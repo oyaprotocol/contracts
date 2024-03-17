@@ -1,4 +1,6 @@
-## Foundry
+## Oya Onchain
+
+The contracts for the Oya proof-of-concept are being developed with Foundry.
 
 **Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
 
@@ -24,8 +26,10 @@ $ forge build
 ### Test
 
 ```shell
-$ forge test
+$ forge test -vv
 ```
+
+The `-vv` flag shows console logs. `-vvvv` will show the full trace of every function call.
 
 ### Format
 
@@ -48,7 +52,7 @@ $ anvil
 ### Deploy
 
 ```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
+$ forge script script/Oya.s.sol:OyaScript --rpc-url <your_rpc_url> --private-key <your_private_key>
 ```
 
 ### Cast
