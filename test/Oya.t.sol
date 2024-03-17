@@ -6,14 +6,29 @@ import "forge-std/console.sol";
 import "../src/Oya.sol";
 
 contract OyaTest is Test {
-  Oya public instance;
+  Oya public oyatoken;
 
   function setUp() public {
     address initialOwner = vm.addr(1);
-    instance = new Oya(initialOwner);
+    oyatoken = new Oya(initialOwner);
   }
 
   function testName() public {
-    assertEq(instance.name(), "Oya");
+    assertEq(oyatoken.name(), "Oya");
+  }
+
+  function testMint() public {
+    // Initial total supply is 1 billion
+    assertEq(oyatoken.totalSupply(), 1000000000 * 10 ** 18);
+
+    // Call mint function as owner
+    vm.prank(address(vm.addr(1)));
+    oyatoken.mint(vm.addr(2), 100);
+
+    // Total supply should increase by 100
+    assertEq(oyatoken.totalSupply(), 1000000000 * 10 ** 18 + 100);
+
+    // Balance of the recipient should be 100
+    assertEq(oyatoken.balanceOf(vm.addr(2)), 100);
   }
 }
