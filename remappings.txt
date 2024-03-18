@@ -1,1 +1,3 @@
 @openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/
+safe-contracts/=lib/safe-tools/lib/safe-contracts/contracts/
+solady/=lib/safe-tools/lib/solady/src/
