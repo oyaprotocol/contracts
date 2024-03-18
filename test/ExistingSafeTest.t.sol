@@ -4,7 +4,7 @@ import "safe-tools/SafeTestTools.sol";
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
 
-contract SafeTest is Test, SafeTestTools {
+contract ExistingSafeTest is Test, SafeTestTools {
     using SafeTestLib for SafeInstance;
 
     function setUp() public {
