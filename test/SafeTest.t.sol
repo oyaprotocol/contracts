@@ -7,10 +7,11 @@ contract SafeTest is Test, SafeTestTools {
     using SafeTestLib for SafeInstance;
 
     function setUp() public {
-        vm.createSelectFork(process.env.MAINNET_RPC_URL);
+        vm.createSelectFork(vm.envString("${MAINNET_RPC_URL}"));
+        address alice = vm.addr(1);
 
         address frax_safe = 0xB1748C79709f4Ba2Dd82834B8c82D4a505003f27;
-        SafeInstance memory instance = _attachToSafe(frax_safe);
+        SafeInstance memory safeInstance = _attachToSafe(frax_safe);
 
         safeInstance.execTransaction({
             to: alice,
