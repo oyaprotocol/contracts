@@ -6,6 +6,8 @@ contract SafeModuleDeployTest is Test, SafeTestTools {
   using SafeTestLib for SafeInstance;
 
   function setUp() public {
+    vm.createSelectFork(vm.envString("MAINNET_RPC_URL"));
+
     AdvancedSafeInitParams memory advancedParams = AdvancedSafeInitParams({
       includeFallbackHandler: false,
       saltNonce: 0xbff0e1d6be3df3bedf05c892f554fbea3c6ca2bb9d224bc3f3d3fbc3ec267d1c,
