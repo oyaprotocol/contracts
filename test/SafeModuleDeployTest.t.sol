@@ -7,6 +7,7 @@ contract SafeModuleDeployTest is Test, SafeTestTools {
 
   function setUp() public {
     vm.createSelectFork(vm.envString("MAINNET_RPC_URL"));
+    _initializeSafeTools();
 
     AdvancedSafeInitParams memory advancedParams = AdvancedSafeInitParams({
       includeFallbackHandler: false,
@@ -27,7 +28,6 @@ contract SafeModuleDeployTest is Test, SafeTestTools {
     );
 
     address alice = address(0xA11c3);
-
     safeInstance.execTransaction({
       to: alice,
       value: 0.5 ether,
