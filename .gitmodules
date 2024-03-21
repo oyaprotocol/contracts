@@ -7,6 +7,3 @@
 [submodule "lib/safe-tools"]
 	path = lib/safe-tools
 	url = https://github.com/colinnielsen/safe-tools
-[submodule "lib/protocol"]
-	path = lib/protocol
-	url = https://github.com/UMAprotocol/protocol
