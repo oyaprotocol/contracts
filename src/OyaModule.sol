@@ -101,6 +101,15 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
     mapping(bytes32 => bytes32) public proposalHashes; // Maps assertionIds to proposal hashes.
     mapping(address => bool) public isController; // Says if address is a controller of this Oya account.
     mapping(address => bool) public isRecoverer; // Says if address is a recoverer of this Oya account.
+    
+    // Modifier to restrict access to proposals to authorized roles.
+    modifier onlyAuthorized {
+        require(
+            this.isController(msg.sender) || this.isRecoverer(msg.sender) || msg.sender == owner() || msg.sender == bookkeeper,
+            "Only controller, recoverer, owner, or bookkeeper can call this function."
+        );
+        _;
+    }
 
     /**
      * @notice Construct Oya module.
@@ -264,8 +273,9 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
      * @param explanation Auxillary information that can be referenced to validate the proposal.
      * @dev Proposer must grant the contract collateral allowance at least to the bondAmount or result of getMinimumBond
      * from the Optimistic Oracle V3, whichever is greater.
+     * @dev Only the owner, controller, recoverer, or bookkeeper can propose transactions.
      */
-    function proposeTransactions(Transaction[] memory transactions, bytes memory explanation) external nonReentrant {
+    function proposeTransactions(Transaction[] memory transactions, bytes memory explanation) external nonReentrant onlyAuthorized {
         // note: Optional explanation explains the intent of the transactions to make comprehension easier.
         uint256 time = getCurrentTime();
         address proposer = msg.sender;
@@ -438,6 +448,14 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
         uint256 minimumBond = optimisticOracleV3.getMinimumBond(address(collateral));
         return minimumBond > bondAmount ? minimumBond : bondAmount;
     }
+
+    // /**
+    //  * @notice Returns the address of the Oya protocol bookkeeper contract.
+    //  * @return The address of the bookkeeper.
+    //  */
+    // function bookkeeper() public view virtual returns (address) {
+    //     return bookkeeper;
+    // }
 
     // Gets the address of Collateral Whitelist from the Finder.
     function _getCollateralWhitelist() internal view returns (AddressWhitelistInterface) {
