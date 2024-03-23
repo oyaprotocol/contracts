@@ -3,3 +3,4 @@ safe-contracts/=lib/safe-tools/lib/safe-contracts/contracts/
 solady/=lib/safe-tools/lib/solady/src/
 @uma/core/=lib/protocol/packages/core/contracts/
 @gnosis.pm/zodiac/=lib/zodiac/
+@gnosis.pm/safe-contracts/=lib/safe-smart-account/
