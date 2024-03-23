@@ -10,3 +10,6 @@
 [submodule "lib/protocol"]
 	path = lib/protocol
 	url = https://github.com/UMAprotocol/protocol
+[submodule "lib/zodiac"]
+	path = lib/zodiac
+	url = https://github.com/gnosisguild/zodiac
