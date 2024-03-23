@@ -65,6 +65,8 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
 
     event SetBookkeeper(address indexed bookkeeper);
 
+    event SetRecoverer(address indexed recoverer);
+
     FinderInterface public immutable finder; // Finder used to discover other UMA ecosystem contracts.
 
     IERC20 public collateral; // Collateral currency used to assert proposed transactions.
@@ -98,6 +100,7 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
     mapping(bytes32 => bytes32) public assertionIds; // Maps proposal hashes to assertionIds.
     mapping(bytes32 => bytes32) public proposalHashes; // Maps assertionIds to proposal hashes.
     mapping(address => bool) public isController; // Says if address is a controller of this Oya account.
+    mapping(address => bool) public isRecoverer; // Says if address is a recoverer of this Oya account.
 
     /**
      * @notice Construct Oya module.
@@ -218,6 +221,11 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
         require(_isContract(_bookkeeper) || _bookkeeper == address(0), "Bookkeeper is not a contract");
         bookkeeper = _bookkeeper;
         emit SetBookkeeper(_bookkeeper);
+    }
+
+    function setRecoverer(address _recoverer) public onlyOwner {
+        isRecoverer[_recoverer] = true;
+        emit SetRecoverer(_recoverer);
     }
 
     /**
