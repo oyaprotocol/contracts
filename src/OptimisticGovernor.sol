@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-pragma solidity ^0.8.6;
+pragma solidity ^0.8.20;
 
 // https://github.com/gnosis/zodiac/blob/master/contracts/core/Module.sol
 import "@gnosis.pm/zodiac/contracts/core/Module.sol";
