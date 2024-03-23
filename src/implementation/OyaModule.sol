@@ -19,6 +19,9 @@ import "@uma/core/optimistic-oracle-v3/interfaces/OptimisticOracleV3CallbackReci
 import "@uma/core/common/implementation/Lockable.sol";
 import "@uma/core/common/interfaces/AddressWhitelistInterface.sol";
 
+import "../interfaces/BookkeeperInterface.sol";
+import "./OyaConstants.sol";
+
 /**
  * @title Oya Module
  * @notice A contract that allows the Oya protocol to manage transactions for a Safe account.
@@ -68,6 +71,7 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
     event SetRecoverer(address indexed recoverer);
 
     FinderInterface public immutable finder; // Finder used to discover other UMA ecosystem contracts.
+    FinderInterface public immutable oyaFinder; // Finder used to discover other Oya ecosystem contracts.
 
     IERC20 public collateral; // Collateral currency used to assert proposed transactions.
     uint64 public liveness; // The amount of time to dispute proposed transactions before they can be executed.
@@ -76,7 +80,7 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
     bytes32 public identifier; // Identifier used to request price from the DVM, compatible with Optimistic Oracle V3.
     OptimisticOracleV3Interface public optimisticOracleV3; // Optimistic Oracle V3 contract used to assert proposed transactions.
     address public escalationManager; // Optional Escalation Manager contract to whitelist proposers / disputers.
-    address public bookkeeper; // Address of the Oya bookkeeper contract.
+    BookkeeperInterface public bookkeeper; // Address of the Oya Finder contract.
 
     // Keys for assertion claim data.
     bytes public constant PROPOSAL_HASH_KEY = "proposalHash";
@@ -105,7 +109,7 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
     // Modifier to restrict access to proposals to authorized roles.
     modifier onlyAuthorized {
         require(
-            this.isController(msg.sender) || this.isRecoverer(msg.sender) || msg.sender == owner() || msg.sender == bookkeeper,
+            this.isController(msg.sender) || this.isRecoverer(msg.sender) || msg.sender == owner() || msg.sender == address(bookkeeper),
             "Only controller, recoverer, owner, or bookkeeper can call this function."
         );
         _;
@@ -113,9 +117,9 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
 
     /**
      * @notice Construct Oya module.
-     * @param _finder Finder address.
+     * @param _finder UMA Finder contract address.
+     * @param _oyaFinder Address of the Oya protocol Finder contract.
      * @param _controller Address of the Oya account controller.
-     * @param _bookkeeper Address of the Oya protocol bookkeeper contract.
      * @param _recoverer Address of the Oya account recovery address.
      * @param _safe Address of the Oya account Safe.
      * @param _collateral Address of the ERC20 collateral used for bonds.
@@ -126,8 +130,8 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
      */
     constructor(
         address _finder,
+        address _oyaFinder,
         address _controller,
-        address _bookkeeper,
         address _recoverer,
         address _safe,
         address _collateral,
@@ -136,9 +140,11 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
         bytes32 _identifier,
         uint64 _liveness
     ) {
-        bytes memory initializeParams = abi.encode(_controller, _bookkeeper, _recoverer, _safe, _collateral, _bondAmount, _rules, _identifier, _liveness);
+        bytes memory initializeParams = abi.encode(_controller, _recoverer, _safe, _collateral, _bondAmount, _rules, _identifier, _liveness);
         require(_finder != address(0), "Finder address can not be empty");
+        require (_oyaFinder != address(0), "Oya Finder address can not be empty");
         finder = FinderInterface(_finder);
+        oyaFinder = FinderInterface(_oyaFinder);
         setUp(initializeParams);
     }
 
@@ -153,7 +159,6 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
         __Ownable_init();
         (
             address _controller,
-            address _bookkeeper,
             address _recoverer,
             address _safe,
             address _collateral,
@@ -161,13 +166,12 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
             string memory _rules,
             bytes32 _identifier,
             uint64 _liveness
-        ) = abi.decode(initializeParams, (address, address, address, address, address, uint256, string, bytes32, uint64));
+        ) = abi.decode(initializeParams, (address, address, address, address, uint256, string, bytes32, uint64));
         setCollateralAndBond(IERC20(_collateral), _bondAmount);
         setRules(_rules);
         setIdentifier(_identifier);
         setLiveness(_liveness);
         setController(_controller);
-        setBookkeeper(_bookkeeper);
         setRecoverer(_recoverer);
         setAvatar(_safe);
         setTarget(_safe);
@@ -232,12 +236,6 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
     function setController(address _controller) public onlyOwner {
         isController[_controller] = true;
         emit SetController(_controller);
-    }
-
-    function setBookkeeper(address _bookkeeper) public onlyOwner {
-        require(_isContract(_bookkeeper) || _bookkeeper == address(0), "Bookkeeper is not a contract");
-        bookkeeper = _bookkeeper;
-        emit SetBookkeeper(_bookkeeper);
     }
 
     function setRecoverer(address _recoverer) public onlyOwner {
@@ -478,6 +476,12 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
         if (newOptimisticOracleV3 != address(optimisticOracleV3)) {
             optimisticOracleV3 = OptimisticOracleV3Interface(newOptimisticOracleV3);
             emit OptimisticOracleChanged(newOptimisticOracleV3);
+        }
+
+        address newBookkeeper = oyaFinder.getImplementationAddress(OyaInterfaces.Bookkeeper);
+        if (newBookkeeper != address(bookkeeper)) {
+            bookkeeper = BookkeeperInterface(newBookkeeper);
+            emit SetBookkeeper(newBookkeeper);
         }
     }
 

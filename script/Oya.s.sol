@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import "forge-std/Script.sol";
-import "../src/Oya.sol";
+import "../src/implementation/Oya.sol";
 
 contract OyaScript is Script {
   function setUp() public {}
