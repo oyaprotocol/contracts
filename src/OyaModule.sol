@@ -114,14 +114,17 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
      */
     constructor(
         address _finder,
-        address _owner,
+        address _controller,
+        address _bookkeeper,
+        address _recoverer,
+        address _safe,
         address _collateral,
         uint256 _bondAmount,
         string memory _rules,
         bytes32 _identifier,
         uint64 _liveness
     ) {
-        bytes memory initializeParams = abi.encode(_owner, _collateral, _bondAmount, _rules, _identifier, _liveness);
+        bytes memory initializeParams = abi.encode(_controller, _bookkeeper, _recoverer, _safe, _collateral, _bondAmount, _rules, _identifier, _liveness);
         require(_finder != address(0), "Finder address can not be empty");
         finder = FinderInterface(_finder);
         setUp(initializeParams);
@@ -139,19 +142,21 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
         (
             address _controller,
             address _bookkeeper,
+            address _recoverer,
             address _safe,
             address _collateral,
             uint256 _bondAmount,
             string memory _rules,
             bytes32 _identifier,
             uint64 _liveness
-        ) = abi.decode(initializeParams, (address, address, address, address, uint256, string, bytes32, uint64));
+        ) = abi.decode(initializeParams, (address, address, address, address, address, uint256, string, bytes32, uint64));
         setCollateralAndBond(IERC20(_collateral), _bondAmount);
         setRules(_rules);
         setIdentifier(_identifier);
         setLiveness(_liveness);
         setController(_controller);
         setBookkeeper(_bookkeeper);
+        setRecoverer(_recoverer);
         setAvatar(_safe);
         setTarget(_safe);
         transferOwnership(_safe);
