@@ -9,8 +9,8 @@ contract OyaTest is Test {
   Oya public oyatoken;
 
   function setUp() public {
-    address initialOwner = vm.addr(1);
-    oyatoken = new Oya(initialOwner);
+    vm.prank(address(vm.addr(1)));
+    oyatoken = new Oya();
   }
 
   function testName() public {
