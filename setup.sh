@@ -23,12 +23,7 @@ then
   forge init --force --no-commit --quiet
 
   # Install OpenZeppelin Contracts
-  forge install OpenZeppelin/openzeppelin-contracts@v5.0.2 --no-commit --quiet
-
-  # Remove template contracts
-  rm src/Counter.sol
-  rm script/Counter.s.sol
-  rm test/Counter.t.sol
+  forge install OpenZeppelin/openzeppelin-contracts@v4.9.6 --no-commit --quiet
 
   # Add remappings
   if [ -f "remappings.txt" ]

@@ -1,0 +1,5 @@
+forge install UMAprotocol/protocol
+forge install safe-global/safe-smart-account
+forge install gnosisguild/zodiac
+forge install OpenZeppelin/openzeppelin-contracts@v4.9.6
+forge install OpenZeppelin/openzeppelin-contracts-upgradeable@v4.9.6
