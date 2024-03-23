@@ -105,7 +105,10 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
     /**
      * @notice Construct Oya module.
      * @param _finder Finder address.
-     * @param _owner Address of the owner.
+     * @param _controller Address of the Oya account controller.
+     * @param _bookkeeper Address of the Oya protocol bookkeeper contract.
+     * @param _recoverer Address of the Oya account recovery address.
+     * @param _safe Address of the Oya account Safe.
      * @param _collateral Address of the ERC20 collateral used for bonds.
      * @param _bondAmount Amount of collateral currency to make assertions for proposed transactions
      * @param _rules Reference to the rules for the Oya module.
