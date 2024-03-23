@@ -26,7 +26,7 @@ import "@uma/core/common/interfaces/AddressWhitelistInterface.sol";
 contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lockable {
     using SafeERC20 for IERC20;
 
-    event OyaModuleDeployed(address indexed owner, address indexed avatar, address target);
+    event OyaModuleDeployed(address indexed owner, address indexed controller, address bookkeeper);
 
     event TransactionsProposed(
         address indexed proposer,
@@ -134,23 +134,27 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
         _startReentrantGuardDisabled();
         __Ownable_init();
         (
-            address _owner,
+            address _controller,
+            address _bookkeeper,
+            address _safe,
             address _collateral,
             uint256 _bondAmount,
             string memory _rules,
             bytes32 _identifier,
             uint64 _liveness
-        ) = abi.decode(initializeParams, (address, address, uint256, string, bytes32, uint64));
+        ) = abi.decode(initializeParams, (address, address, address, address, uint256, string, bytes32, uint64));
         setCollateralAndBond(IERC20(_collateral), _bondAmount);
         setRules(_rules);
         setIdentifier(_identifier);
         setLiveness(_liveness);
-        setAvatar(_owner);
-        setTarget(_owner);
-        transferOwnership(_owner);
+        setController(_controller);
+        setBookkeeper(_bookkeeper);
+        setAvatar(_safe);
+        setTarget(_safe);
+        transferOwnership(_safe);
         _sync();
 
-        emit OyaModuleDeployed(_owner, avatar, target);
+        emit OyaModuleDeployed(_safe, avatar, target);
     }
 
     /**
@@ -205,6 +209,17 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
         emit SetIdentifier(_identifier);
     }
 
+    function setController(address _controller) public onlyOwner {
+        isController[_controller] = true;
+        emit SetController(_controller);
+    }
+
+    function setBookkeeper(address _bookkeeper) public onlyOwner {
+        require(_isContract(_bookkeeper) || _bookkeeper == address(0), "Bookkeeper is not a contract");
+        bookkeeper = _bookkeeper;
+        emit SetBookkeeper(_bookkeeper);
+    }
+
     /**
      * @notice Sets the Escalation Manager for future proposals.
      * @param _escalationManager address of the Escalation Manager, can be zero to disable this functionality.
@@ -216,17 +231,6 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
         require(_isContract(_escalationManager) || _escalationManager == address(0), "EM is not a contract");
         escalationManager = _escalationManager;
         emit SetEscalationManager(_escalationManager);
-    }
-
-    function setController(address _controller) external onlyOwner {
-        isController[_controller] = true;
-        emit SetController(_controller);
-    }
-
-    function setBookkeeper(address _bookkeeper) external onlyOwner {
-        require(_isContract(_bookkeeper) || _bookkeeper == address(0), "Bookkeeper is not a contract");
-        bookkeeper = _bookkeeper;
-        emit SetBookkeeper(_bookkeeper);
     }
 
     /**
