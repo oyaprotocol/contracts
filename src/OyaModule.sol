@@ -61,6 +61,10 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
 
     event OptimisticOracleChanged(address indexed newOptimisticOracleV3);
 
+    event SetController(address indexed controller);
+
+    event SetBookkeeper(address indexed bookkeeper);
+
     FinderInterface public immutable finder; // Finder used to discover other UMA ecosystem contracts.
 
     IERC20 public collateral; // Collateral currency used to assert proposed transactions.
@@ -70,6 +74,7 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
     bytes32 public identifier; // Identifier used to request price from the DVM, compatible with Optimistic Oracle V3.
     OptimisticOracleV3Interface public optimisticOracleV3; // Optimistic Oracle V3 contract used to assert proposed transactions.
     address public escalationManager; // Optional Escalation Manager contract to whitelist proposers / disputers.
+    address public bookkeeper; // Address of the Oya bookkeeper contract.
 
     // Keys for assertion claim data.
     bytes public constant PROPOSAL_HASH_KEY = "proposalHash";
@@ -92,6 +97,7 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
 
     mapping(bytes32 => bytes32) public assertionIds; // Maps proposal hashes to assertionIds.
     mapping(bytes32 => bytes32) public proposalHashes; // Maps assertionIds to proposal hashes.
+    mapping(address => bool) public isController; // Says if address is a controller of this Oya account.
 
     /**
      * @notice Construct Optimistic Governor module.
@@ -210,6 +216,17 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
         require(_isContract(_escalationManager) || _escalationManager == address(0), "EM is not a contract");
         escalationManager = _escalationManager;
         emit SetEscalationManager(_escalationManager);
+    }
+
+    function setController(address _controller) external onlyOwner {
+        isController[_controller] = true;
+        emit SetController(_controller);
+    }
+
+    function setBookkeeper(address _bookkeeper) external onlyOwner {
+        require(_isContract(_bookkeeper) || _bookkeeper == address(0), "Bookkeeper is not a contract");
+        bookkeeper = _bookkeeper;
+        emit SetBookkeeper(_bookkeeper);
     }
 
     /**
