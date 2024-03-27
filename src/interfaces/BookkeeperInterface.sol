@@ -39,8 +39,18 @@ interface BookkeeperInterface {
 
   /*
     Only bundler can bridge assets to a bookkeeper contract on another chain
+
     They will do this periodically so that there are enough tokens on each chain for withdrawal
+    
     Across is implemented under the hood
+
+    Account holders can specify which chains they are willing to hold their assets on, and the 
+    bundler can not transfer more than the total amount allowed by account holders to be on a 
+    particular chain
+
+    In practice, the bundler may choose to bridge their own assets to different chains, to 
+    facilitate fast withdrawals and optimistic execution of new transactions, while the bulk of 
+    funds rest on L1
 
     address - token contract address
     uint256 - amount to bridge
