@@ -76,4 +76,10 @@ interface BookkeeperInterface {
     uint256 - amount to withdraw
   */
   function withdraw(address, uint256) external;
+
+  /*
+    Oya governance can add and remove bundlers
+  */
+  function addBundler(address) external;
+  function removeBundler(address) external;
 }
