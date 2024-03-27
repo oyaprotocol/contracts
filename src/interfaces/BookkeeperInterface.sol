@@ -2,6 +2,11 @@ pragma solidity ^0.8.6;
 
 interface BookkeeperInterface {
   /*
+    What functions are necessary for the bookkeeper to be able to hold ERC20, ERC721, and ERC1155
+    tokens? 
+  */
+
+  /*
     Only bundler can propose a bundle
 
     The bundle will be mapped to an incrementing id
