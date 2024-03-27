@@ -104,6 +104,8 @@ interface BookkeeperInterface {
 
     The upgrade process would simply allow asset bridging to the new bookkeeper contract
 
+    This function should be called on L1 and sync across all chains
+
     address - bookkeeper contract address to add or remove
     uint256 - chain id
   */
