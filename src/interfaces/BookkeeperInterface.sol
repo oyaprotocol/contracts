@@ -3,22 +3,39 @@ pragma solidity ^0.8.6;
 interface BookkeeperInterface {
   /*
     Only bundler can propose a bundle
+
     The bundle will be mapped to an incrementing id
+
+    This will call UMA to validate the bundle
 
     We need to look into data availability solutions for the bundle data
 
     bytes32 - ipfs hash of where to find the bundle offchain
   */
-  function proposeBundle(bytes32) external;
+  function propose(bytes32) external;
 
   /*
-    Only bundler can update the internal state
-    uint256 - bundle id to finalize, which must have been settled with UMA already
+    Only bundler can finalize a bundle
+    uint256 - bundle id to finalize, which must have been validated with UMA already
   
     Calls internal sync function to update bookkeeper contracts on all chains with the latest
     bundle information
   */
-  function update(uint256) external;
+  function finalize(uint256) external;
+
+  /*
+    Anyone can settle with an Oya account, but in practice the bundler will do this
+
+    This will transfer funds from the Oya account holder's Safe to the bookkeeper contract
+
+    Holding funds in the bookkeeper is better for efficiency, and necessary when settling 
+    transactions between account holders, or between the account holder and the bundler
+
+    address - Oya account to settle
+    address - token contract address
+    uint256 - amount to settle
+  */
+  function settle(address, address, uint256) external;
 
   /*
     Only bundler can bridge assets to a bookkeeper contract on another chain
@@ -30,13 +47,6 @@ interface BookkeeperInterface {
     uint256 - chain id
   */
   function bridge(address, uint256, uint256) external;
-
-  /*
-    Anyone can settle with an Oya account, but in practice the bundler will do this
-
-    address - Oya account to settle
-  */
-  function settle(address) external;
 
   /*
     Anyone can withdraw their assets held in the bookkeeper contract
