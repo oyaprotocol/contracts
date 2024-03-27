@@ -79,7 +79,23 @@ interface BookkeeperInterface {
 
   /*
     Oya governance can add and remove bundlers
+
+    address - bundler to add or remove
   */
   function addBundler(address) external;
   function removeBundler(address) external;
+
+  /*
+    Oya governance can add and remove bookkeeper contracts for different chains
+
+    This should be on a timelock, to allow for ragequit if an account holder disapproves of
+    a bookkeeper contract upgrade
+
+    The upgrade process would simply allow asset bridging to the new bookkeeper contract
+
+    address - bookkeeper contract address to add or remove
+    uint256 - chain id
+  */
+  function addBookkeeper(address, uint256) external;
+  function removeBookkeeper(address, uint256) external;
 }
