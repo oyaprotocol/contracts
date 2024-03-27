@@ -1,10 +1,10 @@
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.6;
 
 interface BookkeeperInterface {
   /*
     Only bundler can propose a bundle
     The bundle will be mapped to an incrementing id
-    
+
     We need to look into data availability solutions for the bundle data
 
     bytes32 - ipfs hash of where to find the bundle offchain
