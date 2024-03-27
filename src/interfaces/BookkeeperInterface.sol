@@ -21,12 +21,23 @@ interface BookkeeperInterface {
 
   /*
     Only bundler can finalize a bundle
-    uint256 - bundle id to finalize, which must have been validated with UMA already
   
     Calls internal sync function to update bookkeeper contracts on all chains with the latest
     bundle information
+
+    uint256 - bundle id to finalize, which must have been validated with UMA already
   */
   function finalize(uint256) external;
+
+  /*
+    Only bundler can cancel a bundle
+
+    If they made a mistake in a proposal, canceling a bundle lets them propose a new one with 
+    the next nonce
+
+    uint256 - bundle id to cancel
+  */
+  function cancel(uint256) external;
 
   /*
     Anyone can settle with an Oya account, but in practice the bundler will do this
