@@ -15,7 +15,9 @@ interface BookkeeperInterface {
 
     We need to look into data availability solutions for the bundle data
 
-    bytes32 - ipfs hash of where to find the bundle offchain
+    Maybe we can store the data in blobs?
+
+    bytes32 - where to find the bundle data
   */
   function propose(bytes32) external;
 
