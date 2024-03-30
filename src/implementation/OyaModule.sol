@@ -478,7 +478,7 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
       emit OptimisticOracleChanged(newOptimisticOracleV3);
     }
 
-    address newBookkeeper = oyaFinder.getImplementationAddress(OyaInterfaces.BOOKKEEPER);
+    address newBookkeeper = oyaFinder.getImplementationAddress(OyaInterfaces.Bookkeeper);
     if (newBookkeeper != address(bookkeeper)) {
       bookkeeper = BookkeeperInterface(newBookkeeper);
       emit SetBookkeeper(newBookkeeper);
