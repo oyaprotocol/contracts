@@ -7,7 +7,9 @@ import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract Bookkeeper is BookkeeperInterface, Ownable {
-  // Mapping for bundle data, uint256 is timestamp
+  // Mapping for bundle data
+  // uint256 is block timestamp
+  // bytes32 tells you where to find the bundle data
   mapping(uint256 => bytes32) public bundles;
   uint256 public currentFinalizedBundle;
 
