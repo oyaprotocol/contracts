@@ -98,4 +98,8 @@ contract Bookkeeper is OptimisticExecutor, BookkeeperInterface, Ownable {
     bookkeepers[_chainId][_contractAddress] = _isApproved;
   }
 
+  function exec(address, uint256, bytes memory, Enum.Operation) internal virtual returns (bool) {
+    revert("Not implemented");
+  }
+
 }

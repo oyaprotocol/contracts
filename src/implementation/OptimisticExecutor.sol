@@ -93,6 +93,68 @@ contract OptimisticExecutor is OptimisticOracleV3CallbackRecipientInterface, Loc
   mapping(address => bool) public isController; // Says if address is a controller of this Oya account.
   mapping(address => bool) public isRecoverer; // Says if address is a recoverer of this Oya account.
 
+
+  /**
+   * @notice Makes a new proposal for transactions to be executed with an explanation argument.
+   * @param transactions the transactions being proposed.
+   * @param explanation Auxillary information that can be referenced to validate the proposal.
+   * @dev Proposer must grant the contract collateral allowance at least to the bondAmount or result of getMinimumBond
+   * from the Optimistic Oracle V3, whichever is greater.
+   * @dev Only the owner, controller, recoverer, or bookkeeper can propose transactions.
+   */
+  function proposeTransactions(Transaction[] memory transactions, bytes memory explanation) external nonReentrant {
+    // note: Optional explanation explains the intent of the transactions to make comprehension easier.
+    uint256 time = getCurrentTime();
+    address proposer = msg.sender;
+
+    // Create proposal in memory to emit in an event.
+    Proposal memory proposal;
+    proposal.requestTime = time;
+
+    // Add transactions to proposal in memory.
+    for (uint256 i = 0; i < transactions.length; i++) {
+      require(transactions[i].to != address(0), "The `to` address cannot be 0x0");
+      // If the transaction has any data with it the recipient must be a contract, not an EOA.
+      if (transactions[i].data.length > 0) require(_isContract(transactions[i].to), "EOA can't accept tx with data");
+    }
+    proposal.transactions = transactions;
+
+    // Create the proposal hash.
+    bytes32 proposalHash = keccak256(abi.encode(transactions));
+
+    // Add the proposal hash, explanation and rules to ancillary data.
+    bytes memory claim = _constructClaim(proposalHash, explanation);
+
+    // Check that the proposal is not already mapped to an assertionId, i.e., is not a duplicate.
+    require(assertionIds[proposalHash] == bytes32(0), "Duplicate proposals not allowed");
+
+    // Get the bond from the proposer and approve the required bond to be used by the Optimistic Oracle V3.
+    // This will fail if the proposer has not granted the Oya module contract an allowance
+    // of the collateral token equal to or greater than the totalBond.
+    uint256 totalBond = getProposalBond();
+    collateral.safeTransferFrom(proposer, address(this), totalBond);
+    collateral.safeIncreaseAllowance(address(optimisticOracleV3), totalBond);
+
+    // Assert that the proposal is correct at the Optimistic Oracle V3.
+    bytes32 assertionId = optimisticOracleV3.assertTruth(
+      claim, // claim containing proposalHash, explanation and rules.
+      proposer, // asserter will receive back bond if the assertion is correct.
+      address(this), // callbackRecipient is set to this contract for automated proposal deletion on disputes.
+      escalationManager, // escalationManager (if set) used for whitelisting proposers / disputers.
+      liveness, // liveness in seconds.
+      collateral, // currency in which the bond is denominated.
+      totalBond, // bond amount used to assert proposal.
+      identifier, // identifier used to determine if the claim is correct at DVM.
+      bytes32(0) // domainId is not set.
+    );
+
+    // Maps the proposal hash to the returned assertionId and vice versa.
+    assertionIds[proposalHash] = assertionId;
+    proposalHashes[assertionId] = proposalHash;
+
+    emit TransactionsProposed(proposer, time, assertionId, proposal, proposalHash, explanation, rules, time + liveness);
+  }
+  
   /**
    * @notice Function to delete a proposal on an Optimistic Oracle V3 upgrade.
    * @param proposalHash the hash of the proposal to delete.
