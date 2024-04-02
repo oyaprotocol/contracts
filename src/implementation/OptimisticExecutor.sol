@@ -65,6 +65,17 @@ contract OptimisticExecutor {
     uint256 requestTime;
   }
 
+  uint64 public liveness; // The amount of time to dispute proposed transactions before they can be executed.
+  uint256 public bondAmount; // Configured amount of collateral currency to make assertions for proposed transactions.
+  string public rules; // Rules for the Oya module.
+  bytes32 public identifier; // Identifier used to request price from the DVM, compatible with Optimistic Oracle V3.
+  address public escalationManager; // Optional Escalation Manager contract to whitelist proposers / disputers.
+
+  mapping(bytes32 => bytes32) public assertionIds; // Maps proposal hashes to assertionIds.
+  mapping(bytes32 => bytes32) public proposalHashes; // Maps assertionIds to proposal hashes.
+  mapping(address => bool) public isController; // Says if address is a controller of this Oya account.
+  mapping(address => bool) public isRecoverer; // Says if address is a recoverer of this Oya account.
+
   /**
    * @notice Gets the current time for this contract.
    * @dev This only exists so it can be overridden for testing.

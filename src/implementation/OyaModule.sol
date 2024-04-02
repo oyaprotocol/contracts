@@ -38,19 +38,9 @@ contract OyaModule is OptimisticExecutor, OptimisticOracleV3CallbackRecipientInt
   FinderInterface public immutable oyaFinder; // Finder used to discover other Oya ecosystem contracts.
 
   IERC20 public collateral; // Collateral currency used to assert proposed transactions.
-  uint64 public liveness; // The amount of time to dispute proposed transactions before they can be executed.
-  uint256 public bondAmount; // Configured amount of collateral currency to make assertions for proposed transactions.
-  string public rules; // Rules for the Oya module.
-  bytes32 public identifier; // Identifier used to request price from the DVM, compatible with Optimistic Oracle V3.
   OptimisticOracleV3Interface public optimisticOracleV3; // Optimistic Oracle V3 contract used to assert proposed
     // transactions.
-  address public escalationManager; // Optional Escalation Manager contract to whitelist proposers / disputers.
   BookkeeperInterface public bookkeeper; // Interface for the Oya bookkeeper contract.
-
-  mapping(bytes32 => bytes32) public assertionIds; // Maps proposal hashes to assertionIds.
-  mapping(bytes32 => bytes32) public proposalHashes; // Maps assertionIds to proposal hashes.
-  mapping(address => bool) public isController; // Says if address is a controller of this Oya account.
-  mapping(address => bool) public isRecoverer; // Says if address is a recoverer of this Oya account.
 
   /**
    * @notice Construct Oya module.
