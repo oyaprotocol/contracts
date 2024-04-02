@@ -20,8 +20,8 @@ import "@uma/core/optimistic-oracle-v3/interfaces/OptimisticOracleV3Interface.so
 import "@uma/core/common/implementation/Lockable.sol";
 import "@uma/core/common/interfaces/AddressWhitelistInterface.sol";
 
-import "./OptimisticProposer.sol";
 import "../interfaces/BookkeeperInterface.sol";
+import "./OptimisticProposer.sol";
 import "./OyaConstants.sol";
 
 /**
@@ -211,10 +211,7 @@ contract OyaModule is OptimisticProposer, OptimisticOracleV3CallbackRecipientInt
    * from the Optimistic Oracle V3, whichever is greater.
    * @dev Only the owner, controller, recoverer, or bookkeeper can propose transactions.
    */
-  function proposeTransactions(
-    Transaction[] memory transactions,
-    bytes memory explanation
-  ) external nonReentrant {
+  function proposeTransactions(Transaction[] memory transactions, bytes memory explanation) external nonReentrant {
     // note: Optional explanation explains the intent of the transactions to make comprehension easier.
     uint256 time = getCurrentTime();
     address proposer = msg.sender;
@@ -360,14 +357,6 @@ contract OyaModule is OptimisticProposer, OptimisticOracleV3CallbackRecipientInt
    * @param assertedTruthfully Whether the assertion was resolved as truthful or not.
    */
   function assertionResolvedCallback(bytes32 assertionId, bool assertedTruthfully) external {}
-
-  /**
-   * @notice Gets the current time for this contract.
-   * @dev This only exists so it can be overridden for testing.
-   */
-  function getCurrentTime() public view virtual returns (uint256) {
-    return block.timestamp;
-  }
 
   /**
    * @notice Getter function to check required collateral currency approval.

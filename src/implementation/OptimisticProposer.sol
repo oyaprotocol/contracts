@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 contract OptimisticProposer {
 
   using SafeERC20 for IERC20;
-  
+
   event TransactionsProposed(
     address indexed proposer,
     uint256 indexed proposalTime,
@@ -63,6 +63,14 @@ contract OptimisticProposer {
   struct Proposal {
     Transaction[] transactions;
     uint256 requestTime;
+  }
+
+  /**
+   * @notice Gets the current time for this contract.
+   * @dev This only exists so it can be overridden for testing.
+   */
+  function getCurrentTime() public view virtual returns (uint256) {
+    return block.timestamp;
   }
 
 }
