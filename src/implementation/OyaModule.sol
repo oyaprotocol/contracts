@@ -81,7 +81,7 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
   OptimisticOracleV3Interface public optimisticOracleV3; // Optimistic Oracle V3 contract used to assert proposed
     // transactions.
   address public escalationManager; // Optional Escalation Manager contract to whitelist proposers / disputers.
-  BookkeeperInterface public bookkeeper; // Address of the Oya Finder contract.
+  BookkeeperInterface public bookkeeper; // Interface for the Oya bookkeeper contract.
 
   // Keys for assertion claim data.
   bytes public constant PROPOSAL_HASH_KEY = "proposalHash";
