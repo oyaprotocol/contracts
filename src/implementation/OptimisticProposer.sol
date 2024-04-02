@@ -95,6 +95,30 @@ contract OptimisticProposer is OptimisticOracleV3CallbackRecipientInterface, Loc
   mapping(address => bool) public isRecoverer; // Says if address is a recoverer of this Oya account.
 
   /**
+   * @notice Sets the rules that will be used to evaluate future proposals.
+   * @param _rules string that outlines or references the location where the rules can be found.
+   */
+  function setRules(string memory _rules) public onlyOwner {
+    // Set reference to the rules for the Oya module
+    require(bytes(_rules).length > 0, "Rules can not be empty");
+    rules = _rules;
+    emit SetRules(_rules);
+  }
+
+  /**
+   * @notice Sets the liveness for future proposals. This is the amount of delay before a proposal is approved by
+   * default.
+   * @param _liveness liveness to set in seconds.
+   */
+  function setLiveness(uint64 _liveness) public onlyOwner {
+    // Set liveness for disputing proposed transactions.
+    require(_liveness > 0, "Liveness can't be 0");
+    require(_liveness < 5200 weeks, "Liveness must be less than 5200 weeks");
+    liveness = _liveness;
+    emit SetLiveness(_liveness);
+  }
+
+  /**
    * @notice Makes a new proposal for transactions to be executed with an explanation argument.
    * @param transactions the transactions being proposed.
    * @param explanation Auxillary information that can be referenced to validate the proposal.
