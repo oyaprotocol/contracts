@@ -156,4 +156,25 @@ contract OptimisticExecutor is OptimisticOracleV3CallbackRecipientInterface, Loc
     return block.timestamp;
   }
 
+  // Checks if the address is a contract.
+  function _isContract(address addr) internal view returns (bool) {
+    return addr.code.length > 0;
+  }
+
+  // Constructs the claim that will be asserted at the Optimistic Oracle V3.
+  function _constructClaim(bytes32 proposalHash, bytes memory explanation) internal view returns (bytes memory) {
+    return abi.encodePacked(
+      ClaimData.appendKeyValueBytes32("", PROPOSAL_HASH_KEY, proposalHash),
+      ",",
+      EXPLANATION_KEY,
+      ':"',
+      explanation,
+      '",',
+      RULES_KEY,
+      ':"',
+      rules,
+      '"'
+    );
+  }
+
 }
