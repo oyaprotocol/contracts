@@ -16,6 +16,11 @@ contract Bookkeeper is BookkeeperInterface, Ownable {
   // Mapping for bundler permissions
   mapping(address => bool) public bundlers;
 
+  // Mapping for bookkeeper contracts
+  // uint256 is chain ID
+  // address is the bookkeeper contract address
+  mapping(uint256 => address) public bookkeepers;
+
   // Modifier to restrict function access to only bundlers
   modifier onlyBundler() {
     require(bundlers[msg.sender], "Caller is not a bundler");
@@ -30,7 +35,7 @@ contract Bookkeeper is BookkeeperInterface, Ownable {
   function propose(bytes32 _bundleData) external override onlyBundler {
     bundles[block.timestamp] = _bundleData;
     // In practice, call UMA or another system to validate the bundle here
-    // Also need to store some data to find the 
+    // Also need to store some data for the callback
   }
 
   function finalize(uint256 _bundle) external {
@@ -64,11 +69,7 @@ contract Bookkeeper is BookkeeperInterface, Ownable {
     delete bundlers[_bundler];
   }
 
-  function addBookkeeper(address, uint256) external override onlyOwner {
-    // Implement addition logic, possibly with timelocks or synchronization across chains
-  }
-
-  function removeBookkeeper(address, uint256) external override onlyOwner {
-    // Implement removal logic, possibly with timelocks or synchronization across chains
+  function updateBookkeeper(uint256 _chainId, address _contractAddress) external override onlyOwner {
+    bookkeepers[_chainId] = _contractAddress;
   }
 }

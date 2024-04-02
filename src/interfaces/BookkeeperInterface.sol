@@ -108,9 +108,10 @@ interface BookkeeperInterface {
 
     This function should be called on L1 and sync across all chains
 
-    address - bookkeeper contract address to add or remove
+    To remove a bookkeeper, without replacing it, set to the zero address
+
     uint256 - chain id
+    address - bookkeeper contract address to add or remove
   */
-  function addBookkeeper(address, uint256) external;
-  function removeBookkeeper(address, uint256) external;
+  function updateBookkeeper(uint256, address) external;
 }
