@@ -7,13 +7,6 @@ import "@gnosis.pm/zodiac/contracts/core/Module.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import "@uma/core/data-verification-mechanism/implementation/Constants.sol";
-import "@uma/core/data-verification-mechanism/interfaces/FinderInterface.sol";
-import "@uma/core/data-verification-mechanism/interfaces/IdentifierWhitelistInterface.sol";
-import "@uma/core/data-verification-mechanism/interfaces/StoreInterface.sol";
-
-import "@uma/core/optimistic-oracle-v3/implementation/ClaimData.sol";
-
 import "@uma/core/common/interfaces/AddressWhitelistInterface.sol";
 
 import "../interfaces/BookkeeperInterface.sol";

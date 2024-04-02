@@ -7,8 +7,15 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import "@uma/core/common/implementation/Lockable.sol";
 
+import "@uma/core/data-verification-mechanism/implementation/Constants.sol";
+import "@uma/core/data-verification-mechanism/interfaces/FinderInterface.sol";
+import "@uma/core/data-verification-mechanism/interfaces/IdentifierWhitelistInterface.sol";
+import "@uma/core/data-verification-mechanism/interfaces/StoreInterface.sol";
+
 import "@uma/core/optimistic-oracle-v3/interfaces/OptimisticOracleV3Interface.sol";
 import "@uma/core/optimistic-oracle-v3/interfaces/OptimisticOracleV3CallbackRecipientInterface.sol";
+
+import "@uma/core/optimistic-oracle-v3/implementation/ClaimData.sol";
 
 contract OptimisticExecutor is OptimisticOracleV3CallbackRecipientInterface, Lockable {
 
