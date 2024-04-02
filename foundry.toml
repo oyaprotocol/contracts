@@ -7,3 +7,14 @@ libs = ["lib"]
 
 [rpc_endpoints]
 mainnet = "${MAINNET_RPC_URL}"
+
+[fmt]
+line_length = 120
+tab_width = 2
+single_line_statement_blocks = "single"
+multiline_func_header = "params_first"
+sort_imports = true
+contract_new_lines = true
+override_spacing = false
+number_underscore = "thousands"
+wrap_comments = true

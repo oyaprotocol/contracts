@@ -13,8 +13,9 @@ import "@uma/core/data-verification-mechanism/interfaces/IdentifierWhitelistInte
 import "@uma/core/data-verification-mechanism/interfaces/StoreInterface.sol";
 
 import "@uma/core/optimistic-oracle-v3/implementation/ClaimData.sol";
-import "@uma/core/optimistic-oracle-v3/interfaces/OptimisticOracleV3Interface.sol";
+
 import "@uma/core/optimistic-oracle-v3/interfaces/OptimisticOracleV3CallbackRecipientInterface.sol";
+import "@uma/core/optimistic-oracle-v3/interfaces/OptimisticOracleV3Interface.sol";
 
 import "@uma/core/common/implementation/Lockable.sol";
 import "@uma/core/common/interfaces/AddressWhitelistInterface.sol";
@@ -27,6 +28,7 @@ import "./OyaConstants.sol";
  * @notice A contract that allows the Oya protocol to manage transactions for a Safe account.
  */
 contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lockable {
+
   using SafeERC20 for IERC20;
 
   event OyaModuleDeployed(address indexed owner, address indexed controller, address bookkeeper);
@@ -43,9 +45,7 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
   );
 
   event TransactionExecuted(
-    bytes32 indexed proposalHash,
-    bytes32 indexed assertionId,
-    uint256 indexed transactionIndex
+    bytes32 indexed proposalHash, bytes32 indexed assertionId, uint256 indexed transactionIndex
   );
 
   event ProposalExecuted(bytes32 indexed proposalHash, bytes32 indexed assertionId);
@@ -78,7 +78,8 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
   uint256 public bondAmount; // Configured amount of collateral currency to make assertions for proposed transactions.
   string public rules; // Rules for the Oya module.
   bytes32 public identifier; // Identifier used to request price from the DVM, compatible with Optimistic Oracle V3.
-  OptimisticOracleV3Interface public optimisticOracleV3; // Optimistic Oracle V3 contract used to assert proposed transactions.
+  OptimisticOracleV3Interface public optimisticOracleV3; // Optimistic Oracle V3 contract used to assert proposed
+    // transactions.
   address public escalationManager; // Optional Escalation Manager contract to whitelist proposers / disputers.
   BookkeeperInterface public bookkeeper; // Address of the Oya Finder contract.
 
@@ -105,29 +106,30 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
   mapping(bytes32 => bytes32) public proposalHashes; // Maps assertionIds to proposal hashes.
   mapping(address => bool) public isController; // Says if address is a controller of this Oya account.
   mapping(address => bool) public isRecoverer; // Says if address is a recoverer of this Oya account.
-  
+
   // Modifier to restrict access to proposals to authorized roles.
-  modifier onlyAuthorized {
+  modifier onlyAuthorized() {
     require(
-      this.isController(msg.sender) || this.isRecoverer(msg.sender) || msg.sender == owner() || msg.sender == address(bookkeeper),
+      this.isController(msg.sender) || this.isRecoverer(msg.sender) || msg.sender == owner()
+        || msg.sender == address(bookkeeper),
       "Only controller, recoverer, owner, or bookkeeper can call this function."
     );
     _;
   }
 
   /**
-    * @notice Construct Oya module.
-    * @param _finder UMA Finder contract address.
-    * @param _oyaFinder Address of the Oya protocol Finder contract.
-    * @param _controller Address of the Oya account controller.
-    * @param _recoverer Address of the Oya account recovery address.
-    * @param _safe Address of the Oya account Safe.
-    * @param _collateral Address of the ERC20 collateral used for bonds.
-    * @param _bondAmount Amount of collateral currency to make assertions for proposed transactions
-    * @param _rules Reference to the rules for the Oya module.
-    * @param _identifier The approved identifier to be used with the contract, compatible with Optimistic Oracle V3.
-    * @param _liveness The period, in seconds, in which a proposal can be disputed.
-    */
+   * @notice Construct Oya module.
+   * @param _finder UMA Finder contract address.
+   * @param _oyaFinder Address of the Oya protocol Finder contract.
+   * @param _controller Address of the Oya account controller.
+   * @param _recoverer Address of the Oya account recovery address.
+   * @param _safe Address of the Oya account Safe.
+   * @param _collateral Address of the ERC20 collateral used for bonds.
+   * @param _bondAmount Amount of collateral currency to make assertions for proposed transactions
+   * @param _rules Reference to the rules for the Oya module.
+   * @param _identifier The approved identifier to be used with the contract, compatible with Optimistic Oracle V3.
+   * @param _liveness The period, in seconds, in which a proposal can be disputed.
+   */
   constructor(
     address _finder,
     address _oyaFinder,
@@ -140,20 +142,21 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
     bytes32 _identifier,
     uint64 _liveness
   ) {
-    bytes memory initializeParams = abi.encode(_controller, _recoverer, _safe, _collateral, _bondAmount, _rules, _identifier, _liveness);
+    bytes memory initializeParams =
+      abi.encode(_controller, _recoverer, _safe, _collateral, _bondAmount, _rules, _identifier, _liveness);
     require(_finder != address(0), "Finder address can not be empty");
-    require (_oyaFinder != address(0), "Oya Finder address can not be empty");
+    require(_oyaFinder != address(0), "Oya Finder address can not be empty");
     finder = FinderInterface(_finder);
     oyaFinder = FinderInterface(_oyaFinder);
     setUp(initializeParams);
   }
 
   /**
-    * @notice Sets up the Oya module.
-    * @param initializeParams ABI encoded parameters to initialize the module with.
-    * @dev This method can be called only either by the constructor or as part of first time initialization when
-    * cloning the module.
-    */
+   * @notice Sets up the Oya module.
+   * @param initializeParams ABI encoded parameters to initialize the module with.
+   * @dev This method can be called only either by the constructor or as part of first time initialization when
+   * cloning the module.
+   */
   function setUp(bytes memory initializeParams) public override initializer {
     _startReentrantGuardDisabled();
     __Ownable_init();
@@ -182,10 +185,10 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
   }
 
   /**
-    * @notice Sets the collateral and bond amount for proposals.
-    * @param _collateral token that will be used for all bonds for the contract.
-    * @param _bondAmount amount of the bond token that will need to be paid for future proposals.
-    */
+   * @notice Sets the collateral and bond amount for proposals.
+   * @param _collateral token that will be used for all bonds for the contract.
+   * @param _bondAmount amount of the bond token that will need to be paid for future proposals.
+   */
   function setCollateralAndBond(IERC20 _collateral, uint256 _bondAmount) public onlyOwner {
     // ERC20 token to be used as collateral (must be approved by UMA governance).
     require(_getCollateralWhitelist().isOnWhitelist(address(_collateral)), "Bond token not supported");
@@ -199,9 +202,9 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
   }
 
   /**
-    * @notice Sets the rules that will be used to evaluate future proposals.
-    * @param _rules string that outlines or references the location where the rules can be found.
-    */
+   * @notice Sets the rules that will be used to evaluate future proposals.
+   * @param _rules string that outlines or references the location where the rules can be found.
+   */
   function setRules(string memory _rules) public onlyOwner {
     // Set reference to the rules for the Oya module
     require(bytes(_rules).length > 0, "Rules can not be empty");
@@ -210,10 +213,10 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
   }
 
   /**
-    * @notice Sets the liveness for future proposals. This is the amount of delay before a proposal is approved by
-    * default.
-    * @param _liveness liveness to set in seconds.
-    */
+   * @notice Sets the liveness for future proposals. This is the amount of delay before a proposal is approved by
+   * default.
+   * @param _liveness liveness to set in seconds.
+   */
   function setLiveness(uint64 _liveness) public onlyOwner {
     // Set liveness for disputing proposed transactions.
     require(_liveness > 0, "Liveness can't be 0");
@@ -223,9 +226,9 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
   }
 
   /**
-    * @notice Sets the identifier for future proposals.
-    * @param _identifier identifier to set.
-    */
+   * @notice Sets the identifier for future proposals.
+   * @param _identifier identifier to set.
+   */
   function setIdentifier(bytes32 _identifier) public onlyOwner {
     // Set identifier which is used along with the rules to determine if transactions are valid.
     require(_getIdentifierWhitelist().isIdentifierSupported(_identifier), "Identifier not supported");
@@ -244,12 +247,12 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
   }
 
   /**
-    * @notice Sets the Escalation Manager for future proposals.
-    * @param _escalationManager address of the Escalation Manager, can be zero to disable this functionality.
-    * @dev Only the owner can call this method. The provided address must conform to the Escalation Manager interface.
-    * FullPolicyEscalationManager can be used, but within the context of this contract it should be used only for
-    * whitelisting of proposers and disputers since Oya module is deleting disputed proposals.
-    */
+   * @notice Sets the Escalation Manager for future proposals.
+   * @param _escalationManager address of the Escalation Manager, can be zero to disable this functionality.
+   * @dev Only the owner can call this method. The provided address must conform to the Escalation Manager interface.
+   * FullPolicyEscalationManager can be used, but within the context of this contract it should be used only for
+   * whitelisting of proposers and disputers since Oya module is deleting disputed proposals.
+   */
   function setEscalationManager(address _escalationManager) external onlyOwner {
     require(_isContract(_escalationManager) || _escalationManager == address(0), "EM is not a contract");
     escalationManager = _escalationManager;
@@ -257,23 +260,26 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
   }
 
   /**
-    * @notice This caches the most up-to-date Optimistic Oracle V3.
-    * @dev If a new Optimistic Oracle V3 is added and this is run between a proposal's introduction and execution, the
-    * proposal will become unexecutable.
-    */
+   * @notice This caches the most up-to-date Optimistic Oracle V3.
+   * @dev If a new Optimistic Oracle V3 is added and this is run between a proposal's introduction and execution, the
+   * proposal will become unexecutable.
+   */
   function sync() external nonReentrant {
     _sync();
   }
 
   /**
-    * @notice Makes a new proposal for transactions to be executed with an explanation argument.
-    * @param transactions the transactions being proposed.
-    * @param explanation Auxillary information that can be referenced to validate the proposal.
-    * @dev Proposer must grant the contract collateral allowance at least to the bondAmount or result of getMinimumBond
-    * from the Optimistic Oracle V3, whichever is greater.
-    * @dev Only the owner, controller, recoverer, or bookkeeper can propose transactions.
-    */
-  function proposeTransactions(Transaction[] memory transactions, bytes memory explanation) external nonReentrant onlyAuthorized {
+   * @notice Makes a new proposal for transactions to be executed with an explanation argument.
+   * @param transactions the transactions being proposed.
+   * @param explanation Auxillary information that can be referenced to validate the proposal.
+   * @dev Proposer must grant the contract collateral allowance at least to the bondAmount or result of getMinimumBond
+   * from the Optimistic Oracle V3, whichever is greater.
+   * @dev Only the owner, controller, recoverer, or bookkeeper can propose transactions.
+   */
+  function proposeTransactions(
+    Transaction[] memory transactions,
+    bytes memory explanation
+  ) external nonReentrant onlyAuthorized {
     // note: Optional explanation explains the intent of the transactions to make comprehension easier.
     uint256 time = getCurrentTime();
     address proposer = msg.sender;
@@ -286,9 +292,7 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
     for (uint256 i = 0; i < transactions.length; i++) {
       require(transactions[i].to != address(0), "The `to` address cannot be 0x0");
       // If the transaction has any data with it the recipient must be a contract, not an EOA.
-      if (transactions[i].data.length > 0) {
-        require(_isContract(transactions[i].to), "EOA can't accept tx with data");
-      }
+      if (transactions[i].data.length > 0) require(_isContract(transactions[i].to), "EOA can't accept tx with data");
     }
     proposal.transactions = transactions;
 
@@ -309,39 +313,29 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
     collateral.safeIncreaseAllowance(address(optimisticOracleV3), totalBond);
 
     // Assert that the proposal is correct at the Optimistic Oracle V3.
-    bytes32 assertionId =
-      optimisticOracleV3.assertTruth(
-        claim, // claim containing proposalHash, explanation and rules.
-        proposer, // asserter will receive back bond if the assertion is correct.
-        address(this), // callbackRecipient is set to this contract for automated proposal deletion on disputes.
-        escalationManager, // escalationManager (if set) used for whitelisting proposers / disputers.
-        liveness, // liveness in seconds.
-        collateral, // currency in which the bond is denominated.
-        totalBond, // bond amount used to assert proposal.
-        identifier, // identifier used to determine if the claim is correct at DVM.
-        bytes32(0) // domainId is not set.
-      );
+    bytes32 assertionId = optimisticOracleV3.assertTruth(
+      claim, // claim containing proposalHash, explanation and rules.
+      proposer, // asserter will receive back bond if the assertion is correct.
+      address(this), // callbackRecipient is set to this contract for automated proposal deletion on disputes.
+      escalationManager, // escalationManager (if set) used for whitelisting proposers / disputers.
+      liveness, // liveness in seconds.
+      collateral, // currency in which the bond is denominated.
+      totalBond, // bond amount used to assert proposal.
+      identifier, // identifier used to determine if the claim is correct at DVM.
+      bytes32(0) // domainId is not set.
+    );
 
     // Maps the proposal hash to the returned assertionId and vice versa.
     assertionIds[proposalHash] = assertionId;
     proposalHashes[assertionId] = proposalHash;
 
-    emit TransactionsProposed(
-      proposer,
-      time,
-      assertionId,
-      proposal,
-      proposalHash,
-      explanation,
-      rules,
-      time + liveness
-    );
+    emit TransactionsProposed(proposer, time, assertionId, proposal, proposalHash, explanation, rules, time + liveness);
   }
 
   /**
-    * @notice Executes an approved proposal.
-    * @param transactions the transactions being executed. These must exactly match those that were proposed.
-    */
+   * @notice Executes an approved proposal.
+   * @param transactions the transactions being executed. These must exactly match those that were proposed.
+   */
   function executeProposal(Transaction[] memory transactions) external nonReentrant {
     // Recreate the proposal hash from the inputs and check that it matches the stored proposal hash.
     bytes32 proposalHash = keccak256(abi.encode(transactions));
@@ -378,12 +372,12 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
   }
 
   /**
-    * @notice Function to delete a proposal on an Optimistic Oracle V3 upgrade.
-    * @param proposalHash the hash of the proposal to delete.
-    * @dev In case of an Optimistic Oracle V3 upgrade, the proposal execution would be blocked as its related
-    * assertionId would not be recognized by the new Optimistic Oracle V3. This function allows the proposal to be
-    * deleted if detecting an Optimistic Oracle V3 upgrade so that transactions can be re-proposed if needed.
-    */
+   * @notice Function to delete a proposal on an Optimistic Oracle V3 upgrade.
+   * @param proposalHash the hash of the proposal to delete.
+   * @dev In case of an Optimistic Oracle V3 upgrade, the proposal execution would be blocked as its related
+   * assertionId would not be recognized by the new Optimistic Oracle V3. This function allows the proposal to be
+   * deleted if detecting an Optimistic Oracle V3 upgrade so that transactions can be re-proposed if needed.
+   */
   function deleteProposalOnUpgrade(bytes32 proposalHash) public nonReentrant {
     require(proposalHash != bytes32(0), "Invalid proposal hash");
     bytes32 assertionId = assertionIds[proposalHash];
@@ -400,9 +394,9 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
   }
 
   /**
-    * @notice Callback to automatically delete a proposal that was disputed.
-    * @param assertionId the identifier of the disputed assertion.
-    */
+   * @notice Callback to automatically delete a proposal that was disputed.
+   * @param assertionId the identifier of the disputed assertion.
+   */
   function assertionDisputedCallback(bytes32 assertionId) external {
     bytes32 proposalHash = proposalHashes[assertionId];
 
@@ -419,29 +413,31 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
       delete proposalHashes[assertionId];
 
       emit ProposalDeleted(proposalHash, assertionId);
-    } else deleteProposalOnUpgrade(proposalHash);
+    } else {
+      deleteProposalOnUpgrade(proposalHash);
+    }
   }
 
   /**
-    * @notice Callback function that is called by Optimistic Oracle V3 when an assertion is resolved.
-    * @dev This function does nothing and is only here to satisfy the callback recipient interface.
-    * @param assertionId The identifier of the assertion that was resolved.
-    * @param assertedTruthfully Whether the assertion was resolved as truthful or not.
-    */
+   * @notice Callback function that is called by Optimistic Oracle V3 when an assertion is resolved.
+   * @dev This function does nothing and is only here to satisfy the callback recipient interface.
+   * @param assertionId The identifier of the assertion that was resolved.
+   * @param assertedTruthfully Whether the assertion was resolved as truthful or not.
+   */
   function assertionResolvedCallback(bytes32 assertionId, bool assertedTruthfully) external {}
 
   /**
-    * @notice Gets the current time for this contract.
-    * @dev This only exists so it can be overridden for testing.
-    */
+   * @notice Gets the current time for this contract.
+   * @dev This only exists so it can be overridden for testing.
+   */
   function getCurrentTime() public view virtual returns (uint256) {
     return block.timestamp;
   }
 
   /**
-    * @notice Getter function to check required collateral currency approval.
-    * @return The amount of bond required to propose a transaction.
-    */
+   * @notice Getter function to check required collateral currency approval.
+   * @return The amount of bond required to propose a transaction.
+   */
   function getProposalBond() public view returns (uint256) {
     uint256 minimumBond = optimisticOracleV3.getMinimumBond(address(collateral));
     return minimumBond > bondAmount ? minimumBond : bondAmount;
@@ -487,23 +483,23 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
 
   // Checks if the address is a contract.
   function _isContract(address addr) internal view returns (bool) {
-      return addr.code.length > 0;
+    return addr.code.length > 0;
   }
 
   // Constructs the claim that will be asserted at the Optimistic Oracle V3.
   function _constructClaim(bytes32 proposalHash, bytes memory explanation) internal view returns (bytes memory) {
-    return
-      abi.encodePacked(
-        ClaimData.appendKeyValueBytes32("", PROPOSAL_HASH_KEY, proposalHash),
-        ",",
-        EXPLANATION_KEY,
-        ':"',
-        explanation,
-        '",',
-        RULES_KEY,
-        ':"',
-        rules,
-        '"'
-      );
+    return abi.encodePacked(
+      ClaimData.appendKeyValueBytes32("", PROPOSAL_HASH_KEY, proposalHash),
+      ",",
+      EXPLANATION_KEY,
+      ':"',
+      explanation,
+      '",',
+      RULES_KEY,
+      ':"',
+      rules,
+      '"'
+    );
   }
+
 }

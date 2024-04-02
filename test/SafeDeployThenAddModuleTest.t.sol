@@ -1,8 +1,9 @@
-import "safe-tools/SafeTestTools.sol";
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
+import "safe-tools/SafeTestTools.sol";
 
 contract SafeModuleDeployTest is Test, SafeTestTools {
+
   using SafeTestLib for SafeInstance;
 
   address deployedSafeAddress;
@@ -10,16 +11,12 @@ contract SafeModuleDeployTest is Test, SafeTestTools {
   function setUp() public {
     vm.createSelectFork(vm.envString("MAINNET_RPC_URL"));
     _initializeSafeTools();
-    
+
     SafeInstance memory safeInstance = _setupSafe();
     deployedSafeAddress = address(safeInstance.safe);
 
     address alice = address(0xA11c3);
-    safeInstance.execTransaction({
-      to: alice,
-      value: 0.5 ether,
-      data: ""
-    }); // send .5 eth to alice
+    safeInstance.execTransaction({to: alice, value: 0.5 ether, data: ""}); // send .5 eth to alice
   }
 
   function testSafe() public {
@@ -33,4 +30,5 @@ contract SafeModuleDeployTest is Test, SafeTestTools {
     safeInstance.enableModule(0x28CeBFE94a03DbCA9d17143e9d2Bd1155DC26D5d);
     safeInstance.safe.isModuleEnabled(0x28CeBFE94a03DbCA9d17143e9d2Bd1155DC26D5d); // passes ✅
   }
+
 }

@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "forge-std/Script.sol";
 import "../src/implementation/Oya.sol";
+import "forge-std/Script.sol";
 
 contract OyaScript is Script {
+
   function setUp() public {}
 
   function run() public {
@@ -14,4 +15,5 @@ contract OyaScript is Script {
     // console.log("Contract deployed to %s", address(instance));
     // vm.stopBroadcast();
   }
+
 }

@@ -1,22 +1,20 @@
-import "safe-tools/SafeTestTools.sol";
 import "forge-std/Test.sol";
+import "safe-tools/SafeTestTools.sol";
 
 contract SafeDeployTest is Test, SafeTestTools {
-    using SafeTestLib for SafeInstance;
 
-    function setUp() public {
-        SafeInstance memory safeInstance = _setupSafe();
-        address alice = address(0xA11c3);
+  using SafeTestLib for SafeInstance;
 
-        safeInstance.execTransaction({
-            to: alice,
-            value: 0.5 ether,
-            data: ""
-        }); // send .5 eth to alice
-    }
+  function setUp() public {
+    SafeInstance memory safeInstance = _setupSafe();
+    address alice = address(0xA11c3);
 
-    function testSafe() public {
-        address alice = address(0xA11c3);
-        assertEq(alice.balance, 0.5 ether); // passes ✅
-    }
+    safeInstance.execTransaction({to: alice, value: 0.5 ether, data: ""}); // send .5 eth to alice
+  }
+
+  function testSafe() public {
+    address alice = address(0xA11c3);
+    assertEq(alice.balance, 0.5 ether); // passes ✅
+  }
+
 }
