@@ -53,7 +53,7 @@ interface BookkeeperInterface {
     address - token contract address
     uint256 - amount to settle
   */
-  function settle(address, address, uint256) external;
+  function sweep(address, address, uint256) external;
 
   /*
     Only bundler can bridge assets to a bookkeeper contract on another chain
@@ -112,6 +112,7 @@ interface BookkeeperInterface {
 
     uint256 - chain id
     address - bookkeeper contract address to add or remove
+    bool - Says whether to add or remove
   */
-  function updateBookkeeper(uint256, address) external;
+  function updateBookkeeper(uint256, address, bool) external;
 }
