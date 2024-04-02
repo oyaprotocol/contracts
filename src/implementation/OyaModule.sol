@@ -21,14 +21,14 @@ import "@uma/core/common/implementation/Lockable.sol";
 import "@uma/core/common/interfaces/AddressWhitelistInterface.sol";
 
 import "../interfaces/BookkeeperInterface.sol";
-import "./OptimisticProposer.sol";
+import "./OptimisticExecutor.sol";
 import "./OyaConstants.sol";
 
 /**
  * @title Oya Module
  * @notice A contract that allows the Oya protocol to manage transactions for a Safe account.
  */
-contract OyaModule is OptimisticProposer, OptimisticOracleV3CallbackRecipientInterface, Module, Lockable {
+contract OyaModule is OptimisticExecutor, OptimisticOracleV3CallbackRecipientInterface, Module, Lockable {
 
   using SafeERC20 for IERC20;
 

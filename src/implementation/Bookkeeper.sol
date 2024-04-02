@@ -20,13 +20,13 @@ import "@uma/core/optimistic-oracle-v3/interfaces/OptimisticOracleV3Interface.so
 import "@uma/core/common/implementation/Lockable.sol";
 import "@uma/core/common/interfaces/AddressWhitelistInterface.sol";
 
-import "./OptimisticProposer.sol";
+import "./OptimisticExecutor.sol";
 
 /// @title Bookkeeper
 /// @dev Implements transaction bundling and settlement functionality for the Oya network.
 /// Allows for the registration and management of bundlers, and the proposal, finalization, and
 /// cancellation of transaction bundles.
-contract Bookkeeper is OptimisticProposer, BookkeeperInterface, Ownable, Lockable {
+contract Bookkeeper is OptimisticExecutor, BookkeeperInterface, Ownable, Lockable {
 
   /// @notice Mapping of proposal block timestamps to bytes32 pointers to the bundle data.
   mapping(uint256 => bytes32) public bundles;
