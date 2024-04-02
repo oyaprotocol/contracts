@@ -107,16 +107,6 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
   mapping(address => bool) public isController; // Says if address is a controller of this Oya account.
   mapping(address => bool) public isRecoverer; // Says if address is a recoverer of this Oya account.
 
-  // Modifier to restrict access to proposals to authorized roles.
-  modifier onlyAuthorized() {
-    require(
-      this.isController(msg.sender) || this.isRecoverer(msg.sender) || msg.sender == owner()
-        || msg.sender == address(bookkeeper),
-      "Only controller, recoverer, owner, or bookkeeper can call this function."
-    );
-    _;
-  }
-
   /**
    * @notice Construct Oya module.
    * @param _finder UMA Finder contract address.
@@ -279,7 +269,7 @@ contract OyaModule is OptimisticOracleV3CallbackRecipientInterface, Module, Lock
   function proposeTransactions(
     Transaction[] memory transactions,
     bytes memory explanation
-  ) external nonReentrant onlyAuthorized {
+  ) external nonReentrant {
     // note: Optional explanation explains the intent of the transactions to make comprehension easier.
     uint256 time = getCurrentTime();
     address proposer = msg.sender;
