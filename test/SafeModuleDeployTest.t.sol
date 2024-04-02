@@ -1,3 +1,5 @@
+pragma solidity ^0.8.23;
+
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
 import "safe-tools/SafeTestTools.sol";
@@ -43,7 +45,7 @@ contract SafeModuleDeployTest is Test, SafeTestTools {
     return ownerPKs;
   }
 
-  function testSafe() public {
+  function testSafe() public view {
     address alice = address(0xA11c3);
     assertEq(alice.balance, 0.5 ether); // passes ✅
   }
