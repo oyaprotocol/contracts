@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import "@uma/core/common/implementation/Lockable.sol";
+import "@uma/core/common/interfaces/AddressWhitelistInterface.sol";
 
 import "@uma/core/data-verification-mechanism/implementation/Constants.sol";
 import "@uma/core/data-verification-mechanism/interfaces/FinderInterface.sol";
