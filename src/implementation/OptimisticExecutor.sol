@@ -5,6 +5,8 @@ import {Enum} from "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
+import "@uma/core/optimistic-oracle-v3/interfaces/OptimisticOracleV3Interface.sol";
+
 contract OptimisticExecutor {
 
   using SafeERC20 for IERC20;
@@ -70,6 +72,9 @@ contract OptimisticExecutor {
   string public rules; // Rules for the Oya module.
   bytes32 public identifier; // Identifier used to request price from the DVM, compatible with Optimistic Oracle V3.
   address public escalationManager; // Optional Escalation Manager contract to whitelist proposers / disputers.
+
+  OptimisticOracleV3Interface public optimisticOracleV3; // Optimistic Oracle V3 contract used to assert proposed
+    // transactions.
 
   mapping(bytes32 => bytes32) public assertionIds; // Maps proposal hashes to assertionIds.
   mapping(bytes32 => bytes32) public proposalHashes; // Maps assertionIds to proposal hashes.

@@ -15,7 +15,6 @@ import "@uma/core/data-verification-mechanism/interfaces/StoreInterface.sol";
 import "@uma/core/optimistic-oracle-v3/implementation/ClaimData.sol";
 
 import "@uma/core/optimistic-oracle-v3/interfaces/OptimisticOracleV3CallbackRecipientInterface.sol";
-import "@uma/core/optimistic-oracle-v3/interfaces/OptimisticOracleV3Interface.sol";
 
 import "@uma/core/common/implementation/Lockable.sol";
 import "@uma/core/common/interfaces/AddressWhitelistInterface.sol";
@@ -38,8 +37,6 @@ contract OyaModule is OptimisticExecutor, OptimisticOracleV3CallbackRecipientInt
   FinderInterface public immutable oyaFinder; // Finder used to discover other Oya ecosystem contracts.
 
   IERC20 public collateral; // Collateral currency used to assert proposed transactions.
-  OptimisticOracleV3Interface public optimisticOracleV3; // Optimistic Oracle V3 contract used to assert proposed
-    // transactions.
   BookkeeperInterface public bookkeeper; // Interface for the Oya bookkeeper contract.
 
   /**
