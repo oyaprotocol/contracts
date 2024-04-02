@@ -18,7 +18,7 @@ import "@uma/core/optimistic-oracle-v3/interfaces/OptimisticOracleV3CallbackReci
 
 import "@uma/core/optimistic-oracle-v3/implementation/ClaimData.sol";
 
-contract OptimisticExecutor is OptimisticOracleV3CallbackRecipientInterface, Lockable {
+contract OptimisticProposer is OptimisticOracleV3CallbackRecipientInterface, Lockable {
 
   using SafeERC20 for IERC20;
 

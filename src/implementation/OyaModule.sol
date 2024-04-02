@@ -8,14 +8,14 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import "../interfaces/BookkeeperInterface.sol";
-import "./OptimisticExecutor.sol";
+import "./OptimisticProposer.sol";
 import "./OyaConstants.sol";
 
 /**
  * @title Oya Module
  * @notice A contract that allows the Oya protocol to manage transactions for a Safe account.
  */
-contract OyaModule is OptimisticExecutor, Module {
+contract OyaModule is OptimisticProposer, Module {
 
   using SafeERC20 for IERC20;
 
@@ -108,30 +108,6 @@ contract OyaModule is OptimisticExecutor, Module {
     bondAmount = _bondAmount;
 
     emit SetCollateralAndBond(_collateral, _bondAmount);
-  }
-
-  /**
-   * @notice Sets the rules that will be used to evaluate future proposals.
-   * @param _rules string that outlines or references the location where the rules can be found.
-   */
-  function setRules(string memory _rules) public onlyOwner {
-    // Set reference to the rules for the Oya module
-    require(bytes(_rules).length > 0, "Rules can not be empty");
-    rules = _rules;
-    emit SetRules(_rules);
-  }
-
-  /**
-   * @notice Sets the liveness for future proposals. This is the amount of delay before a proposal is approved by
-   * default.
-   * @param _liveness liveness to set in seconds.
-   */
-  function setLiveness(uint64 _liveness) public onlyOwner {
-    // Set liveness for disputing proposed transactions.
-    require(_liveness > 0, "Liveness can't be 0");
-    require(_liveness < 5200 weeks, "Liveness must be less than 5200 weeks");
-    liveness = _liveness;
-    emit SetLiveness(_liveness);
   }
 
   /**
