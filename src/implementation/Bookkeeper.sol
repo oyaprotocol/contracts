@@ -59,19 +59,6 @@ contract Bookkeeper is BookkeeperInterface, Ownable {
     delete bundles[_bundle];
   }
 
-  /// @notice Sweeps funds from an Oya Safe to the Bookkeeper contract.
-  /// @dev Aggregating funds in the Bookkeeper is more efficient for settlement.
-  /// @dev This function will call the optimistic oracle for sweep verification.
-  /// @dev Account holders can withdraw just as easily from the Bookkeeper or Oya Safe.
-  /// @param _oyaSafe The Oya Safe to sweep from.
-  /// @param _tokenContract Token contract.
-  /// @param _amount Amount to sweep.
-  function sweep(address _oyaSafe, address _tokenContract, uint256 _amount) external override {
-    // Sweep logic to be implemented.
-    // This should simply transfer tokens from the Oya Safe to the Bookkeeper.
-    // The sweep will be verified by the optimistic oracle, through the Oya Safe module.
-  }
-
   /// @notice Bridges assets to another chain.
   /// @dev Placeholder function for asset bridging logic.
   /// @dev Not required for proof-of-concept, but will be implemented with Across later.

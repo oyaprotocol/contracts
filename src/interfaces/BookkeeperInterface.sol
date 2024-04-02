@@ -5,7 +5,6 @@ interface BookkeeperInterface {
   function propose(bytes32) external;
   function finalize(uint256) external;
   function cancel(uint256) external;
-  function sweep(address, address, uint256) external;
   function bridge(address, uint256, uint256) external;
   function withdraw(address, uint256) external;
   function addBundler(address) external;
