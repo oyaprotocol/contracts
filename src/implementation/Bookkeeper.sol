@@ -3,6 +3,7 @@ pragma solidity ^0.8.6;
 import "../interfaces/BookkeeperInterface.sol";
 
 import {Enum} from "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
+import "@gnosis.pm/safe-contracts/contracts/base/Executor.sol";
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
@@ -26,7 +27,7 @@ import "./OptimisticProposer.sol";
 /// @dev Implements transaction bundling and settlement functionality for the Oya network.
 /// Allows for the registration and management of bundlers, and the proposal, finalization, and
 /// cancellation of transaction bundles.
-contract Bookkeeper is OptimisticProposer, BookkeeperInterface, Ownable {
+contract Bookkeeper is OptimisticProposer, Executor, BookkeeperInterface, Ownable {
 
   /// @notice Mapping of proposal block timestamps to bytes32 pointers to the bundle data.
   mapping(uint256 => bytes32) public bundles;
@@ -98,8 +99,43 @@ contract Bookkeeper is OptimisticProposer, BookkeeperInterface, Ownable {
     bookkeepers[_chainId][_contractAddress] = _isApproved;
   }
 
-  function exec(address, uint256, bytes memory, Enum.Operation) internal virtual returns (bool) {
-    revert("Not implemented");
+  /**
+   * @notice Executes an approved proposal.
+   * @param transactions the transactions being executed. These must exactly match those that were proposed.
+   */
+  function executeProposal(Transaction[] memory transactions) external nonReentrant {
+    // Recreate the proposal hash from the inputs and check that it matches the stored proposal hash.
+    bytes32 proposalHash = keccak256(abi.encode(transactions));
+
+    // Get the original proposal assertionId.
+    bytes32 assertionId = assertionIds[proposalHash];
+
+    // This will reject the transaction if the proposal hash generated from the inputs does not have the associated
+    // assertionId stored. This is possible when a) the transactions have not been proposed, b) transactions have
+    // already been executed, c) the proposal was disputed or d) the proposal was deleted after Optimistic Oracle V3
+    // upgrade.
+    require(assertionId != bytes32(0), "Proposal hash does not exist");
+
+    // Remove proposal hash and assertionId so transactions can not be executed again.
+    delete assertionIds[proposalHash];
+    delete proposalHashes[assertionId];
+
+    // There is no need to check the assertion result as this point can be reached only for non-disputed assertions.
+    // This will revert if the assertion has not been settled and can not currently be settled.
+    optimisticOracleV3.settleAndGetAssertionResult(assertionId);
+
+    // Execute the transactions.
+    for (uint256 i = 0; i < transactions.length; i++) {
+      Transaction memory transaction = transactions[i];
+
+      require(
+        execute(transaction.to, transaction.value, transaction.data, transaction.operation, type(uint256).max),
+        "Failed to execute transaction"
+      );
+      emit TransactionExecuted(proposalHash, assertionId, i);
+    }
+
+    emit ProposalExecuted(proposalHash, assertionId);
   }
 
 }
