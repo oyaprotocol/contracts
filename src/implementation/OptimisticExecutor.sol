@@ -93,7 +93,6 @@ contract OptimisticExecutor is OptimisticOracleV3CallbackRecipientInterface, Loc
   mapping(address => bool) public isController; // Says if address is a controller of this Oya account.
   mapping(address => bool) public isRecoverer; // Says if address is a recoverer of this Oya account.
 
-
   /**
    * @notice Makes a new proposal for transactions to be executed with an explanation argument.
    * @param transactions the transactions being proposed.
@@ -154,7 +153,7 @@ contract OptimisticExecutor is OptimisticOracleV3CallbackRecipientInterface, Loc
 
     emit TransactionsProposed(proposer, time, assertionId, proposal, proposalHash, explanation, rules, time + liveness);
   }
-  
+
   /**
    * @notice Function to delete a proposal on an Optimistic Oracle V3 upgrade.
    * @param proposalHash the hash of the proposal to delete.

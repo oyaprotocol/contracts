@@ -247,11 +247,11 @@ contract OyaModule is OptimisticExecutor, Module {
       emit OptimisticOracleChanged(newOptimisticOracleV3);
     }
 
-    address newBookkeeper = oyaFinder.getImplementationAddress(OyaInterfaces.Bookkeeper);
-    if (newBookkeeper != address(bookkeeper)) {
-      bookkeeper = BookkeeperInterface(newBookkeeper);
-      emit SetBookkeeper(newBookkeeper);
-    }
+    // address newBookkeeper = oyaFinder.getImplementationAddress(OyaInterfaces.Bookkeeper);
+    // if (newBookkeeper != address(bookkeeper)) {
+    //   bookkeeper = BookkeeperInterface(newBookkeeper);
+    //   emit SetBookkeeper(newBookkeeper);
+    // }
   }
 
 }
