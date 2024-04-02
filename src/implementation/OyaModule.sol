@@ -216,14 +216,6 @@ contract OyaModule is OptimisticExecutor, Module {
     emit ProposalExecuted(proposalHash, assertionId);
   }
 
-  // /**
-  //  * @notice Returns the address of the Oya protocol bookkeeper contract.
-  //  * @return The address of the bookkeeper.
-  //  */
-  // function bookkeeper() public view virtual returns (address) {
-  //     return bookkeeper;
-  // }
-
   // Gets the address of Collateral Whitelist from the Finder.
   function _getCollateralWhitelist() internal view returns (AddressWhitelistInterface) {
     return AddressWhitelistInterface(finder.getImplementationAddress(OracleInterfaces.CollateralWhitelist));
