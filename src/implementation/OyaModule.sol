@@ -24,7 +24,6 @@ contract OyaModule is OptimisticExecutor, Module {
   FinderInterface public immutable finder; // Finder used to discover other UMA ecosystem contracts.
   FinderInterface public immutable oyaFinder; // Finder used to discover other Oya ecosystem contracts.
 
-  IERC20 public collateral; // Collateral currency used to assert proposed transactions.
   BookkeeperInterface public bookkeeper; // Interface for the Oya bookkeeper contract.
 
   /**

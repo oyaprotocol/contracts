@@ -79,6 +79,7 @@ contract OptimisticExecutor is OptimisticOracleV3CallbackRecipientInterface, Loc
   }
 
   uint64 public liveness; // The amount of time to dispute proposed transactions before they can be executed.
+  IERC20 public collateral; // Collateral currency used to assert proposed transactions.
   uint256 public bondAmount; // Configured amount of collateral currency to make assertions for proposed transactions.
   string public rules; // Rules for the Oya module.
   bytes32 public identifier; // Identifier used to request price from the DVM, compatible with Optimistic Oracle V3.
