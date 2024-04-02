@@ -5,9 +5,12 @@ import {Enum} from "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import "@uma/core/optimistic-oracle-v3/interfaces/OptimisticOracleV3Interface.sol";
+import "@uma/core/common/implementation/Lockable.sol";
 
-contract OptimisticExecutor {
+import "@uma/core/optimistic-oracle-v3/interfaces/OptimisticOracleV3Interface.sol";
+import "@uma/core/optimistic-oracle-v3/interfaces/OptimisticOracleV3CallbackRecipientInterface.sol";
+
+contract OptimisticExecutor is OptimisticOracleV3CallbackRecipientInterface, Lockable {
 
   using SafeERC20 for IERC20;
 
@@ -80,6 +83,61 @@ contract OptimisticExecutor {
   mapping(bytes32 => bytes32) public proposalHashes; // Maps assertionIds to proposal hashes.
   mapping(address => bool) public isController; // Says if address is a controller of this Oya account.
   mapping(address => bool) public isRecoverer; // Says if address is a recoverer of this Oya account.
+
+  /**
+   * @notice Function to delete a proposal on an Optimistic Oracle V3 upgrade.
+   * @param proposalHash the hash of the proposal to delete.
+   * @dev In case of an Optimistic Oracle V3 upgrade, the proposal execution would be blocked as its related
+   * assertionId would not be recognized by the new Optimistic Oracle V3. This function allows the proposal to be
+   * deleted if detecting an Optimistic Oracle V3 upgrade so that transactions can be re-proposed if needed.
+   */
+  function deleteProposalOnUpgrade(bytes32 proposalHash) public nonReentrant {
+    require(proposalHash != bytes32(0), "Invalid proposal hash");
+    bytes32 assertionId = assertionIds[proposalHash];
+    require(assertionId != bytes32(0), "Proposal hash does not exist");
+
+    // Detect Optimistic Oracle V3 upgrade by checking if it has the matching assertionId.
+    require(optimisticOracleV3.getAssertion(assertionId).asserter == address(0), "OOv3 upgrade not detected");
+
+    // Remove proposal hash and assertionId so that transactions can be re-proposed if needed.
+    delete assertionIds[proposalHash];
+    delete proposalHashes[assertionId];
+
+    emit ProposalDeleted(proposalHash, assertionId);
+  }
+
+  /**
+   * @notice Callback to automatically delete a proposal that was disputed.
+   * @param assertionId the identifier of the disputed assertion.
+   */
+  function assertionDisputedCallback(bytes32 assertionId) external {
+    bytes32 proposalHash = proposalHashes[assertionId];
+
+    // Callback should only be called by the Optimistic Oracle V3. Address would not match in case of contract
+    // upgrade, thus try deleting the proposal through deleteProposalOnUpgrade function that should revert if
+    // address mismatch was not caused by an Optimistic Oracle V3 upgrade.
+    if (msg.sender == address(optimisticOracleV3)) {
+      // Validate the assertionId through existence of non-zero proposalHash. This is the same check as in
+      // deleteProposalOnUpgrade method that is called in the else branch.
+      require(proposalHash != bytes32(0), "Invalid proposal hash");
+
+      // Delete the disputed proposal and associated assertionId.
+      delete assertionIds[proposalHash];
+      delete proposalHashes[assertionId];
+
+      emit ProposalDeleted(proposalHash, assertionId);
+    } else {
+      deleteProposalOnUpgrade(proposalHash);
+    }
+  }
+
+  /**
+   * @notice Callback function that is called by Optimistic Oracle V3 when an assertion is resolved.
+   * @dev This function does nothing and is only here to satisfy the callback recipient interface.
+   * @param assertionId The identifier of the assertion that was resolved.
+   * @param assertedTruthfully Whether the assertion was resolved as truthful or not.
+   */
+  function assertionResolvedCallback(bytes32 assertionId, bool assertedTruthfully) external {}
 
   /**
    * @notice Gets the current time for this contract.
