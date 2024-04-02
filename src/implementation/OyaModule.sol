@@ -277,15 +277,6 @@ contract OyaModule is OptimisticExecutor, Module {
     emit ProposalExecuted(proposalHash, assertionId);
   }
 
-  /**
-   * @notice Getter function to check required collateral currency approval.
-   * @return The amount of bond required to propose a transaction.
-   */
-  function getProposalBond() public view returns (uint256) {
-    uint256 minimumBond = optimisticOracleV3.getMinimumBond(address(collateral));
-    return minimumBond > bondAmount ? minimumBond : bondAmount;
-  }
-
   // /**
   //  * @notice Returns the address of the Oya protocol bookkeeper contract.
   //  * @return The address of the bookkeeper.

@@ -149,6 +149,15 @@ contract OptimisticExecutor is OptimisticOracleV3CallbackRecipientInterface, Loc
   function assertionResolvedCallback(bytes32 assertionId, bool assertedTruthfully) external {}
 
   /**
+   * @notice Getter function to check required collateral currency approval.
+   * @return The amount of bond required to propose a transaction.
+   */
+  function getProposalBond() public view returns (uint256) {
+    uint256 minimumBond = optimisticOracleV3.getMinimumBond(address(collateral));
+    return minimumBond > bondAmount ? minimumBond : bondAmount;
+  }
+
+  /**
    * @notice Gets the current time for this contract.
    * @dev This only exists so it can be overridden for testing.
    */
