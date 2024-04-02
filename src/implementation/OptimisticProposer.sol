@@ -4,6 +4,7 @@ import {Enum} from "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import "@uma/core/common/implementation/Lockable.sol";
 import "@uma/core/common/interfaces/AddressWhitelistInterface.sol";
@@ -18,7 +19,7 @@ import "@uma/core/optimistic-oracle-v3/interfaces/OptimisticOracleV3CallbackReci
 
 import "@uma/core/optimistic-oracle-v3/implementation/ClaimData.sol";
 
-contract OptimisticProposer is OptimisticOracleV3CallbackRecipientInterface, Lockable {
+contract OptimisticProposer is OptimisticOracleV3CallbackRecipientInterface, Lockable, OwnableUpgradeable {
 
   using SafeERC20 for IERC20;
 
