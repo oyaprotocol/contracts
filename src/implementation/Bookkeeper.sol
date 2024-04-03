@@ -111,13 +111,6 @@ contract Bookkeeper is OptimisticProposer, Executor, BookkeeperInterface {
     bundles[block.timestamp] = _bundleData;
   }
 
-  /// @notice Marks a bundle as finalized.
-  /// @dev This should be implemented as a callback after oracle verification.
-  /// @param _bundle The proposal timestamp of the bundle to finalize.
-  function finalizeBundle(uint256 _bundle) internal {
-    lastFinalizedBundle = _bundle;
-  }
-
   /// @notice Cancels a proposed bundle.
   /// @dev Only callable by an approved bundler.
   /// @dev They may cancel a bundle if they make an error, to propose a new bundle.
@@ -187,6 +180,13 @@ contract Bookkeeper is OptimisticProposer, Executor, BookkeeperInterface {
     }
 
     emit ProposalExecuted(proposalHash, assertionId);
+  }
+
+  /// @notice Marks a bundle as finalized.
+  /// @dev This should be implemented as a callback after oracle verification.
+  /// @param _bundle The proposal timestamp of the bundle to finalize.
+  function _finalizeBundle(uint256 _bundle) internal {
+    lastFinalizedBundle = _bundle;
   }
 
 }
