@@ -113,7 +113,7 @@ contract OptimisticProposer is OptimisticOracleV3CallbackRecipientInterface, Loc
 
     emit SetCollateralAndBond(_collateral, _bondAmount);
   }
-  
+
   /**
    * @notice Sets the identifier for future proposals.
    * @param _identifier identifier to set.
@@ -123,16 +123,6 @@ contract OptimisticProposer is OptimisticOracleV3CallbackRecipientInterface, Loc
     require(_getIdentifierWhitelist().isIdentifierSupported(_identifier), "Identifier not supported");
     identifier = _identifier;
     emit SetIdentifier(_identifier);
-  }
-
-  function setController(address _controller) public onlyOwner {
-    isController[_controller] = true;
-    emit SetController(_controller);
-  }
-
-  function setRecoverer(address _recoverer) public onlyOwner {
-    isRecoverer[_recoverer] = true;
-    emit SetRecoverer(_recoverer);
   }
 
   /**

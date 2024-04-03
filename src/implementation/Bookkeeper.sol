@@ -6,9 +6,8 @@ import {Enum} from "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 import "@gnosis.pm/safe-contracts/contracts/base/Executor.sol";
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import "@uma/core/data-verification-mechanism/implementation/Constants.sol";
 import "@uma/core/data-verification-mechanism/interfaces/FinderInterface.sol";
@@ -29,6 +28,10 @@ import "./OptimisticProposer.sol";
 /// cancellation of transaction bundles.
 contract Bookkeeper is OptimisticProposer, Executor, BookkeeperInterface {
 
+  using SafeERC20 for IERC20;
+
+  event BookkeeperDeployed(address indexed bundler, string rules);
+
   /// @notice Mapping of proposal block timestamps to bytes32 pointers to the bundle data.
   mapping(uint256 => bytes32) public bundles;
 
@@ -47,23 +50,71 @@ contract Bookkeeper is OptimisticProposer, Executor, BookkeeperInterface {
     _;
   }
 
-  /// @dev Sets the contract deployer as the initial bundler.
-  constructor() {
-    bundlers[msg.sender] = true;
+  /**
+   * @notice Construct Oya Bookkeeper contract.
+   * @param _finder UMA Finder contract address.
+   * @param _bundler Address of the initial bundler for the Bookkeeper contract.
+   * @param _collateral Address of the ERC20 collateral used for bonds.
+   * @param _bondAmount Amount of collateral currency to make assertions for proposed transactions
+   * @param _rules Reference to the rules for the Bookkeeper.
+   * @param _identifier The approved identifier to be used with the contract, compatible with Optimistic Oracle V3.
+   * @param _liveness The period, in seconds, in which a proposal can be disputed.
+   */
+  constructor(
+    address _finder,
+    address _bundler,
+    address _collateral,
+    uint256 _bondAmount,
+    string memory _rules,
+    bytes32 _identifier,
+    uint64 _liveness
+  ) {
+    bytes memory initializeParams =
+      abi.encode(_bundler, _collateral, _bondAmount, _rules, _identifier, _liveness);
+    require(_finder != address(0), "Finder address can not be empty");
+    finder = FinderInterface(_finder);
+    setUp(initializeParams);
+  }
+
+  /**
+   * @notice Sets up the Oya module.
+   * @param initializeParams ABI encoded parameters to initialize the module with.
+   * @dev This method can be called only either by the constructor or as part of first time initialization when
+   * cloning the module.
+   */
+  function setUp(bytes memory initializeParams) public initializer {
+    _startReentrantGuardDisabled();
+    __Ownable_init();
+    (
+      address _bundler,
+      address _collateral,
+      uint256 _bondAmount,
+      string memory _rules,
+      bytes32 _identifier,
+      uint64 _liveness
+    ) = abi.decode(initializeParams, (address, address, uint256, string, bytes32, uint64));
+    addBundler(_bundler);
+    setCollateralAndBond(IERC20(_collateral), _bondAmount);
+    setRules(_rules);
+    setIdentifier(_identifier);
+    setLiveness(_liveness);
+    _sync();
+
+    emit BookkeeperDeployed(_bundler, _rules);
   }
 
   /// @notice Proposes a new bundle of transactions.
   /// @dev Only callable by an approved bundler.
   /// @dev This function will call the optimistic oracle for bundle verification.
   /// @param _bundleData A reference to the offchain bundle data being proposed.
-  function proposeBundle(bytes32 _bundleData) external override onlyBundler {
+  function proposeBundle(bytes32 _bundleData) external onlyBundler {
     bundles[block.timestamp] = _bundleData;
   }
 
   /// @notice Marks a bundle as finalized.
   /// @dev This should be implemented as a callback after oracle verification.
   /// @param _bundle The proposal timestamp of the bundle to finalize.
-  function finalizeBundle(uint256 _bundle) external {
+  function finalizeBundle(uint256 _bundle) internal {
     lastFinalizedBundle = _bundle;
   }
 
@@ -71,21 +122,21 @@ contract Bookkeeper is OptimisticProposer, Executor, BookkeeperInterface {
   /// @dev Only callable by an approved bundler.
   /// @dev They may cancel a bundle if they make an error, to propose a new bundle.
   /// @param _bundle The proposal timestamp of the bundle to cancel.
-  function cancelBundle(uint256 _bundle) external override onlyBundler {
+  function cancelBundle(uint256 _bundle) external onlyBundler {
     delete bundles[_bundle];
   }
 
   /// @notice Adds a new bundler.
   /// @dev Only callable by the contract owner. Bundlers are added by protocol governance.
   /// @param _bundler The address to grant bundler permissions to.
-  function addBundler(address _bundler) external override onlyOwner {
+  function addBundler(address _bundler) public onlyOwner {
     bundlers[_bundler] = true;
   }
 
   /// @notice Removes a bundler.
   /// @dev Only callable by the contract owner. Bundlers are removed by protocol governance.
   /// @param _bundler The address to revoke bundler permissions from.
-  function removeBundler(address _bundler) external override onlyOwner {
+  function removeBundler(address _bundler) external onlyOwner {
     delete bundlers[_bundler];
   }
 
@@ -95,7 +146,7 @@ contract Bookkeeper is OptimisticProposer, Executor, BookkeeperInterface {
   /// @param _chainId The chain to update.
   /// @param _contractAddress The address of the Bookkeeper contract.
   /// @param _isApproved Set to true to add the Bookkeeper contract, false to remove.
-  function updateBookkeeper(uint256 _chainId, address _contractAddress, bool _isApproved) external override onlyOwner {
+  function updateBookkeeper(uint256 _chainId, address _contractAddress, bool _isApproved) external onlyOwner {
     bookkeepers[_chainId][_contractAddress] = _isApproved;
   }
 

@@ -16,7 +16,7 @@ contract OyaModule is OptimisticProposer, Module {
 
   using SafeERC20 for IERC20;
 
-  event OyaModuleDeployed(address indexed owner, address indexed controller, address bookkeeper);
+  event OyaModuleDeployed(address indexed safe, address indexed avatar, address indexed target);
 
   /**
    * @notice Construct Oya module.
@@ -79,6 +79,16 @@ contract OyaModule is OptimisticProposer, Module {
     _sync();
 
     emit OyaModuleDeployed(_safe, avatar, target);
+  }
+
+  function setController(address _controller) public onlyOwner {
+    isController[_controller] = true;
+    emit SetController(_controller);
+  }
+
+  function setRecoverer(address _recoverer) public onlyOwner {
+    isRecoverer[_recoverer] = true;
+    emit SetRecoverer(_recoverer);
   }
 
   /**
