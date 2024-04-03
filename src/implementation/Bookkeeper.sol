@@ -2,8 +2,8 @@ pragma solidity ^0.8.6;
 
 import "../interfaces/BookkeeperInterface.sol";
 
-import {Enum} from "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 import "@gnosis.pm/safe-contracts/contracts/base/Executor.sol";
+import {Enum} from "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -69,8 +69,7 @@ contract Bookkeeper is OptimisticProposer, Executor, BookkeeperInterface {
     bytes32 _identifier,
     uint64 _liveness
   ) {
-    bytes memory initializeParams =
-      abi.encode(_bundler, _collateral, _bondAmount, _rules, _identifier, _liveness);
+    bytes memory initializeParams = abi.encode(_bundler, _collateral, _bondAmount, _rules, _identifier, _liveness);
     require(_finder != address(0), "Finder address can not be empty");
     finder = FinderInterface(_finder);
     setUp(initializeParams);

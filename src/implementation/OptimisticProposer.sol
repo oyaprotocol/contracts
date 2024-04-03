@@ -2,9 +2,9 @@ pragma solidity ^0.8.6;
 
 import {Enum} from "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import "@uma/core/common/implementation/Lockable.sol";
 import "@uma/core/common/interfaces/AddressWhitelistInterface.sol";
@@ -14,8 +14,8 @@ import "@uma/core/data-verification-mechanism/interfaces/FinderInterface.sol";
 import "@uma/core/data-verification-mechanism/interfaces/IdentifierWhitelistInterface.sol";
 import "@uma/core/data-verification-mechanism/interfaces/StoreInterface.sol";
 
-import "@uma/core/optimistic-oracle-v3/interfaces/OptimisticOracleV3Interface.sol";
 import "@uma/core/optimistic-oracle-v3/interfaces/OptimisticOracleV3CallbackRecipientInterface.sol";
+import "@uma/core/optimistic-oracle-v3/interfaces/OptimisticOracleV3Interface.sol";
 
 import "@uma/core/optimistic-oracle-v3/implementation/ClaimData.sol";
 
@@ -95,7 +95,6 @@ contract OptimisticProposer is OptimisticOracleV3CallbackRecipientInterface, Loc
   mapping(bytes32 => bytes32) public proposalHashes; // Maps assertionIds to proposal hashes.
   mapping(address => bool) public isController; // Says if address is a controller of this Oya account.
   mapping(address => bool) public isRecoverer; // Says if address is a recoverer of this Oya account.
-
 
   /**
    * @notice Sets the collateral and bond amount for proposals.
