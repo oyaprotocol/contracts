@@ -7,7 +7,6 @@ import "@gnosis.pm/zodiac/contracts/core/Module.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import "../interfaces/BookkeeperInterface.sol";
 import "./OptimisticProposer.sol";
 import "./OyaConstants.sol";
 
@@ -22,14 +21,10 @@ contract OyaModule is OptimisticProposer, Module {
   event OyaModuleDeployed(address indexed owner, address indexed controller, address bookkeeper);
 
   FinderInterface public immutable finder; // Finder used to discover other UMA ecosystem contracts.
-  FinderInterface public immutable oyaFinder; // Finder used to discover other Oya ecosystem contracts.
-
-  BookkeeperInterface public bookkeeper; // Interface for the Oya bookkeeper contract.
 
   /**
    * @notice Construct Oya module.
    * @param _finder UMA Finder contract address.
-   * @param _oyaFinder Address of the Oya protocol Finder contract.
    * @param _controller Address of the Oya account controller.
    * @param _recoverer Address of the Oya account recovery address.
    * @param _safe Address of the Oya account Safe.
@@ -41,7 +36,6 @@ contract OyaModule is OptimisticProposer, Module {
    */
   constructor(
     address _finder,
-    address _oyaFinder,
     address _controller,
     address _recoverer,
     address _safe,
@@ -54,9 +48,7 @@ contract OyaModule is OptimisticProposer, Module {
     bytes memory initializeParams =
       abi.encode(_controller, _recoverer, _safe, _collateral, _bondAmount, _rules, _identifier, _liveness);
     require(_finder != address(0), "Finder address can not be empty");
-    require(_oyaFinder != address(0), "Oya Finder address can not be empty");
     finder = FinderInterface(_finder);
-    oyaFinder = FinderInterface(_oyaFinder);
     setUp(initializeParams);
   }
 
@@ -214,12 +206,6 @@ contract OyaModule is OptimisticProposer, Module {
       optimisticOracleV3 = OptimisticOracleV3Interface(newOptimisticOracleV3);
       emit OptimisticOracleChanged(newOptimisticOracleV3);
     }
-
-    // address newBookkeeper = oyaFinder.getImplementationAddress(OyaInterfaces.Bookkeeper);
-    // if (newBookkeeper != address(bookkeeper)) {
-    //   bookkeeper = BookkeeperInterface(newBookkeeper);
-    //   emit SetBookkeeper(newBookkeeper);
-    // }
   }
 
 }
