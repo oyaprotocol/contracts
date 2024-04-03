@@ -18,8 +18,6 @@ contract OyaModule is OptimisticProposer, Module {
 
   event OyaModuleDeployed(address indexed owner, address indexed controller, address bookkeeper);
 
-  FinderInterface public immutable finder; // Finder used to discover other UMA ecosystem contracts.
-
   /**
    * @notice Construct Oya module.
    * @param _finder UMA Finder contract address.
@@ -84,66 +82,6 @@ contract OyaModule is OptimisticProposer, Module {
   }
 
   /**
-   * @notice Sets the collateral and bond amount for proposals.
-   * @param _collateral token that will be used for all bonds for the contract.
-   * @param _bondAmount amount of the bond token that will need to be paid for future proposals.
-   */
-  function setCollateralAndBond(IERC20 _collateral, uint256 _bondAmount) public onlyOwner {
-    // ERC20 token to be used as collateral (must be approved by UMA governance).
-    require(_getCollateralWhitelist().isOnWhitelist(address(_collateral)), "Bond token not supported");
-    collateral = _collateral;
-
-    // Value of the bond posted for asserting the proposed transactions. If the minimum amount required by
-    // Optimistic Oracle V3 is higher this contract will attempt to pull the required bond amount.
-    bondAmount = _bondAmount;
-
-    emit SetCollateralAndBond(_collateral, _bondAmount);
-  }
-
-  /**
-   * @notice Sets the identifier for future proposals.
-   * @param _identifier identifier to set.
-   */
-  function setIdentifier(bytes32 _identifier) public onlyOwner {
-    // Set identifier which is used along with the rules to determine if transactions are valid.
-    require(_getIdentifierWhitelist().isIdentifierSupported(_identifier), "Identifier not supported");
-    identifier = _identifier;
-    emit SetIdentifier(_identifier);
-  }
-
-  function setController(address _controller) public onlyOwner {
-    isController[_controller] = true;
-    emit SetController(_controller);
-  }
-
-  function setRecoverer(address _recoverer) public onlyOwner {
-    isRecoverer[_recoverer] = true;
-    emit SetRecoverer(_recoverer);
-  }
-
-  /**
-   * @notice Sets the Escalation Manager for future proposals.
-   * @param _escalationManager address of the Escalation Manager, can be zero to disable this functionality.
-   * @dev Only the owner can call this method. The provided address must conform to the Escalation Manager interface.
-   * FullPolicyEscalationManager can be used, but within the context of this contract it should be used only for
-   * whitelisting of proposers and disputers since Oya module is deleting disputed proposals.
-   */
-  function setEscalationManager(address _escalationManager) external onlyOwner {
-    require(_isContract(_escalationManager) || _escalationManager == address(0), "EM is not a contract");
-    escalationManager = _escalationManager;
-    emit SetEscalationManager(_escalationManager);
-  }
-
-  /**
-   * @notice This caches the most up-to-date Optimistic Oracle V3.
-   * @dev If a new Optimistic Oracle V3 is added and this is run between a proposal's introduction and execution, the
-   * proposal will become unexecutable.
-   */
-  function sync() external nonReentrant {
-    _sync();
-  }
-
-  /**
    * @notice Executes an approved proposal.
    * @param transactions the transactions being executed. These must exactly match those that were proposed.
    */
@@ -180,30 +118,6 @@ contract OyaModule is OptimisticProposer, Module {
     }
 
     emit ProposalExecuted(proposalHash, assertionId);
-  }
-
-  // Gets the address of Collateral Whitelist from the Finder.
-  function _getCollateralWhitelist() internal view returns (AddressWhitelistInterface) {
-    return AddressWhitelistInterface(finder.getImplementationAddress(OracleInterfaces.CollateralWhitelist));
-  }
-
-  // Gets the address of Identifier Whitelist from the Finder.
-  function _getIdentifierWhitelist() internal view returns (IdentifierWhitelistInterface) {
-    return IdentifierWhitelistInterface(finder.getImplementationAddress(OracleInterfaces.IdentifierWhitelist));
-  }
-
-  // Gets the address of Store contract from the Finder.
-  function _getStore() internal view returns (StoreInterface) {
-    return StoreInterface(finder.getImplementationAddress(OracleInterfaces.Store));
-  }
-
-  // Caches the address of the Optimistic Oracle V3 from the Finder.
-  function _sync() internal {
-    address newOptimisticOracleV3 = finder.getImplementationAddress(OracleInterfaces.OptimisticOracleV3);
-    if (newOptimisticOracleV3 != address(optimisticOracleV3)) {
-      optimisticOracleV3 = OptimisticOracleV3Interface(newOptimisticOracleV3);
-      emit OptimisticOracleChanged(newOptimisticOracleV3);
-    }
   }
 
 }
