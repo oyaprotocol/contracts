@@ -29,6 +29,7 @@ contract OyaModule is OptimisticProposer, Module {
   string public accountRules;
   string public globalRules;
 
+  // Accounts are in automatic mode by default, with the bundler proposing transactions.
   bool public manualMode = false;
 
   mapping(address => bool) public isController; // Says if address is a controller of this Oya account.
@@ -175,6 +176,7 @@ contract OyaModule is OptimisticProposer, Module {
   // This function goes into manual mode. Only controllers may propose transactions for this 
   // account while in manual, and controllers may not use the bundler. This is useful for 
   // transactions that the bundler can not serve due to lack or liquidity or other reasons.
+  // This is enforced through the global rules related to Oya proposals.
   function goManual() public {
     require(isController[msg.sender], "Not a controller");
     manualMode = true;
