@@ -22,8 +22,17 @@ contract OyaModule is OptimisticProposer, Module {
 
   event SetGlobalRules(string globalRules);
 
+  event SetController(address indexed controller);
+
+  event SetRecoverer(address indexed recoverer);
+
   string public accountRules;
   string public globalRules;
+
+  bool public manualMode = false;
+
+  mapping(address => bool) public isController; // Says if address is a controller of this Oya account.
+  mapping(address => bool) public isRecoverer; // Says if address is a recoverer of this Oya account.
 
   /**
    * @notice Construct Oya module.
@@ -101,6 +110,7 @@ contract OyaModule is OptimisticProposer, Module {
     isRecoverer[_recoverer] = true;
     emit SetRecoverer(_recoverer);
   }
+
   /**
    * @notice Sets the rules that will be used to evaluate future proposals from this account.
    * @param _rules string that outlines or references the location where the rules can be found.
@@ -160,6 +170,21 @@ contract OyaModule is OptimisticProposer, Module {
     }
 
     emit ProposalExecuted(proposalHash, assertionId);
+  }
+
+  // This function goes into manual mode. Only controllers may propose transactions for this 
+  // account while in manual, and controllers may not use the bundler. This is useful for 
+  // transactions that the bundler can not serve due to lack or liquidity or other reasons.
+  function goManual() public {
+    require(isController[msg.sender], "Not a controller");
+    manualMode = true;
+  }
+
+  // This function takes the account out of manual mode. Controllers may resume using the 
+  // bundler, and may not propose transactions of their own.
+  function goAutomatic() public {
+    require(isController[msg.sender], "Not a controller");
+    manualMode = false;
   }
 
 }

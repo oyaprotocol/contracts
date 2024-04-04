@@ -54,11 +54,7 @@ contract OptimisticProposer is OptimisticOracleV3CallbackRecipientInterface, Loc
 
   event OptimisticOracleChanged(address indexed newOptimisticOracleV3);
 
-  event SetController(address indexed controller);
-
   event SetBookkeeper(address indexed bookkeeper);
-
-  event SetRecoverer(address indexed recoverer);
 
   // Keys for assertion claim data.
   bytes public constant PROPOSAL_HASH_KEY = "proposalHash";
@@ -93,8 +89,6 @@ contract OptimisticProposer is OptimisticOracleV3CallbackRecipientInterface, Loc
 
   mapping(bytes32 => bytes32) public assertionIds; // Maps proposal hashes to assertionIds.
   mapping(bytes32 => bytes32) public proposalHashes; // Maps assertionIds to proposal hashes.
-  mapping(address => bool) public isController; // Says if address is a controller of this Oya account.
-  mapping(address => bool) public isRecoverer; // Says if address is a recoverer of this Oya account.
 
   /**
    * @notice Sets the collateral and bond amount for proposals.
@@ -176,7 +170,6 @@ contract OptimisticProposer is OptimisticOracleV3CallbackRecipientInterface, Loc
    * @param explanation Auxillary information that can be referenced to validate the proposal.
    * @dev Proposer must grant the contract collateral allowance at least to the bondAmount or result of getMinimumBond
    * from the Optimistic Oracle V3, whichever is greater.
-   * @dev Only the owner, controller, recoverer, or bookkeeper can propose transactions.
    */
   function proposeTransactions(Transaction[] memory transactions, bytes memory explanation) external nonReentrant {
     // note: Optional explanation explains the intent of the transactions to make comprehension easier.
