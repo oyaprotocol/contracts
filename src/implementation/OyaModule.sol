@@ -179,6 +179,7 @@ contract OyaModule is OptimisticProposer, Module {
   // This is enforced through the global rules related to Oya proposals.
   function goManual() public {
     require(isController[msg.sender], "Not a controller");
+    // add a time delay so pending transactions are resolved before going manual
     manualMode = true;
   }
 
@@ -186,6 +187,7 @@ contract OyaModule is OptimisticProposer, Module {
   // bundler, and may not propose transactions of their own.
   function goAutomatic() public {
     require(isController[msg.sender], "Not a controller");
+    // add a time delay so pending transactions are resolved before going automatic
     manualMode = false;
   }
 
