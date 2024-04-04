@@ -18,6 +18,13 @@ contract OyaModule is OptimisticProposer, Module {
 
   event OyaModuleDeployed(address indexed safe, address indexed avatar, address indexed target);
 
+  event SetAccountRules(string accountRules);
+
+  event SetGlobalRules(string globalRules);
+
+  string public accountRules;
+  string public globalRules;
+
   /**
    * @notice Construct Oya module.
    * @param _finder UMA Finder contract address.
@@ -26,7 +33,8 @@ contract OyaModule is OptimisticProposer, Module {
    * @param _safe Address of the Oya account Safe.
    * @param _collateral Address of the ERC20 collateral used for bonds.
    * @param _bondAmount Amount of collateral currency to make assertions for proposed transactions
-   * @param _rules Reference to the rules for the Oya module.
+   * @param _accountRules Reference to the rules for this specific Oya account.
+   * @param _globalRules Reference to the global rules for the Oya protocol.
    * @param _identifier The approved identifier to be used with the contract, compatible with Optimistic Oracle V3.
    * @param _liveness The period, in seconds, in which a proposal can be disputed.
    */
@@ -37,12 +45,13 @@ contract OyaModule is OptimisticProposer, Module {
     address _safe,
     address _collateral,
     uint256 _bondAmount,
-    string memory _rules,
+    string memory _accountRules,
+    string memory _globalRules,
     bytes32 _identifier,
     uint64 _liveness
   ) {
     bytes memory initializeParams =
-      abi.encode(_controller, _recoverer, _safe, _collateral, _bondAmount, _rules, _identifier, _liveness);
+      abi.encode(_controller, _recoverer, _safe, _collateral, _bondAmount, _accountRules, _globalRules, _identifier, _liveness);
     require(_finder != address(0), "Finder address can not be empty");
     finder = FinderInterface(_finder);
     setUp(initializeParams);
@@ -63,12 +72,14 @@ contract OyaModule is OptimisticProposer, Module {
       address _safe,
       address _collateral,
       uint256 _bondAmount,
-      string memory _rules,
+      string memory _accountRules,
+      string memory _globalRules,
       bytes32 _identifier,
       uint64 _liveness
-    ) = abi.decode(initializeParams, (address, address, address, address, uint256, string, bytes32, uint64));
+    ) = abi.decode(initializeParams, (address, address, address, address, uint256, string, string, bytes32, uint64));
     setCollateralAndBond(IERC20(_collateral), _bondAmount);
-    setRules(_rules);
+    setAccountRules(_accountRules);
+    setGlobalRules(_globalRules);
     setIdentifier(_identifier);
     setLiveness(_liveness);
     setController(_controller);
@@ -89,6 +100,27 @@ contract OyaModule is OptimisticProposer, Module {
   function setRecoverer(address _recoverer) public onlyOwner {
     isRecoverer[_recoverer] = true;
     emit SetRecoverer(_recoverer);
+  }
+  /**
+   * @notice Sets the rules that will be used to evaluate future proposals from this account.
+   * @param _rules string that outlines or references the location where the rules can be found.
+   */
+  function setAccountRules(string memory _rules) public onlyOwner {
+    // Set reference to the rules for the Oya module
+    require(bytes(_rules).length > 0, "Rules can not be empty");
+    accountRules = _rules;
+    emit SetAccountRules(_rules);
+  }
+
+  /**
+   * @notice Sets the global rules that govern all accounts in this protocol.
+   * @param _rules string that outlines or references the location where the rules can be found.
+   */
+  function setGlobalRules(string memory _rules) public onlyOwner {
+    // Set reference to the rules for the Oya module
+    require(bytes(_rules).length > 0, "Rules can not be empty");
+    globalRules = _rules;
+    emit SetGlobalRules(_rules);
   }
 
   /**
