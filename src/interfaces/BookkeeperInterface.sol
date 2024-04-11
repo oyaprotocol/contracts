@@ -5,6 +5,6 @@ interface BookkeeperInterface {
   function proposeBundle(bytes32) external;
   function cancelBundle(uint256) external;
   function removeBundler(address) external;
-  function updateBookkeeper(uint256, address, bool) external;
+  function updateBookkeeper(address, uint256, bool) external;
 
 }

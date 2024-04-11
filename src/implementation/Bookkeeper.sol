@@ -41,8 +41,8 @@ contract Bookkeeper is OptimisticProposer, Executor, BookkeeperInterface {
   /// @notice Addresses of approved bundlers.
   mapping(address => bool) public bundlers;
 
-  /// @notice Mapping of chain IDs to Bookkeeper contract addresses.
-  mapping(uint256 => mapping(address => bool)) public bookkeepers;
+  /// @notice Mapping of Bookkeeper contract address to chain IDs, and whether they are authorized.
+  mapping(address => mapping(uint256 => bool)) public bookkeepers;
 
   /// @dev Restricts function access to only approved bundlers.
   modifier onlyBundler() {
@@ -135,11 +135,11 @@ contract Bookkeeper is OptimisticProposer, Executor, BookkeeperInterface {
   /// @notice Updates the address of a Bookkeeper contract for a specific chain.
   /// @dev Only callable by the contract owner. Bookkeepers are added by protocol governance.
   /// @dev There may be multiple Bookkeepers on one chain temporarily during a migration.
-  /// @param _chainId The chain to update.
   /// @param _contractAddress The address of the Bookkeeper contract.
+  /// @param _chainId The chain to update.
   /// @param _isApproved Set to true to add the Bookkeeper contract, false to remove.
-  function updateBookkeeper(uint256 _chainId, address _contractAddress, bool _isApproved) external onlyOwner {
-    bookkeepers[_chainId][_contractAddress] = _isApproved;
+  function updateBookkeeper(address _contractAddress, uint256 _chainId, bool _isApproved) external onlyOwner {
+    bookkeepers[_contractAddress][_chainId] = _isApproved;
   }
 
   /**
