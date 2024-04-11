@@ -32,6 +32,8 @@ contract OyaModule is OptimisticProposer, Module {
   // Accounts are in automatic mode by default, with the bundler proposing transactions.
   bool public manualMode = false;
 
+  bool public frozen = false;
+
   mapping(address => bool) public isController; // Says if address is a controller of this Oya account.
   mapping(address => bool) public isRecoverer; // Says if address is a recoverer of this Oya account.
 
@@ -189,6 +191,11 @@ contract OyaModule is OptimisticProposer, Module {
     require(isController[msg.sender], "Not a controller");
     // add a time delay so pending transactions are resolved before going automatic
     manualMode = false;
+  }
+
+  function freeze() public {
+    require (isRecoverer[msg.sender], "Not a recoverer");
+    frozen = true;
   }
 
 }
