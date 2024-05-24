@@ -62,8 +62,9 @@ contract OyaModule is OptimisticProposer, Module {
     bytes32 _identifier,
     uint64 _liveness
   ) {
-    bytes memory initializeParams =
-      abi.encode(_controller, _recoverer, _safe, _collateral, _bondAmount, _accountRules, _globalRules, _identifier, _liveness);
+    bytes memory initializeParams = abi.encode(
+      _controller, _recoverer, _safe, _collateral, _bondAmount, _accountRules, _globalRules, _identifier, _liveness
+    );
     require(_finder != address(0), "Finder address can not be empty");
     finder = FinderInterface(_finder);
     setUp(initializeParams);
@@ -175,8 +176,8 @@ contract OyaModule is OptimisticProposer, Module {
     emit ProposalExecuted(proposalHash, assertionId);
   }
 
-  // This function goes into manual mode. Only controllers may propose transactions for this 
-  // account while in manual, and controllers may not use the bundler. This is useful for 
+  // This function goes into manual mode. Only controllers may propose transactions for this
+  // account while in manual, and controllers may not use the bundler. This is useful for
   // transactions that the bundler can not serve due to lack or liquidity or other reasons.
   // This is enforced through the global rules related to Oya proposals.
   function goManual() public {
@@ -185,7 +186,7 @@ contract OyaModule is OptimisticProposer, Module {
     manualMode = true;
   }
 
-  // This function takes the account out of manual mode. Controllers may resume using the 
+  // This function takes the account out of manual mode. Controllers may resume using the
   // bundler, and may not propose transactions of their own.
   function goAutomatic() public {
     require(isController[msg.sender], "Not a controller");
@@ -194,7 +195,7 @@ contract OyaModule is OptimisticProposer, Module {
   }
 
   function freeze() public {
-    require (isRecoverer[msg.sender], "Not a recoverer");
+    require(isRecoverer[msg.sender], "Not a recoverer");
     frozen = true;
   }
 
