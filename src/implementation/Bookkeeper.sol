@@ -32,8 +32,8 @@ contract Bookkeeper is OptimisticProposer, Executor, BookkeeperInterface {
 
   event BookkeeperDeployed(address indexed bundler, string rules);
 
-  /// @notice Mapping of proposal block timestamps to bytes32 pointers to the bundle data.
-  mapping(uint256 => bytes32) public bundles;
+  /// @notice Mapping of proposal block timestamps to string pointers to the bundle data.
+  mapping(uint256 => string) public bundles;
 
   /// @notice The proposal timestamp of the most recently finalized bundle.
   uint256 public lastFinalizedBundle;
@@ -106,16 +106,16 @@ contract Bookkeeper is OptimisticProposer, Executor, BookkeeperInterface {
   /// @dev Only callable by an approved bundler.
   /// @dev This function will call the optimistic oracle for bundle verification.
   /// @param _bundleData A reference to the offchain bundle data being proposed.
-  function proposeBundle(bytes32 _bundleData) external onlyBundler {
+  function proposeBundle(string memory _bundleData) external onlyBundler {
     bundles[block.timestamp] = _bundleData;
   }
 
   /// @notice Cancels a proposed bundle.
   /// @dev Only callable by an approved bundler.
   /// @dev They may cancel a bundle if they make an error, to propose a new bundle.
-  /// @param _bundle The proposal timestamp of the bundle to cancel.
-  function cancelBundle(uint256 _bundle) external onlyBundler {
-    delete bundles[_bundle];
+  /// @param _bundleTimestamp The proposal timestamp of the bundle to cancel.
+  function cancelBundle(uint256 _bundleTimestamp) external onlyBundler {
+    delete bundles[_bundleTimestamp];
   }
 
   /// @notice Adds a new bundler.
