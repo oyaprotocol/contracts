@@ -32,6 +32,14 @@ contract Bookkeeper is OptimisticProposer, Executor, BookkeeperInterface {
 
   event BookkeeperDeployed(address indexed bundler, string rules);
 
+  event BundleProposed(uint256 indexed timestamp, string bundleData);
+
+  event BundleCanceled(uint256 indexed timestamp);
+
+  event BundlerAdded(address indexed bundler);
+
+  event BundlerRemoved(address indexed bundler);
+
   /// @notice Mapping of proposal block timestamps to string pointers to the bundle data.
   mapping(uint256 => string) public bundles;
 
@@ -123,6 +131,7 @@ contract Bookkeeper is OptimisticProposer, Executor, BookkeeperInterface {
   /// @param _bundler The address to grant bundler permissions to.
   function addBundler(address _bundler) public onlyOwner {
     bundlers[_bundler] = true;
+    emit BundlerAdded(_bundler);
   }
 
   /// @notice Removes a bundler.
@@ -130,6 +139,7 @@ contract Bookkeeper is OptimisticProposer, Executor, BookkeeperInterface {
   /// @param _bundler The address to revoke bundler permissions from.
   function removeBundler(address _bundler) external onlyOwner {
     delete bundlers[_bundler];
+    emit BundlerRemoved(_bundler);
   }
 
   /// @notice Updates the address of a Bookkeeper contract for a specific chain.
