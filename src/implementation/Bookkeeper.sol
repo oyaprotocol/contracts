@@ -40,6 +40,8 @@ contract Bookkeeper is OptimisticProposer, Executor, BookkeeperInterface {
 
   event BundlerRemoved(address indexed bundler);
 
+  event BookkeeperUpdated(address indexed contractAddress, uint256 indexed chainId, bool isApproved);
+
   /// @notice Mapping of proposal block timestamps to string pointers to the bundle data.
   mapping(uint256 => string) public bundles;
 
@@ -150,6 +152,7 @@ contract Bookkeeper is OptimisticProposer, Executor, BookkeeperInterface {
   /// @param _isApproved Set to true to add the Bookkeeper contract, false to remove.
   function updateBookkeeper(address _contractAddress, uint256 _chainId, bool _isApproved) external onlyOwner {
     bookkeepers[_contractAddress][_chainId] = _isApproved;
+    emit BookkeeperUpdated(_contractAddress, _chainId, _isApproved);
   }
 
   /**
