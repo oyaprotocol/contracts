@@ -26,11 +26,14 @@ contract OyaModule is OptimisticProposer, Module {
 
   event SetRecoverer(address indexed recoverer);
 
+  event ChangeAccountMode(string mode, uint timestamp);
+
   string public accountRules;
   string public globalRules;
 
   // Accounts are in automatic mode by default, with the bundler proposing transactions.
-  bool public manualMode = false;
+  // Manual mode is active starting at the timestamp, inactive if value is zero.
+  uint public manualMode = 0;
 
   bool public frozen = false;
 
@@ -182,16 +185,18 @@ contract OyaModule is OptimisticProposer, Module {
   // This is enforced through the global rules related to Oya proposals.
   function goManual() public {
     require(isController[msg.sender], "Not a controller");
-    // add a time delay so pending transactions are resolved before going manual
-    manualMode = true;
+    // add a time delay so pending bundler transactions are resolved before going manual
+    manualMode = block.timestamp + 15 minutes;
+    emit ChangeAccountMode("manual", manualMode);
   }
 
   // This function takes the account out of manual mode. Controllers may resume using the
   // bundler, and may not propose transactions of their own.
   function goAutomatic() public {
     require(isController[msg.sender], "Not a controller");
-    // add a time delay so pending transactions are resolved before going automatic
-    manualMode = false;
+    require(manualMode > block.timestamp, "Not in manual mode");
+    manualMode = 0;
+    emit ChangeAccountMode("automatic", block.timestamp);
   }
 
   function freeze() public {
