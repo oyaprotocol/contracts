@@ -21,6 +21,7 @@ import "@uma/core/common/implementation/Lockable.sol";
 import "@uma/core/common/interfaces/AddressWhitelistInterface.sol";
 
 import "./OptimisticProposer.sol";
+import "forge-std/console.sol";
 
 /// @title Bookkeeper
 /// @dev Implements transaction bundling and settlement functionality for the Oya network.
@@ -79,10 +80,13 @@ contract Bookkeeper is OptimisticProposer, Executor, BookkeeperInterface {
     bytes32 _identifier,
     uint64 _liveness
   ) {
-    bytes memory initializeParams = abi.encode(_bundler, _collateral, _bondAmount, _rules, _identifier, _liveness);
+    console.log("Constructor start");
     require(_finder != address(0), "Finder address can not be empty");
     finder = FinderInterface(_finder);
+    console.log("Finder set");
+    bytes memory initializeParams = abi.encode(_bundler, _collateral, _bondAmount, _rules, _identifier, _liveness);
     setUp(initializeParams);
+    console.log("setUp called");
   }
 
   /**
@@ -92,6 +96,7 @@ contract Bookkeeper is OptimisticProposer, Executor, BookkeeperInterface {
    * cloning the module.
    */
   function setUp(bytes memory initializeParams) public initializer {
+    console.log("setUp start");
     _startReentrantGuardDisabled();
     __Ownable_init();
     (
@@ -102,14 +107,22 @@ contract Bookkeeper is OptimisticProposer, Executor, BookkeeperInterface {
       bytes32 _identifier,
       uint64 _liveness
     ) = abi.decode(initializeParams, (address, address, uint256, string, bytes32, uint64));
+    console.log("Decoded params");
     addBundler(_bundler);
+    console.log("Bundler added");
     setCollateralAndBond(IERC20(_collateral), _bondAmount);
+    console.log("Collateral and bond set");
     setRules(_rules);
+    console.log("Rules set");
     setIdentifier(_identifier);
+    console.log("Identifier set");
     setLiveness(_liveness);
+    console.log("Liveness set");
     _sync();
+    console.log("Sync complete");
 
     emit BookkeeperDeployed(_bundler, _rules);
+    console.log("Bookkeeper deployed");
   }
 
   /// @notice Proposes a new bundle of transactions.

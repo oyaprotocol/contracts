@@ -2,8 +2,10 @@
 pragma solidity ^0.8.6;
 
 import "forge-std/Test.sol";
+import "forge-std/console.sol";
 import "../src/implementation/Bookkeeper.sol";
 import "../src/mocks/MockAddressWhitelist.sol";
+import "../src/mocks/MockERC20.sol";
 import "../src/mocks/MockFinder.sol";
 import "../src/mocks/MockIdentifierWhitelist.sol";
 import "../src/mocks/MockOptimisticOracleV3.sol";
@@ -14,13 +16,12 @@ contract BookkeeperTest is Test {
   MockAddressWhitelist public mockAddressWhitelist;
   MockIdentifierWhitelist public mockIdentifierWhitelist;
   MockOptimisticOracleV3 public mockOptimisticOracleV3;
+  MockERC20 public mockERC20;
   address public owner = address(1);
   address public bundler = address(2);
   address public nonBundler = address(3);
   address public newBundler = address(4);
   address public bookkeeperAddress = address(5);
-  address public finder = address(6);
-  address public collateral = address(7);
   uint256 public bondAmount = 1000;
   string public rules = "Sample rules";
   bytes32 public identifier = keccak256("Identifier");
@@ -29,9 +30,11 @@ contract BookkeeperTest is Test {
   function setUp() public {
     // Set up the mock contracts
     mockFinder = new MockFinder();
+    // console.log("mockFinder: ", mockFinder.address);
     mockAddressWhitelist = new MockAddressWhitelist();
     mockIdentifierWhitelist = new MockIdentifierWhitelist();
     mockOptimisticOracleV3 = new MockOptimisticOracleV3();
+    mockERC20 = new MockERC20();
 
     // Setup the finder to return the mocks
     mockFinder.changeImplementationAddress(keccak256("CollateralWhitelist"), address(mockAddressWhitelist));
@@ -39,14 +42,14 @@ contract BookkeeperTest is Test {
     mockFinder.changeImplementationAddress(keccak256("OptimisticOracleV3"), address(mockOptimisticOracleV3));
 
     // Add collateral and identifier to the whitelist
-    mockAddressWhitelist.addToWhitelist(collateral);
+    mockAddressWhitelist.addToWhitelist(address(mockERC20));
     mockIdentifierWhitelist.addIdentifier(identifier);
 
     vm.startPrank(owner);
     bookkeeper = new Bookkeeper(
       address(mockFinder),
       bundler,
-      collateral,
+      address(mockERC20),
       bondAmount,
       rules,
       identifier,

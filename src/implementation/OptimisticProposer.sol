@@ -19,6 +19,8 @@ import "@uma/core/optimistic-oracle-v3/interfaces/OptimisticOracleV3Interface.so
 
 import "@uma/core/optimistic-oracle-v3/implementation/ClaimData.sol";
 
+import "forge-std/console.sol";
+
 contract OptimisticProposer is OptimisticOracleV3CallbackRecipientInterface, Lockable, OwnableUpgradeable {
 
   using SafeERC20 for IERC20;
@@ -96,15 +98,18 @@ contract OptimisticProposer is OptimisticOracleV3CallbackRecipientInterface, Loc
    * @param _bondAmount amount of the bond token that will need to be paid for future proposals.
    */
   function setCollateralAndBond(IERC20 _collateral, uint256 _bondAmount) public onlyOwner {
+    console.log("setCollateralAndBond start");
     // ERC20 token to be used as collateral (must be approved by UMA governance).
-    require(_getCollateralWhitelist().isOnWhitelist(address(_collateral)), "Bond token not supported");
-    collateral = _collateral;
+    AddressWhitelistInterface collateralWhitelist = _getCollateralWhitelist();
+    console.log("Retrieved collateral whitelist");
+    bool isWhitelisted = collateralWhitelist.isOnWhitelist(address(_collateral));
+    console.log("Checked if collateral is whitelisted:", isWhitelisted);
 
-    // Value of the bond posted for asserting the proposed transactions. If the minimum amount required by
-    // Optimistic Oracle V3 is higher this contract will attempt to pull the required bond amount.
-    bondAmount = _bondAmount;
+    require(isWhitelisted, "Bond token not supported");
+    console.log("Collateral is whitelisted");
 
     emit SetCollateralAndBond(_collateral, _bondAmount);
+    console.log("setCollateralAndBond complete");
   }
 
   /**

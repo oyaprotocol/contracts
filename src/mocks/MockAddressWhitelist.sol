@@ -18,7 +18,7 @@ contract MockAddressWhitelist is AddressWhitelistInterface {
     return whitelist[_address];
   }
 
-  function getWhitelist() external view override returns (address[] memory) {
+  function getWhitelist() external pure override returns (address[] memory) {
     address[] memory emptyArray = new address[](0);
     return emptyArray;
   }

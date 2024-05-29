@@ -4,12 +4,6 @@ pragma solidity ^0.8.6;
 import "@uma/core/optimistic-oracle-v3/interfaces/OptimisticOracleV3Interface.sol";
 
 contract MockOptimisticOracleV3 is OptimisticOracleV3Interface {
-  struct Assertion {
-    address asserter;
-    uint256 bond;
-    uint256 liveness;
-  }
-
   mapping(bytes32 => Assertion) public assertions;
 
   function assertTruth(
@@ -17,18 +11,37 @@ contract MockOptimisticOracleV3 is OptimisticOracleV3Interface {
     address asserter,
     address callbackRecipient,
     address escalationManager,
-    uint256 liveness,
-    IERC20 collateral,
+    uint64 liveness,
+    IERC20 currency,
     uint256 bondAmount,
     bytes32 identifier,
     bytes32 domainId
   ) external override returns (bytes32) {
     bytes32 assertionId = keccak256(abi.encode(claim, asserter, block.timestamp));
-    assertions[assertionId] = Assertion(asserter, bondAmount, liveness);
+    assertions[assertionId] = Assertion({
+      escalationManagerSettings: EscalationManagerSettings({
+        arbitrateViaEscalationManager: false,
+        discardOracle: false,
+        validateDisputers: false,
+        assertingCaller: msg.sender,
+        escalationManager: escalationManager
+      }),
+      asserter: asserter,
+      assertionTime: uint64(block.timestamp),
+      settled: false,
+      currency: currency,
+      expirationTime: uint64(block.timestamp + liveness),
+      settlementResolution: true,
+      domainId: domainId,
+      identifier: identifier,
+      bond: bondAmount,
+      callbackRecipient: callbackRecipient,
+      disputer: address(0)
+    });
     return assertionId;
   }
 
-  function getMinimumBond(address /* collateral */) external pure override returns (uint256) {
+  function getMinimumBond(address /* currency */) external pure override returns (uint256) {
     return 100;
   }
 
@@ -48,13 +61,13 @@ contract MockOptimisticOracleV3 is OptimisticOracleV3Interface {
     return keccak256("default");
   }
 
-  function disputeAssertion(bytes32 assertionId, address disputer) external override {}
+  function disputeAssertion(bytes32 /* assertionId */, address /* disputer */) external override {}
 
-  function getAssertionResult(bytes32 assertionId) external view override returns (bool) {
+  function getAssertionResult(bytes32 /* assertionId */) external view override returns (bool) {
     return true;
   }
 
-  function settleAssertion(bytes32 assertionId) external override {}
+  function settleAssertion(bytes32 /* assertionId */) external override {}
 
-  function syncUmaParams(bytes32 identifier, address currency) external override {}
+  function syncUmaParams(bytes32 /* identifier */, address /* currency */) external override {}
 }
