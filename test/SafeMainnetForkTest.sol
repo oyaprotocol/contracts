@@ -12,15 +12,15 @@ contract ExistingSafeTest is Test, SafeTestTools {
     vm.createSelectFork(vm.envString("MAINNET_RPC_URL"));
     address alice = vm.addr(1337);
 
-    address frax_safe = 0xB1748C79709f4Ba2Dd82834B8c82D4a505003f27;
-    SafeInstance memory safeInstance = _attachToSafe(frax_safe);
+    address cow_safe = 0xcA771eda0c70aA7d053aB1B25004559B918FE662;
+    SafeInstance memory safeInstance = _attachToSafe(cow_safe);
 
-    safeInstance.execTransaction({to: alice, value: 0.5 ether, data: ""}); // send .5 eth to alice
+    safeInstance.execTransaction({to: alice, value: 0.1 ether, data: ""}); // send .1 eth to alice
   }
 
   function testSafe() public {
     address alice = vm.addr(1337);
-    assertEq(alice.balance, 0.5 ether); // passes ✅
+    assertEq(alice.balance, 0.1 ether); // passes ✅
   }
 
 }
