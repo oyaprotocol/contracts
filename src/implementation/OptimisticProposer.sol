@@ -98,19 +98,11 @@ contract OptimisticProposer is OptimisticOracleV3CallbackRecipientInterface, Loc
    * @param _bondAmount amount of the bond token that will need to be paid for future proposals.
    */
   function setCollateralAndBond(IERC20 _collateral, uint256 _bondAmount) public onlyOwner {
-    console.log("setCollateralAndBond start");
     // ERC20 token to be used as collateral (must be approved by UMA governance).
     AddressWhitelistInterface collateralWhitelist = _getCollateralWhitelist();
-    console.log("Retrieved collateral whitelist");
-    console.log("Address:", address(collateralWhitelist));
     bool isWhitelisted = collateralWhitelist.isOnWhitelist(address(_collateral));
-    console.log("Checked if collateral is whitelisted:", isWhitelisted);
-
     require(isWhitelisted, "Bond token not supported");
-    console.log("Collateral is whitelisted");
-
     emit SetCollateralAndBond(_collateral, _bondAmount);
-    console.log("setCollateralAndBond complete");
   }
 
   /**
