@@ -30,16 +30,15 @@ contract BookkeeperTest is Test {
   function setUp() public {
     // Set up the mock contracts
     mockFinder = new MockFinder();
-    // console.log("mockFinder: ", mockFinder.address);
     mockAddressWhitelist = new MockAddressWhitelist();
     mockIdentifierWhitelist = new MockIdentifierWhitelist();
     mockOptimisticOracleV3 = new MockOptimisticOracleV3();
     mockERC20 = new MockERC20();
 
     // Setup the finder to return the mocks
-    mockFinder.changeImplementationAddress(keccak256("CollateralWhitelist"), address(mockAddressWhitelist));
-    mockFinder.changeImplementationAddress(keccak256("IdentifierWhitelist"), address(mockIdentifierWhitelist));
-    mockFinder.changeImplementationAddress(keccak256("OptimisticOracleV3"), address(mockOptimisticOracleV3));
+    mockFinder.changeImplementationAddress(OracleInterfaces.CollateralWhitelist, address(mockAddressWhitelist));
+    mockFinder.changeImplementationAddress(OracleInterfaces.IdentifierWhitelist, address(mockIdentifierWhitelist));
+    mockFinder.changeImplementationAddress(OracleInterfaces.OptimisticOracleV3, address(mockOptimisticOracleV3));
 
     // Add collateral and identifier to the whitelist
     mockAddressWhitelist.addToWhitelist(address(mockERC20));

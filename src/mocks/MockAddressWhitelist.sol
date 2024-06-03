@@ -14,11 +14,11 @@ contract MockAddressWhitelist is AddressWhitelistInterface {
     whitelist[_address] = false;
   }
 
-  function isOnWhitelist(address _address) external view override returns (bool) {
+  function isOnWhitelist(address _address) external view returns (bool) {
     return whitelist[_address];
   }
 
-  function getWhitelist() external pure override returns (address[] memory) {
+  function getWhitelist() external view returns (address[] memory) {
     address[] memory emptyArray = new address[](0);
     return emptyArray;
   }

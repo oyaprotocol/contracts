@@ -102,6 +102,7 @@ contract OptimisticProposer is OptimisticOracleV3CallbackRecipientInterface, Loc
     // ERC20 token to be used as collateral (must be approved by UMA governance).
     AddressWhitelistInterface collateralWhitelist = _getCollateralWhitelist();
     console.log("Retrieved collateral whitelist");
+    console.log("Address:", address(collateralWhitelist));
     bool isWhitelisted = collateralWhitelist.isOnWhitelist(address(_collateral));
     console.log("Checked if collateral is whitelisted:", isWhitelisted);
 
