@@ -275,7 +275,7 @@ contract OptimisticProposer is OptimisticOracleV3CallbackRecipientInterface, Loc
    * @param assertionId The identifier of the assertion that was resolved.
    * @param assertedTruthfully Whether the assertion was resolved as truthful or not.
    */
-  function assertionResolvedCallback(bytes32 assertionId, bool assertedTruthfully) external {}
+  function assertionResolvedCallback(bytes32 assertionId, bool assertedTruthfully) external virtual {}
 
   /**
    * @notice Getter function to check required collateral currency approval.

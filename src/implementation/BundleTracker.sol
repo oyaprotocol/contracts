@@ -19,8 +19,11 @@ contract BundleTracker is OptimisticProposer {
   /// @notice The proposal timestamp of the most recently finalized bundle.
   uint256 public lastFinalizedBundle;
 
-  /// @notice Mapping of proposal block timestamps to string pointers to the bundle data.
+  /// @notice Mapping of proposal block timestamps to strings pointing to the bundle data.
   mapping(uint256 => string) public bundles;
+
+  /// @notice Mapping of oracle assertion IDs to bundle timestamps.
+  mapping(bytes32 => uint256) public assertions;
 
   /// @notice Addresses of approved bundlers.
   mapping(address => bool) public bundlers;
@@ -87,7 +90,7 @@ contract BundleTracker is OptimisticProposer {
   /// @param _bundleData A reference to the offchain bundle data being proposed.
   function proposeBundle(string memory _bundleData) external onlyBundler {
     bundles[block.timestamp] = _bundleData;
-    optimisticOracleV3.assertTruth(
+    bytes32 _assertionID = optimisticOracleV3.assertTruth(
       bytes(_bundleData),
       msg.sender, // bundler is the proposer
       address(this), // callback to the bundle tracker contract
@@ -98,6 +101,7 @@ contract BundleTracker is OptimisticProposer {
       identifier,
       0 // no domain id
     );
+    assertions[_assertionID] = block.timestamp;
   }
 
   /// @notice Cancels a proposed bundle.
@@ -129,6 +133,20 @@ contract BundleTracker is OptimisticProposer {
   /// @param _bundle The proposal timestamp of the bundle to finalize.
   function _finalizeBundle(uint256 _bundle) internal {
     lastFinalizedBundle = _bundle;
+  }
+
+  /**
+   * @notice Callback function that is called by Optimistic Oracle V3 when an assertion is resolved.
+   * @dev This is not implemented by the inherited Optimistic Proposer, but we want it here.
+   * @param assertionId The identifier of the assertion that was resolved.
+   * @param assertedTruthfully Whether the assertion was resolved as truthful or not.
+   */
+  function assertionResolvedCallback(bytes32 assertionId, bool assertedTruthfully) external override {
+    require(msg.sender == address(optimisticOracleV3));
+    // If the assertion was true, then the data assertion is resolved.
+    if (assertedTruthfully) {
+      _finalizeBundle(assertions[assertionId]);
+    }
   }
 
 }
