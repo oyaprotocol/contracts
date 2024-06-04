@@ -3,22 +3,24 @@ pragma solidity ^0.8.6;
 
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
-import "../src/implementation/Bookkeeper.sol";
+import "../src/implementation/BundleTracker.sol";
 import "../src/mocks/MockAddressWhitelist.sol";
 import "../src/mocks/MockERC20.sol";
 import "../src/mocks/MockFinder.sol";
 import "../src/mocks/MockIdentifierWhitelist.sol";
 import "../src/mocks/MockOptimisticOracleV3.sol";
 
-contract BookkeeperTest is Test {
-  Bookkeeper public bookkeeper;
+contract BundleTrackerTest is Test {
+  BundleTracker public bundleTracker;
   MockFinder public mockFinder;
   MockAddressWhitelist public mockAddressWhitelist;
   MockIdentifierWhitelist public mockIdentifierWhitelist;
   MockOptimisticOracleV3 public mockOptimisticOracleV3;
   MockERC20 public mockERC20;
   address public owner = address(1);
-  address public bookkeeperAddress = address(2);
+  address public bundler = address(2);
+  address public nonBundler = address(3);
+  address public newBundler = address(4);
   uint256 public bondAmount = 1000;
   string public rules = "Sample rules";
   bytes32 public identifier = keccak256("Identifier");
@@ -42,8 +44,9 @@ contract BookkeeperTest is Test {
     mockIdentifierWhitelist.addIdentifier(identifier);
 
     vm.startPrank(owner);
-    bookkeeper = new Bookkeeper(
+    bundleTracker = new BundleTracker(
       address(mockFinder),
+      bundler,
       address(mockERC20),
       bondAmount,
       rules,
@@ -53,12 +56,41 @@ contract BookkeeperTest is Test {
     vm.stopPrank();
   }
 
-  function testUpdateBookkeeper() public {
-    vm.startPrank(owner);
-    uint256 chainId = 1;
-    bookkeeper.updateBookkeeper(bookkeeperAddress, chainId, true);
+  function testProposeBundle() public {
+    vm.startPrank(bundler);
+    string memory bundleData = "Bundle data";
+    bundleTracker.proposeBundle(bundleData);
 
-    assertTrue(bookkeeper.bookkeepers(bookkeeperAddress, chainId));
+    assertEq(bundleTracker.bundles(block.timestamp), bundleData);
+    vm.stopPrank();
+  }
+
+  function testCancelBundle() public {
+    vm.startPrank(bundler);
+    string memory bundleData = "Bundle data";
+    bundleTracker.proposeBundle(bundleData);
+
+    bundleTracker.cancelBundle(block.timestamp);
+
+    assertEq(bundleTracker.bundles(block.timestamp), "");
+    vm.stopPrank();
+  }
+
+  function testAddBundler() public {
+    vm.startPrank(owner);
+    bundleTracker.addBundler(newBundler);
+
+    assertTrue(bundleTracker.bundlers(newBundler));
+    vm.stopPrank();
+  }
+
+  function testRemoveBundler() public {
+    vm.startPrank(owner);
+    bundleTracker.addBundler(newBundler);
+    assertTrue(bundleTracker.bundlers(newBundler));
+
+    bundleTracker.removeBundler(newBundler);
+    assertFalse(bundleTracker.bundlers(newBundler));
     vm.stopPrank();
   }
 }
