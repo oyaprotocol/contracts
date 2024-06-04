@@ -53,17 +53,17 @@ contract MockOptimisticOracleV3 is OptimisticOracleV3Interface {
     return assertions[assertionId];
   }
 
-  function assertTruthWithDefaults(bytes memory claim, address asserter) external override returns (bytes32) {
+  function assertTruthWithDefaults(bytes memory claim, address asserter) external view override returns (bytes32) {
     return keccak256(abi.encode(claim, asserter, block.timestamp));
   }
 
-  function defaultIdentifier() external view override returns (bytes32) {
+  function defaultIdentifier() external pure override returns (bytes32) {
     return keccak256("default");
   }
 
   function disputeAssertion(bytes32 /* assertionId */, address /* disputer */) external override {}
 
-  function getAssertionResult(bytes32 /* assertionId */) external view override returns (bool) {
+  function getAssertionResult(bytes32 /* assertionId */) external pure override returns (bool) {
     return true;
   }
 
