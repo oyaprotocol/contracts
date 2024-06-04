@@ -1,7 +1,5 @@
 pragma solidity ^0.8.6;
 
-import "../interfaces/BookkeeperInterface.sol";
-
 import "@gnosis.pm/safe-contracts/contracts/base/Executor.sol";
 import {Enum} from "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 
@@ -25,9 +23,7 @@ import "forge-std/console.sol";
 
 /// @title Bookkeeper
 /// @dev Implements transaction bundling and settlement functionality for the Oya network.
-/// Allows for the registration and management of bundlers, and the proposal, finalization, and
-/// cancellation of transaction bundles.
-contract Bookkeeper is OptimisticProposer, Executor, BookkeeperInterface {
+contract Bookkeeper is OptimisticProposer, Executor {
 
   using SafeERC20 for IERC20;
 
