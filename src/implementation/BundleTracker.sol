@@ -128,13 +128,6 @@ contract BundleTracker is OptimisticProposer {
     emit BundlerRemoved(_bundler);
   }
 
-  /// @notice Marks a bundle as finalized.
-  /// @dev This should be implemented as a callback after oracle verification.
-  /// @param _bundle The proposal timestamp of the bundle to finalize.
-  function _finalizeBundle(uint256 _bundle) internal {
-    lastFinalizedBundle = _bundle;
-  }
-
   /**
    * @notice Callback function that is called by Optimistic Oracle V3 when an assertion is resolved.
    * @dev This is not implemented by the inherited Optimistic Proposer, but we want it here.
@@ -145,7 +138,7 @@ contract BundleTracker is OptimisticProposer {
     require(msg.sender == address(optimisticOracleV3));
     // If the assertion was true, then the data assertion is resolved.
     if (assertedTruthfully) {
-      _finalizeBundle(assertions[assertionId]);
+      lastFinalizedBundle = assertions[assertionId];
     }
   }
 
