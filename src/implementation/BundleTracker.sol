@@ -87,6 +87,17 @@ contract BundleTracker is OptimisticProposer {
   /// @param _bundleData A reference to the offchain bundle data being proposed.
   function proposeBundle(string memory _bundleData) external onlyBundler {
     bundles[block.timestamp] = _bundleData;
+    optimisticOracleV3.assertTruth(
+      bytes(_bundleData),
+      msg.sender, // bundler is the proposer
+      address(this), // callback to the bundle tracker contract
+      address(0), // no escalation manager
+      liveness, // these and other oracle values set in OptimisticProposer setup
+      collateral,
+      bondAmount,
+      identifier,
+      0 // no domain id
+    );
   }
 
   /// @notice Cancels a proposed bundle.
