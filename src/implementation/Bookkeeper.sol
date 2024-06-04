@@ -43,11 +43,11 @@ contract Bookkeeper is OptimisticProposer, Executor, BookkeeperInterface {
 
   event BookkeeperUpdated(address indexed contractAddress, uint256 indexed chainId, bool isApproved);
 
-  /// @notice Mapping of proposal block timestamps to string pointers to the bundle data.
-  mapping(uint256 => string) public bundles;
-
   /// @notice The proposal timestamp of the most recently finalized bundle.
   uint256 public lastFinalizedBundle;
+
+  /// @notice Mapping of proposal block timestamps to string pointers to the bundle data.
+  mapping(uint256 => string) public bundles;
 
   /// @notice Addresses of approved bundlers.
   mapping(address => bool) public bundlers;
@@ -80,13 +80,10 @@ contract Bookkeeper is OptimisticProposer, Executor, BookkeeperInterface {
     bytes32 _identifier,
     uint64 _liveness
   ) {
-    console.log("Constructor start");
     require(_finder != address(0), "Finder address can not be empty");
     finder = FinderInterface(_finder);
-    console.log("Finder set");
     bytes memory initializeParams = abi.encode(_bundler, _collateral, _bondAmount, _rules, _identifier, _liveness);
     setUp(initializeParams);
-    console.log("setUp called");
   }
 
   /**
@@ -96,7 +93,6 @@ contract Bookkeeper is OptimisticProposer, Executor, BookkeeperInterface {
    * cloning the module.
    */
   function setUp(bytes memory initializeParams) public initializer {
-    console.log("setUp start");
     _startReentrantGuardDisabled();
     __Ownable_init();
     (
@@ -107,22 +103,14 @@ contract Bookkeeper is OptimisticProposer, Executor, BookkeeperInterface {
       bytes32 _identifier,
       uint64 _liveness
     ) = abi.decode(initializeParams, (address, address, uint256, string, bytes32, uint64));
-    console.log("Decoded params");
     addBundler(_bundler);
-    console.log("Bundler added");
     setCollateralAndBond(IERC20(_collateral), _bondAmount);
-    console.log("Collateral and bond set");
     setRules(_rules);
-    console.log("Rules set");
     setIdentifier(_identifier);
-    console.log("Identifier set");
     setLiveness(_liveness);
-    console.log("Liveness set");
     _sync();
-    console.log("Sync complete");
 
     emit BookkeeperDeployed(_bundler, _rules);
-    console.log("Bookkeeper deployed");
   }
 
   /// @notice Proposes a new bundle of transactions.

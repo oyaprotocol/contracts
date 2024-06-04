@@ -88,8 +88,9 @@ contract BookkeeperTest is Test {
   function testRemoveBundler() public {
     vm.startPrank(owner);
     bookkeeper.addBundler(newBundler);
-    bookkeeper.removeBundler(newBundler);
+    assertTrue(bookkeeper.bundlers(newBundler));
 
+    bookkeeper.removeBundler(newBundler);
     assertFalse(bookkeeper.bundlers(newBundler));
     vm.stopPrank();
   }

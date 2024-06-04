@@ -8,12 +8,10 @@ contract MockFinder is FinderInterface {
     mapping(bytes32 => address) private addresses;
 
     function changeImplementationAddress(bytes32 interfaceName, address implementation) external {
-        console.log("Registering implementation");
         addresses[interfaceName] = implementation;
     }
 
     function getImplementationAddress(bytes32 interfaceName) external view override returns (address) {
-        console.log("Getting implementation");
         return addresses[interfaceName];
     }
 }
