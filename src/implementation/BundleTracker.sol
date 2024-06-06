@@ -137,9 +137,7 @@ contract BundleTracker is OptimisticProposer {
   function assertionResolvedCallback(bytes32 assertionId, bool assertedTruthfully) public override {
     require(msg.sender == address(optimisticOracleV3));
     // If the assertion was true, then the data assertion is resolved.
-    if (assertedTruthfully) {
-      lastFinalizedBundle = assertions[assertionId];
-    }
+    if (assertedTruthfully) lastFinalizedBundle = assertions[assertionId];
   }
 
 }

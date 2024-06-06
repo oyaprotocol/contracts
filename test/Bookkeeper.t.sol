@@ -1,16 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.6;
 
-import "forge-std/Test.sol";
-import "forge-std/console.sol";
 import "../src/implementation/Bookkeeper.sol";
 import "../src/mocks/MockAddressWhitelist.sol";
 import "../src/mocks/MockERC20.sol";
 import "../src/mocks/MockFinder.sol";
 import "../src/mocks/MockIdentifierWhitelist.sol";
 import "../src/mocks/MockOptimisticOracleV3.sol";
+import "forge-std/Test.sol";
+import "forge-std/console.sol";
 
 contract BookkeeperTest is Test {
+
   Bookkeeper public bookkeeper;
   MockFinder public mockFinder;
   MockAddressWhitelist public mockAddressWhitelist;
@@ -42,14 +43,7 @@ contract BookkeeperTest is Test {
     mockIdentifierWhitelist.addIdentifier(identifier);
 
     vm.startPrank(owner);
-    bookkeeper = new Bookkeeper(
-      address(mockFinder),
-      address(mockERC20),
-      bondAmount,
-      rules,
-      identifier,
-      liveness
-    );
+    bookkeeper = new Bookkeeper(address(mockFinder), address(mockERC20), bondAmount, rules, identifier, liveness);
     vm.stopPrank();
   }
 
@@ -61,4 +55,5 @@ contract BookkeeperTest is Test {
     assertTrue(bookkeeper.bookkeepers(bookkeeperAddress, chainId));
     vm.stopPrank();
   }
+
 }

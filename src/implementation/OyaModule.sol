@@ -26,14 +26,14 @@ contract OyaModule is OptimisticProposer, Module {
 
   event SetRecoverer(address indexed recoverer);
 
-  event ChangeAccountMode(string mode, uint timestamp);
+  event ChangeAccountMode(string mode, uint256 timestamp);
 
   string public accountRules;
   string public globalRules;
 
   // Accounts are in automatic mode by default, with the bundler proposing transactions.
   // Manual mode is active starting at the timestamp, inactive if value is zero.
-  uint public manualMode = 0;
+  uint256 public manualMode = 0;
 
   bool public frozen = false;
 

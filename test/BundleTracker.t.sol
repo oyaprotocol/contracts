@@ -1,16 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.6;
 
-import "forge-std/Test.sol";
-import "forge-std/console.sol";
 import "../src/implementation/BundleTracker.sol";
 import "../src/mocks/MockAddressWhitelist.sol";
 import "../src/mocks/MockERC20.sol";
 import "../src/mocks/MockFinder.sol";
 import "../src/mocks/MockIdentifierWhitelist.sol";
 import "../src/mocks/MockOptimisticOracleV3.sol";
+import "forge-std/Test.sol";
+import "forge-std/console.sol";
 
 contract BundleTrackerTest is Test {
+
   BundleTracker public bundleTracker;
   MockFinder public mockFinder;
   MockAddressWhitelist public mockAddressWhitelist;
@@ -44,15 +45,8 @@ contract BundleTrackerTest is Test {
     mockIdentifierWhitelist.addIdentifier(identifier);
 
     vm.startPrank(owner);
-    bundleTracker = new BundleTracker(
-      address(mockFinder),
-      bundler,
-      address(mockERC20),
-      bondAmount,
-      rules,
-      identifier,
-      liveness
-    );
+    bundleTracker =
+      new BundleTracker(address(mockFinder), bundler, address(mockERC20), bondAmount, rules, identifier, liveness);
     vm.stopPrank();
   }
 
@@ -93,4 +87,5 @@ contract BundleTrackerTest is Test {
     assertFalse(bundleTracker.bundlers(newBundler));
     vm.stopPrank();
   }
+
 }

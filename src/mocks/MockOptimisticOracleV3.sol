@@ -4,6 +4,7 @@ pragma solidity ^0.8.6;
 import "@uma/core/optimistic-oracle-v3/interfaces/OptimisticOracleV3Interface.sol";
 
 contract MockOptimisticOracleV3 is OptimisticOracleV3Interface {
+
   mapping(bytes32 => Assertion) public assertions;
 
   function assertTruth(
@@ -41,11 +42,11 @@ contract MockOptimisticOracleV3 is OptimisticOracleV3Interface {
     return assertionId;
   }
 
-  function getMinimumBond(address /* currency */) external pure override returns (uint256) {
+  function getMinimumBond(address /* currency */ ) external pure override returns (uint256) {
     return 100;
   }
 
-  function settleAndGetAssertionResult(bytes32 /* assertionId */) external pure override returns (bool) {
+  function settleAndGetAssertionResult(bytes32 /* assertionId */ ) external pure override returns (bool) {
     return true;
   }
 
@@ -61,13 +62,14 @@ contract MockOptimisticOracleV3 is OptimisticOracleV3Interface {
     return keccak256("default");
   }
 
-  function disputeAssertion(bytes32 /* assertionId */, address /* disputer */) external override {}
+  function disputeAssertion(bytes32, /* assertionId */ address /* disputer */ ) external override {}
 
-  function getAssertionResult(bytes32 /* assertionId */) external pure override returns (bool) {
+  function getAssertionResult(bytes32 /* assertionId */ ) external pure override returns (bool) {
     return true;
   }
 
-  function settleAssertion(bytes32 /* assertionId */) external override {}
+  function settleAssertion(bytes32 /* assertionId */ ) external override {}
 
-  function syncUmaParams(bytes32 /* identifier */, address /* currency */) external override {}
+  function syncUmaParams(bytes32, /* identifier */ address /* currency */ ) external override {}
+
 }

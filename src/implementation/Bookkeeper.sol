@@ -48,13 +48,8 @@ contract Bookkeeper is OptimisticProposer, Executor {
   function setUp(bytes memory initializeParams) public initializer {
     _startReentrantGuardDisabled();
     __Ownable_init();
-    (
-      address _collateral,
-      uint256 _bondAmount,
-      string memory _rules,
-      bytes32 _identifier,
-      uint64 _liveness
-    ) = abi.decode(initializeParams, (address, uint256, string, bytes32, uint64));
+    (address _collateral, uint256 _bondAmount, string memory _rules, bytes32 _identifier, uint64 _liveness) =
+      abi.decode(initializeParams, (address, uint256, string, bytes32, uint64));
     setCollateralAndBond(IERC20(_collateral), _bondAmount);
     setRules(_rules);
     setIdentifier(_identifier);

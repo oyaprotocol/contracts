@@ -4,6 +4,7 @@ pragma solidity ^0.8.6;
 import "@uma/core/common/interfaces/AddressWhitelistInterface.sol";
 
 contract MockAddressWhitelist is AddressWhitelistInterface {
+
   mapping(address => bool) public whitelist;
 
   function addToWhitelist(address _address) external {
@@ -22,4 +23,5 @@ contract MockAddressWhitelist is AddressWhitelistInterface {
     address[] memory emptyArray = new address[](0);
     return emptyArray;
   }
+
 }
