@@ -44,6 +44,9 @@ contract BundleTrackerTest is Test {
     mockCollateral = new MockERC20();
     newMockCollateral = new MockERC20();
 
+    // Give the "owner" some collateral
+    mockCollateral.transfer(owner, 1000 * 10 ** 18);
+
     // Setup the finder to return the mocks
     mockFinder.changeImplementationAddress(OracleInterfaces.CollateralWhitelist, address(mockAddressWhitelist));
     mockFinder.changeImplementationAddress(OracleInterfaces.IdentifierWhitelist, address(mockIdentifierWhitelist));
@@ -163,22 +166,21 @@ contract BundleTrackerTest is Test {
     vm.stopPrank();
   }
 
-  // tests currently failing
-
-  // function testProposeTransactions() public {
-  //   vm.startPrank(owner);
-  //   OptimisticProposer.Transaction[] memory testTransactions = new OptimisticProposer.Transaction[](2);
+  function testProposeTransactions() public {
+    vm.startPrank(owner);
+    mockCollateral.approve(address(bundleTracker), 1000 * 10 ** 18);
+    OptimisticProposer.Transaction[] memory testTransactions = new OptimisticProposer.Transaction[](2);
     
-  //   testTransactions[0] = OptimisticProposer.Transaction(
-  //     address(4), Enum.Operation(0), 0, "");
-  //   testTransactions[1] = OptimisticProposer.Transaction(
-  //     address(mockOptimisticOracleV3), Enum.Operation(0), 0, "0x");
+    testTransactions[0] = OptimisticProposer.Transaction(
+      address(4), Enum.Operation(0), 0, "");
+    testTransactions[1] = OptimisticProposer.Transaction(
+      address(mockOptimisticOracleV3), Enum.Operation(0), 0, "0x");
     
-  //   bundleTracker.proposeTransactions(
-  //     testTransactions, 
-  //     "0x6f79612074657374000000000000000000000000000000000000000000000000"
-  //   ); // "oya test" is the explanation
-  //   vm.stopPrank();
-  // }
+    bundleTracker.proposeTransactions(
+      testTransactions, 
+      "0x6f79612074657374000000000000000000000000000000000000000000000000"
+    ); // "oya test" is the explanation
+    vm.stopPrank();
+  }
 
 }

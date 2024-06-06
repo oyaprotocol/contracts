@@ -42,6 +42,9 @@ contract BookkeeperTest is Test {
     mockCollateral = new MockERC20();
     newMockCollateral = new MockERC20();
 
+    // Give the "owner" some collateral
+    mockCollateral.transfer(owner, 1000 * 10 ** 18);
+
     // Setup the finder to return the mocks
     mockFinder.changeImplementationAddress(OracleInterfaces.CollateralWhitelist, address(mockAddressWhitelist));
     mockFinder.changeImplementationAddress(OracleInterfaces.IdentifierWhitelist, address(mockIdentifierWhitelist));
@@ -52,9 +55,8 @@ contract BookkeeperTest is Test {
     mockAddressWhitelist.addToWhitelist(address(newMockCollateral));
     mockIdentifierWhitelist.addIdentifier(identifier);
 
-    vm.startPrank(owner);
+    vm.prank(owner);
     bookkeeper = new Bookkeeper(address(mockFinder), address(mockCollateral), bondAmount, rules, identifier, liveness);
-    vm.stopPrank();
   }
 
   function testUpdateBookkeeper() public {
@@ -131,22 +133,21 @@ contract BookkeeperTest is Test {
     vm.stopPrank();
   }
 
-  // tests currently failing
-
-  // function testProposeTransactions() public {
-  //   vm.startPrank(owner);
-  //   OptimisticProposer.Transaction[] memory testTransactions = new OptimisticProposer.Transaction[](2);
+  function testProposeTransactions() public {
+    vm.startPrank(owner);
+    mockCollateral.approve(address(bookkeeper), 1000 * 10 ** 18);
+    OptimisticProposer.Transaction[] memory testTransactions = new OptimisticProposer.Transaction[](2);
     
-  //   testTransactions[0] = OptimisticProposer.Transaction(
-  //     address(4), Enum.Operation(0), 0, "");
-  //   testTransactions[1] = OptimisticProposer.Transaction(
-  //     address(mockOptimisticOracleV3), Enum.Operation(0), 0, "0x");
+    testTransactions[0] = OptimisticProposer.Transaction(
+      address(4), Enum.Operation(0), 0, "");
+    testTransactions[1] = OptimisticProposer.Transaction(
+      address(mockOptimisticOracleV3), Enum.Operation(0), 0, "0x");
     
-  //   bookkeeper.proposeTransactions(
-  //     testTransactions, 
-  //     "0x6f79612074657374000000000000000000000000000000000000000000000000"
-  //   ); // "oya test" is the explanation
-  //   vm.stopPrank();
-  // }
+    bookkeeper.proposeTransactions(
+      testTransactions, 
+      "0x6f79612074657374000000000000000000000000000000000000000000000000"
+    ); // "oya test" is the explanation
+    vm.stopPrank();
+  }
 
 }
