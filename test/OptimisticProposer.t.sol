@@ -18,7 +18,8 @@ contract OptimisticProposerTest is Test {
   MockIdentifierWhitelist public mockIdentifierWhitelist;
   MockOptimisticOracleV3 public mockOptimisticOracleV3;
   MockERC20 public mockCollateral;
-  address public newOwner = address(1);
+  address public owner = address(1);
+  address public newOwner = address(2);
   uint256 public bondAmount = 1000;
   string public rules = "Sample rules";
   bytes32 public identifier = keccak256("Identifier");
@@ -41,16 +42,39 @@ contract OptimisticProposerTest is Test {
     mockAddressWhitelist.addToWhitelist(address(mockCollateral));
     mockIdentifierWhitelist.addIdentifier(identifier);
 
+    // Deploy the OptimisticProposer contract, default owner is deployer, i.e., the zero address in tests
     optimisticProposer =
       new OptimisticProposer();
-    console.log(optimisticProposer.owner());
+    
+    // Transferring ownership to a non-zero address for test clarity
+    vm.prank(address(0));
+    optimisticProposer.transferOwnership(owner);
   }
 
   function testTransferOwnership() public {
-    vm.startPrank(address(0)); // Original owner is deployer, i.e., the zero address in tests
+    vm.startPrank(owner);
     optimisticProposer.transferOwnership(newOwner);
 
     assertEq(optimisticProposer.owner(), newOwner);
+    vm.stopPrank();
+  }
+
+  function testRenounceOwnership() public {
+    vm.startPrank(owner);
+    optimisticProposer.renounceOwnership();
+    assertEq(optimisticProposer.owner(), address(0));
+    vm.stopPrank();
+  }
+
+  function testNonOwnerCallShouldRevert() public {
+    vm.startPrank(address(3));
+    vm.expectRevert();
+    optimisticProposer.transferOwnership(address(3));
+    vm.stopPrank();
+  }
+
+  function testSetCollateralAndBond() public {
+    vm.startPrank(owner);
     vm.stopPrank();
   }
 
