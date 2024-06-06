@@ -139,6 +139,19 @@ contract BundleTrackerTest is Test {
     vm.stopPrank();
   }
 
+  function testSetIdentifier() public {
+    vm.startPrank(owner);
+    bundleTracker.setIdentifier(identifier);
+    assertEq(bundleTracker.identifier(), identifier);
+    vm.stopPrank();
+  }
+
+  function testSync() public {
+    vm.startPrank(randomAddress);
+    bundleTracker.sync();
+    vm.stopPrank();
+  }
+
   // tests currently failing
 
   // function testSetCollateralAndBond() public {
@@ -146,19 +159,6 @@ contract BundleTrackerTest is Test {
   //   bundleTracker.setCollateralAndBond(mockCollateral, bondAmount);
   //   assertEq(bundleTracker.collateral(), mockCollateral);
   //   assertEq(bundleTracker.bondAmount(), bondAmount);
-  //   vm.stopPrank();
-  // }
-
-  // function testSetIdentifier() public {
-  //   vm.startPrank(owner);
-  //   bundleTracker.setIdentifier(identifier);
-  //   assertEq(bundleTracker.identifier(), identifier);
-  //   vm.stopPrank();
-  // }
-
-  // function testSync() public {
-  //   vm.startPrank(randomAddress);
-  //   bundleTracker.sync();
   //   vm.stopPrank();
   // }
 

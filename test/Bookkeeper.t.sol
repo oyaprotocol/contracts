@@ -107,6 +107,19 @@ contract BookkeeperTest is Test {
     vm.stopPrank();
   }
 
+  function testSetIdentifier() public {
+    vm.startPrank(owner);
+    bookkeeper.setIdentifier(identifier);
+    assertEq(bookkeeper.identifier(), identifier);
+    vm.stopPrank();
+  }
+
+  function testSync() public {
+    vm.startPrank(randomAddress);
+    bookkeeper.sync();
+    vm.stopPrank();
+  }
+
   // tests currently failing
 
   // function testSetCollateralAndBond() public {
@@ -114,19 +127,6 @@ contract BookkeeperTest is Test {
   //   bookkeeper.setCollateralAndBond(mockCollateral, bondAmount);
   //   assertEq(bookkeeper.collateral(), mockCollateral);
   //   assertEq(bookkeeper.bondAmount(), bondAmount);
-  //   vm.stopPrank();
-  // }
-
-  // function testSetIdentifier() public {
-  //   vm.startPrank(owner);
-  //   bookkeeper.setIdentifier(identifier);
-  //   assertEq(bookkeeper.identifier(), identifier);
-  //   vm.stopPrank();
-  // }
-
-  // function testSync() public {
-  //   vm.startPrank(randomAddress);
-  //   bookkeeper.sync();
   //   vm.stopPrank();
   // }
 
