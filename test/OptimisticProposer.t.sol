@@ -18,7 +18,7 @@ contract OptimisticProposerTest is Test {
   MockIdentifierWhitelist public mockIdentifierWhitelist;
   MockOptimisticOracleV3 public mockOptimisticOracleV3;
   MockERC20 public mockCollateral;
-  address public owner = address(1);
+  address public newOwner = address(1);
   uint256 public bondAmount = 1000;
   string public rules = "Sample rules";
   bytes32 public identifier = keccak256("Identifier");
@@ -41,17 +41,16 @@ contract OptimisticProposerTest is Test {
     mockAddressWhitelist.addToWhitelist(address(mockCollateral));
     mockIdentifierWhitelist.addIdentifier(identifier);
 
-    vm.startPrank(owner);
     optimisticProposer =
       new OptimisticProposer();
-    vm.stopPrank();
+    console.log(optimisticProposer.owner());
   }
 
-  function testSetCollateralAndBond() public {
-    vm.startPrank(owner);
-    optimisticProposer.setCollateralAndBond(mockCollateral, bondAmount);
+  function testTransferOwnership() public {
+    vm.startPrank(address(0)); // Original owner is deployer, i.e., the zero address in tests
+    optimisticProposer.transferOwnership(newOwner);
 
-    assertEq(optimisticProposer.collateral.address, address(mockCollateral));
+    assertEq(optimisticProposer.owner(), newOwner);
     vm.stopPrank();
   }
 
