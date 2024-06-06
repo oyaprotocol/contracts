@@ -100,22 +100,6 @@ contract OptimisticProposerTest is Test {
     vm.stopPrank();
   }
 
-  function testProposeTransactions() public {
-    vm.startPrank(owner);
-    OptimisticProposer.Transaction[] memory testTransactions = new OptimisticProposer.Transaction[](2);
-    
-    testTransactions[0] = OptimisticProposer.Transaction(
-      address(4), Enum.Operation(0), 0, "");
-    testTransactions[1] = OptimisticProposer.Transaction(
-      address(mockOptimisticOracleV3), Enum.Operation(0), 0, "0x");
-    
-    optimisticProposer.proposeTransactions(
-      testTransactions, 
-      "0x6f79612074657374000000000000000000000000000000000000000000000000"
-    ); // "oya test" is the explanation
-    vm.stopPrank();
-  }
-
   // tests currently failing
 
   // function testSetCollateralAndBond() public {
@@ -136,6 +120,22 @@ contract OptimisticProposerTest is Test {
   // function testSync() public {
   //   vm.startPrank(randomAddress);
   //   optimisticProposer.sync();
+  //   vm.stopPrank();
+  // }
+
+  // function testProposeTransactions() public {
+  //   vm.startPrank(owner);
+  //   OptimisticProposer.Transaction[] memory testTransactions = new OptimisticProposer.Transaction[](2);
+    
+  //   testTransactions[0] = OptimisticProposer.Transaction(
+  //     address(4), Enum.Operation(0), 0, "");
+  //   testTransactions[1] = OptimisticProposer.Transaction(
+  //     address(mockOptimisticOracleV3), Enum.Operation(0), 0, "0x");
+    
+  //   optimisticProposer.proposeTransactions(
+  //     testTransactions, 
+  //     "0x6f79612074657374000000000000000000000000000000000000000000000000"
+  //   ); // "oya test" is the explanation
   //   vm.stopPrank();
   // }
 

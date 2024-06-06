@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.6;
 
+import "@uma/core/optimistic-oracle-v3/interfaces/EscalationManagerInterface.sol";
+
 import "../src/implementation/Bookkeeper.sol";
 import "../src/mocks/MockAddressWhitelist.sol";
 import "../src/mocks/MockERC20.sol";
@@ -17,13 +19,18 @@ contract BookkeeperTest is Test {
   MockAddressWhitelist public mockAddressWhitelist;
   MockIdentifierWhitelist public mockIdentifierWhitelist;
   MockOptimisticOracleV3 public mockOptimisticOracleV3;
-  MockERC20 public mockERC20;
+  MockERC20 public mockCollateral;
+  EscalationManagerInterface public mockEscalationManager;
   address public owner = address(1);
   address public bookkeeperAddress = address(2);
+  address public newOwner = address(3);
+  address public randomAddress = address(4);
   uint256 public bondAmount = 1000;
   string public rules = "Sample rules";
+  string public newRules = "New rules";
   bytes32 public identifier = keccak256("Identifier");
   uint64 public liveness = 100;
+  uint64 public newLiveness = 200;
 
   function setUp() public {
     // Set up the mock contracts
@@ -31,7 +38,7 @@ contract BookkeeperTest is Test {
     mockAddressWhitelist = new MockAddressWhitelist();
     mockIdentifierWhitelist = new MockIdentifierWhitelist();
     mockOptimisticOracleV3 = new MockOptimisticOracleV3();
-    mockERC20 = new MockERC20();
+    mockCollateral = new MockERC20();
 
     // Setup the finder to return the mocks
     mockFinder.changeImplementationAddress(OracleInterfaces.CollateralWhitelist, address(mockAddressWhitelist));
@@ -39,11 +46,11 @@ contract BookkeeperTest is Test {
     mockFinder.changeImplementationAddress(OracleInterfaces.OptimisticOracleV3, address(mockOptimisticOracleV3));
 
     // Add collateral and identifier to the whitelist
-    mockAddressWhitelist.addToWhitelist(address(mockERC20));
+    mockAddressWhitelist.addToWhitelist(address(mockCollateral));
     mockIdentifierWhitelist.addIdentifier(identifier);
 
     vm.startPrank(owner);
-    bookkeeper = new Bookkeeper(address(mockFinder), address(mockERC20), bondAmount, rules, identifier, liveness);
+    bookkeeper = new Bookkeeper(address(mockFinder), address(mockCollateral), bondAmount, rules, identifier, liveness);
     vm.stopPrank();
   }
 
@@ -55,5 +62,89 @@ contract BookkeeperTest is Test {
     assertTrue(bookkeeper.bookkeepers(bookkeeperAddress, chainId));
     vm.stopPrank();
   }
+
+  // Optimistic Proposer inherited tests
+  function testTransferOwnership() public {
+    vm.startPrank(owner);
+    bookkeeper.transferOwnership(newOwner);
+
+    assertEq(bookkeeper.owner(), newOwner);
+    vm.stopPrank();
+  }
+
+  function testRenounceOwnership() public {
+    vm.startPrank(owner);
+    bookkeeper.renounceOwnership();
+    assertEq(bookkeeper.owner(), address(0));
+    vm.stopPrank();
+  }
+
+  function testNonOwnerCallShouldRevert() public {
+    vm.startPrank(randomAddress);
+    vm.expectRevert();
+    bookkeeper.transferOwnership(randomAddress);
+    vm.stopPrank();
+  }
+
+  function testSetEscalationManager() public {
+    vm.startPrank(owner);
+    bookkeeper.setEscalationManager(address(mockEscalationManager));
+    assertEq(bookkeeper.escalationManager(), address(mockEscalationManager));
+    vm.stopPrank();
+  }
+
+  function testSetRules() public {
+    vm.startPrank(owner);
+    bookkeeper.setRules(newRules);
+    assertEq(bookkeeper.rules(), newRules);
+    vm.stopPrank();
+  }
+
+  function testSetLiveness() public {
+    vm.startPrank(owner);
+    bookkeeper.setLiveness(newLiveness);
+    assertEq(bookkeeper.liveness(), newLiveness);
+    vm.stopPrank();
+  }
+
+  // tests currently failing
+
+  // function testSetCollateralAndBond() public {
+  //   vm.startPrank(owner);
+  //   bookkeeper.setCollateralAndBond(mockCollateral, bondAmount);
+  //   assertEq(bookkeeper.collateral(), mockCollateral);
+  //   assertEq(bookkeeper.bondAmount(), bondAmount);
+  //   vm.stopPrank();
+  // }
+
+  // function testSetIdentifier() public {
+  //   vm.startPrank(owner);
+  //   bookkeeper.setIdentifier(identifier);
+  //   assertEq(bookkeeper.identifier(), identifier);
+  //   vm.stopPrank();
+  // }
+
+  // function testSync() public {
+  //   vm.startPrank(randomAddress);
+  //   bookkeeper.sync();
+  //   vm.stopPrank();
+  // }
+
+  // function testProposeTransactions() public {
+  //   vm.startPrank(owner);
+  //   OptimisticProposer.Transaction[] memory testTransactions = new OptimisticProposer.Transaction[](2);
+    
+  //   testTransactions[0] = OptimisticProposer.Transaction(
+  //     address(4), Enum.Operation(0), 0, "");
+  //   testTransactions[1] = OptimisticProposer.Transaction(
+  //     address(mockOptimisticOracleV3), Enum.Operation(0), 0, "0x");
+    
+  //   bookkeeper.proposeTransactions(
+  //     testTransactions, 
+  //     "0x6f79612074657374000000000000000000000000000000000000000000000000"
+  //   ); // "oya test" is the explanation
+  //   vm.stopPrank();
+  // }
+
 
 }
