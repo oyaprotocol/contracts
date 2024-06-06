@@ -26,8 +26,10 @@ contract OptimisticProposerTest is Test {
   address public randomAddress = address(3);
   uint256 public bondAmount = 1000;
   string public rules = "Sample rules";
+  string public newRules = "New rules";
   bytes32 public identifier = keccak256("Identifier");
   uint64 public liveness = 100;
+  uint64 public newLiveness = 200;
 
   function setUp() public {
     // Set up the mock contracts
@@ -84,9 +86,28 @@ contract OptimisticProposerTest is Test {
     vm.stopPrank();
   }
 
-  function testSync() public {
-    vm.startPrank(randomAddress);
-    optimisticProposer.sync();
+  function testSetRules() public {
+    vm.startPrank(owner);
+    optimisticProposer.setRules(newRules);
+    assertEq(optimisticProposer.rules(), newRules);
+    vm.stopPrank();
+  }
+
+  function testSetLiveness() public {
+    vm.startPrank(owner);
+    optimisticProposer.setLiveness(newLiveness);
+    assertEq(optimisticProposer.liveness(), newLiveness);
+    vm.stopPrank();
+  }
+
+  function testProposeTransactions() public {
+    vm.startPrank(owner);
+    OptimisticProposer.Transaction[] memory testTransactions = new OptimisticProposer.Transaction[](1);
+    testTransactions[0] = OptimisticProposer.Transaction(address(4), Enum.Operation(0), 0, "");
+    optimisticProposer.proposeTransactions(
+      testTransactions, 
+      "0x6f79612074657374000000000000000000000000000000000000000000000000"
+    ); // "oya test" is the explanation
     vm.stopPrank();
   }
 
@@ -104,6 +125,12 @@ contract OptimisticProposerTest is Test {
   //   vm.startPrank(owner);
   //   optimisticProposer.setIdentifier(identifier);
   //   assertEq(optimisticProposer.identifier(), identifier);
+  //   vm.stopPrank();
+  // }
+
+  // function testSync() public {
+  //   vm.startPrank(randomAddress);
+  //   optimisticProposer.sync();
   //   vm.stopPrank();
   // }
 
