@@ -20,6 +20,7 @@ contract OptimisticProposerTest is Test {
   MockIdentifierWhitelist public mockIdentifierWhitelist;
   MockOptimisticOracleV3 public mockOptimisticOracleV3;
   MockERC20 public mockCollateral;
+  MockERC20 public newMockCollateral;
   EscalationManagerInterface public mockEscalationManager;
   address public owner = address(1);
   address public newOwner = address(2);
@@ -38,6 +39,7 @@ contract OptimisticProposerTest is Test {
     mockIdentifierWhitelist = new MockIdentifierWhitelist();
     mockOptimisticOracleV3 = new MockOptimisticOracleV3();
     mockCollateral = new MockERC20();
+    newMockCollateral = new MockERC20();
 
     // Setup the finder to return the mocks
     mockFinder.changeImplementationAddress(OracleInterfaces.CollateralWhitelist, address(mockAddressWhitelist));
@@ -46,6 +48,7 @@ contract OptimisticProposerTest is Test {
 
     // Add collateral and identifier to the whitelist
     mockAddressWhitelist.addToWhitelist(address(mockCollateral));
+    mockAddressWhitelist.addToWhitelist(address(newMockCollateral));
     mockIdentifierWhitelist.addIdentifier(identifier);
 
     // Deploy the OptimisticProposer contract, default owner is deployer, i.e., the zero address in tests
@@ -104,8 +107,8 @@ contract OptimisticProposerTest is Test {
 
   // function testSetCollateralAndBond() public {
   //   vm.startPrank(owner);
-  //   optimisticProposer.setCollateralAndBond(mockCollateral, bondAmount);
-  //   assertEq(optimisticProposer.collateral(), mockCollateral);
+  //   optimisticProposer.setCollateralAndBond(newMockCollateral, bondAmount);
+  //   assertEq(address(optimisticProposer.collateral()), address(newMockCollateral));
   //   assertEq(optimisticProposer.bondAmount(), bondAmount);
   //   vm.stopPrank();
   // }

@@ -20,6 +20,7 @@ contract BookkeeperTest is Test {
   MockIdentifierWhitelist public mockIdentifierWhitelist;
   MockOptimisticOracleV3 public mockOptimisticOracleV3;
   MockERC20 public mockCollateral;
+  MockERC20 public newMockCollateral;
   EscalationManagerInterface public mockEscalationManager;
   address public owner = address(1);
   address public bookkeeperAddress = address(2);
@@ -39,6 +40,7 @@ contract BookkeeperTest is Test {
     mockIdentifierWhitelist = new MockIdentifierWhitelist();
     mockOptimisticOracleV3 = new MockOptimisticOracleV3();
     mockCollateral = new MockERC20();
+    newMockCollateral = new MockERC20();
 
     // Setup the finder to return the mocks
     mockFinder.changeImplementationAddress(OracleInterfaces.CollateralWhitelist, address(mockAddressWhitelist));
@@ -47,6 +49,7 @@ contract BookkeeperTest is Test {
 
     // Add collateral and identifier to the whitelist
     mockAddressWhitelist.addToWhitelist(address(mockCollateral));
+    mockAddressWhitelist.addToWhitelist(address(newMockCollateral));
     mockIdentifierWhitelist.addIdentifier(identifier);
 
     vm.startPrank(owner);
@@ -120,15 +123,15 @@ contract BookkeeperTest is Test {
     vm.stopPrank();
   }
 
-  // tests currently failing
+  function testSetCollateralAndBond() public {
+    vm.startPrank(owner);
+    bookkeeper.setCollateralAndBond(newMockCollateral, bondAmount);
+    assertEq(address(bookkeeper.collateral()), address(newMockCollateral));
+    assertEq(bookkeeper.bondAmount(), bondAmount);
+    vm.stopPrank();
+  }
 
-  // function testSetCollateralAndBond() public {
-  //   vm.startPrank(owner);
-  //   bookkeeper.setCollateralAndBond(mockCollateral, bondAmount);
-  //   assertEq(bookkeeper.collateral(), mockCollateral);
-  //   assertEq(bookkeeper.bondAmount(), bondAmount);
-  //   vm.stopPrank();
-  // }
+  // tests currently failing
 
   // function testProposeTransactions() public {
   //   vm.startPrank(owner);

@@ -102,6 +102,8 @@ contract OptimisticProposer is OptimisticOracleV3CallbackRecipientInterface, Loc
     AddressWhitelistInterface collateralWhitelist = _getCollateralWhitelist();
     bool isWhitelisted = collateralWhitelist.isOnWhitelist(address(_collateral));
     require(isWhitelisted, "Bond token not supported");
+    collateral = _collateral;
+    bondAmount = _bondAmount;
     emit SetCollateralAndBond(_collateral, _bondAmount);
   }
 
