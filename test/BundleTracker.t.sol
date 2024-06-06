@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.6;
 
+import "@uma/core/optimistic-oracle-v3/interfaces/EscalationManagerInterface.sol";
+
 import "../src/implementation/BundleTracker.sol";
 import "../src/mocks/MockAddressWhitelist.sol";
 import "../src/mocks/MockERC20.sol";
@@ -17,15 +19,20 @@ contract BundleTrackerTest is Test {
   MockAddressWhitelist public mockAddressWhitelist;
   MockIdentifierWhitelist public mockIdentifierWhitelist;
   MockOptimisticOracleV3 public mockOptimisticOracleV3;
-  MockERC20 public mockERC20;
+  MockERC20 public mockCollateral;
+  EscalationManagerInterface public mockEscalationManager;
   address public owner = address(1);
   address public bundler = address(2);
   address public nonBundler = address(3);
   address public newBundler = address(4);
+  address public newOwner = address(5);
+  address public randomAddress = address(6);
   uint256 public bondAmount = 1000;
   string public rules = "Sample rules";
+  string public newRules = "New rules";
   bytes32 public identifier = keccak256("Identifier");
   uint64 public liveness = 100;
+  uint64 public newLiveness = 200;
 
   function setUp() public {
     // Set up the mock contracts
@@ -33,7 +40,7 @@ contract BundleTrackerTest is Test {
     mockAddressWhitelist = new MockAddressWhitelist();
     mockIdentifierWhitelist = new MockIdentifierWhitelist();
     mockOptimisticOracleV3 = new MockOptimisticOracleV3();
-    mockERC20 = new MockERC20();
+    mockCollateral = new MockERC20();
 
     // Setup the finder to return the mocks
     mockFinder.changeImplementationAddress(OracleInterfaces.CollateralWhitelist, address(mockAddressWhitelist));
@@ -41,12 +48,12 @@ contract BundleTrackerTest is Test {
     mockFinder.changeImplementationAddress(OracleInterfaces.OptimisticOracleV3, address(mockOptimisticOracleV3));
 
     // Add collateral and identifier to the whitelist
-    mockAddressWhitelist.addToWhitelist(address(mockERC20));
+    mockAddressWhitelist.addToWhitelist(address(mockCollateral));
     mockIdentifierWhitelist.addIdentifier(identifier);
 
     vm.startPrank(owner);
     bundleTracker =
-      new BundleTracker(address(mockFinder), bundler, address(mockERC20), bondAmount, rules, identifier, liveness);
+      new BundleTracker(address(mockFinder), bundler, address(mockCollateral), bondAmount, rules, identifier, liveness);
     vm.stopPrank();
   }
 
@@ -87,5 +94,88 @@ contract BundleTrackerTest is Test {
     assertFalse(bundleTracker.bundlers(newBundler));
     vm.stopPrank();
   }
+
+  // Optimistic Proposer inherited tests
+  function testTransferOwnership() public {
+    vm.startPrank(owner);
+    bundleTracker.transferOwnership(newOwner);
+
+    assertEq(bundleTracker.owner(), newOwner);
+    vm.stopPrank();
+  }
+
+  function testRenounceOwnership() public {
+    vm.startPrank(owner);
+    bundleTracker.renounceOwnership();
+    assertEq(bundleTracker.owner(), address(0));
+    vm.stopPrank();
+  }
+
+  function testNonOwnerCallShouldRevert() public {
+    vm.startPrank(randomAddress);
+    vm.expectRevert();
+    bundleTracker.transferOwnership(randomAddress);
+    vm.stopPrank();
+  }
+
+  function testSetEscalationManager() public {
+    vm.startPrank(owner);
+    bundleTracker.setEscalationManager(address(mockEscalationManager));
+    assertEq(bundleTracker.escalationManager(), address(mockEscalationManager));
+    vm.stopPrank();
+  }
+
+  function testSetRules() public {
+    vm.startPrank(owner);
+    bundleTracker.setRules(newRules);
+    assertEq(bundleTracker.rules(), newRules);
+    vm.stopPrank();
+  }
+
+  function testSetLiveness() public {
+    vm.startPrank(owner);
+    bundleTracker.setLiveness(newLiveness);
+    assertEq(bundleTracker.liveness(), newLiveness);
+    vm.stopPrank();
+  }
+
+  // tests currently failing
+
+  // function testSetCollateralAndBond() public {
+  //   vm.startPrank(owner);
+  //   bundleTracker.setCollateralAndBond(mockCollateral, bondAmount);
+  //   assertEq(bundleTracker.collateral(), mockCollateral);
+  //   assertEq(bundleTracker.bondAmount(), bondAmount);
+  //   vm.stopPrank();
+  // }
+
+  // function testSetIdentifier() public {
+  //   vm.startPrank(owner);
+  //   bundleTracker.setIdentifier(identifier);
+  //   assertEq(bundleTracker.identifier(), identifier);
+  //   vm.stopPrank();
+  // }
+
+  // function testSync() public {
+  //   vm.startPrank(randomAddress);
+  //   bundleTracker.sync();
+  //   vm.stopPrank();
+  // }
+
+  // function testProposeTransactions() public {
+  //   vm.startPrank(owner);
+  //   OptimisticProposer.Transaction[] memory testTransactions = new OptimisticProposer.Transaction[](2);
+    
+  //   testTransactions[0] = OptimisticProposer.Transaction(
+  //     address(4), Enum.Operation(0), 0, "");
+  //   testTransactions[1] = OptimisticProposer.Transaction(
+  //     address(mockOptimisticOracleV3), Enum.Operation(0), 0, "0x");
+    
+  //   bundleTracker.proposeTransactions(
+  //     testTransactions, 
+  //     "0x6f79612074657374000000000000000000000000000000000000000000000000"
+  //   ); // "oya test" is the explanation
+  //   vm.stopPrank();
+  // }
 
 }
