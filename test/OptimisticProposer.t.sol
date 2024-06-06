@@ -23,6 +23,7 @@ contract OptimisticProposerTest is Test {
   EscalationManagerInterface public mockEscalationManager;
   address public owner = address(1);
   address public newOwner = address(2);
+  address public randomAddress = address(3);
   uint256 public bondAmount = 1000;
   string public rules = "Sample rules";
   bytes32 public identifier = keccak256("Identifier");
@@ -70,9 +71,9 @@ contract OptimisticProposerTest is Test {
   }
 
   function testNonOwnerCallShouldRevert() public {
-    vm.startPrank(address(3));
+    vm.startPrank(randomAddress);
     vm.expectRevert();
-    optimisticProposer.transferOwnership(address(3));
+    optimisticProposer.transferOwnership(randomAddress);
     vm.stopPrank();
   }
 
@@ -80,6 +81,12 @@ contract OptimisticProposerTest is Test {
     vm.startPrank(owner);
     optimisticProposer.setEscalationManager(address(mockEscalationManager));
     assertEq(optimisticProposer.escalationManager(), address(mockEscalationManager));
+    vm.stopPrank();
+  }
+
+  function testSync() public {
+    vm.startPrank(randomAddress);
+    optimisticProposer.sync();
     vm.stopPrank();
   }
 
