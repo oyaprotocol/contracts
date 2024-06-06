@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.6;
 
+import "@uma/core/optimistic-oracle-v3/interfaces/EscalationManagerInterface.sol";
+
 import "../src/implementation/OptimisticProposer.sol";
 import "../src/mocks/MockAddressWhitelist.sol";
 import "../src/mocks/MockERC20.sol";
@@ -18,6 +20,7 @@ contract OptimisticProposerTest is Test {
   MockIdentifierWhitelist public mockIdentifierWhitelist;
   MockOptimisticOracleV3 public mockOptimisticOracleV3;
   MockERC20 public mockCollateral;
+  EscalationManagerInterface public mockEscalationManager;
   address public owner = address(1);
   address public newOwner = address(2);
   uint256 public bondAmount = 1000;
@@ -73,9 +76,28 @@ contract OptimisticProposerTest is Test {
     vm.stopPrank();
   }
 
-  function testSetCollateralAndBond() public {
+  function testSetEscalationManager() public {
     vm.startPrank(owner);
+    optimisticProposer.setEscalationManager(address(mockEscalationManager));
+    assertEq(optimisticProposer.escalationManager(), address(mockEscalationManager));
     vm.stopPrank();
   }
+
+  // tests currently failing
+
+  // function testSetCollateralAndBond() public {
+  //   vm.startPrank(owner);
+  //   optimisticProposer.setCollateralAndBond(mockCollateral, bondAmount);
+  //   assertEq(optimisticProposer.collateral(), mockCollateral);
+  //   assertEq(optimisticProposer.bondAmount(), bondAmount);
+  //   vm.stopPrank();
+  // }
+
+  // function testSetIdentifier() public {
+  //   vm.startPrank(owner);
+  //   optimisticProposer.setIdentifier(identifier);
+  //   assertEq(optimisticProposer.identifier(), identifier);
+  //   vm.stopPrank();
+  // }
 
 }
