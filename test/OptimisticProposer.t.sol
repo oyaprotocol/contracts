@@ -102,8 +102,13 @@ contract OptimisticProposerTest is Test {
 
   function testProposeTransactions() public {
     vm.startPrank(owner);
-    OptimisticProposer.Transaction[] memory testTransactions = new OptimisticProposer.Transaction[](1);
-    testTransactions[0] = OptimisticProposer.Transaction(address(4), Enum.Operation(0), 0, "");
+    OptimisticProposer.Transaction[] memory testTransactions = new OptimisticProposer.Transaction[](2);
+    
+    testTransactions[0] = OptimisticProposer.Transaction(
+      address(4), Enum.Operation(0), 0, "");
+    testTransactions[1] = OptimisticProposer.Transaction(
+      address(mockOptimisticOracleV3), Enum.Operation(0), 0, "0x");
+    
     optimisticProposer.proposeTransactions(
       testTransactions, 
       "0x6f79612074657374000000000000000000000000000000000000000000000000"
