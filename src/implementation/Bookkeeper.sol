@@ -15,8 +15,31 @@ contract Bookkeeper is OptimisticProposer, Executor {
 
   event BookkeeperUpdated(address indexed contractAddress, uint256 indexed chainId, bool isApproved);
 
+  event SetGlobalRules(string globalRules);
+
+  event SetAccountRules(address indexed account, string accountRules);
+
+  event SetController(address indexed account, address indexed controller);
+
+  event SetRecoverer(address indexed account, address indexed recoverer);
+
+  event ChangeAccountMode(address indexed account, string mode, uint256 timestamp);
+
   /// @notice Mapping of Bookkeeper contract address to chain IDs, and whether they are authorized.
   mapping(address => mapping(uint256 => bool)) public bookkeepers;
+
+  string public globalRules;
+
+  mapping(address => string) public accountRules;
+
+  // Accounts are in automatic mode by default, with the bundler proposing transactions.
+  // Manual mode is active starting at the timestamp, inactive if value is zero.
+  mapping(address => uint256) public manualMode;
+
+  mapping(address => bool) public frozen;
+
+  mapping(address => mapping(address => bool)) public isController; // Says if address is a controller of this Oya account.
+  mapping(address => mapping(address => bool)) public isRecoverer; // Says if address is a recoverer of this Oya account.
 
   /**
    * @notice Construct Oya Bookkeeper contract.
