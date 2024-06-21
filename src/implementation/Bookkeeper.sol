@@ -132,4 +132,53 @@ contract Bookkeeper is OptimisticProposer, Executor {
     emit ProposalExecuted(proposalHash, assertionId);
   }
 
+
+
+  // Porting over account management functions from OyaModule
+  function setController(address _controller) public onlyOwner {
+    isController[_controller] = true;
+    emit SetController(_controller);
+  }
+
+  function setRecoverer(address _recoverer) public onlyOwner {
+    isRecoverer[_recoverer] = true;
+    emit SetRecoverer(_recoverer);
+  }
+
+  /**
+   * @notice Sets the rules that will be used to evaluate future proposals from this account.
+   * @param _rules string that outlines or references the location where the rules can be found.
+   */
+  function setAccountRules(string memory _rules) public onlyOwner {
+    // Set reference to the rules for the Oya module
+    require(bytes(_rules).length > 0, "Rules can not be empty");
+    accountRules = _rules;
+    emit SetAccountRules(_rules);
+  }
+  
+  // This function goes into manual mode. Only controllers may propose transactions for this
+  // account while in manual, and controllers may not use the bundler. This is useful for
+  // transactions that the bundler can not serve due to lack or liquidity or other reasons.
+  // This is enforced through the global rules related to Oya proposals.
+  function goManual() public {
+    require(isController[msg.sender], "Not a controller");
+    // add a time delay so pending bundler transactions are resolved before going manual
+    manualMode = block.timestamp + 15 minutes;
+    emit ChangeAccountMode("manual", manualMode);
+  }
+
+  // This function takes the account out of manual mode. Controllers may resume using the
+  // bundler, and may not propose transactions of their own.
+  function goAutomatic() public {
+    require(isController[msg.sender], "Not a controller");
+    require(manualMode > block.timestamp, "Not in manual mode");
+    manualMode = 0;
+    emit ChangeAccountMode("automatic", block.timestamp);
+  }
+
+  function freeze() public {
+    require(isRecoverer[msg.sender], "Not a recoverer");
+    frozen = true;
+  }
+
 }
