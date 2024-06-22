@@ -132,9 +132,6 @@ contract Bookkeeper is OptimisticProposer, Executor {
     emit ProposalExecuted(proposalHash, assertionId);
   }
 
-
-
-  // Porting over account management functions from OyaModule
   function setController(address _account, address _controller) public {
     require(msg.sender == _account || isController[_account][msg.sender], "Not a controller");
     isController[_account][_controller] = true;
