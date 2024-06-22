@@ -135,50 +135,53 @@ contract Bookkeeper is OptimisticProposer, Executor {
 
 
   // Porting over account management functions from OyaModule
-  function setController(address _controller) public onlyOwner {
-    isController[_controller] = true;
-    emit SetController(_controller);
+  function setController(address _account, address _controller) public {
+    require(msg.sender == _account || isController[_account][msg.sender], "Not a controller");
+    isController[_account][_controller] = true;
+    emit SetController(_account, _controller);
   }
 
-  function setRecoverer(address _recoverer) public onlyOwner {
-    isRecoverer[_recoverer] = true;
-    emit SetRecoverer(_recoverer);
+  function setRecoverer(address _account, address _recoverer) public {
+    require(msg.sender == _account || isController[_account][msg.sender], "Not a controller");
+    isRecoverer[_account][_recoverer] = true;
+    emit SetRecoverer(_account, _recoverer);
   }
 
   /**
    * @notice Sets the rules that will be used to evaluate future proposals from this account.
    * @param _rules string that outlines or references the location where the rules can be found.
    */
-  function setAccountRules(string memory _rules) public onlyOwner {
+  function setAccountRules(address _account, string memory _rules) public {
+    require(msg.sender == _account || isController[_account][msg.sender], "Not a controller");
     // Set reference to the rules for the Oya module
     require(bytes(_rules).length > 0, "Rules can not be empty");
-    accountRules = _rules;
-    emit SetAccountRules(_rules);
+    accountRules[_account] = _rules;
+    emit SetAccountRules(_account, _rules);
   }
   
   // This function goes into manual mode. Only controllers may propose transactions for this
   // account while in manual, and controllers may not use the bundler. This is useful for
   // transactions that the bundler can not serve due to lack or liquidity or other reasons.
   // This is enforced through the global rules related to Oya proposals.
-  function goManual() public {
-    require(isController[msg.sender], "Not a controller");
+  function goManual(address _account) public {
+    require(msg.sender == _account || isController[_account][msg.sender], "Not a controller");
     // add a time delay so pending bundler transactions are resolved before going manual
-    manualMode = block.timestamp + 15 minutes;
-    emit ChangeAccountMode("manual", manualMode);
+    manualMode[_account] = block.timestamp + 15 minutes;
+    emit ChangeAccountMode(_account, "manual", manualMode[_account]);
   }
 
   // This function takes the account out of manual mode. Controllers may resume using the
   // bundler, and may not propose transactions of their own.
-  function goAutomatic() public {
-    require(isController[msg.sender], "Not a controller");
-    require(manualMode > block.timestamp, "Not in manual mode");
-    manualMode = 0;
-    emit ChangeAccountMode("automatic", block.timestamp);
+  function goAutomatic(address _account) public {
+    require(msg.sender == _account || isController[_account][msg.sender], "Not a controller");
+    require(manualMode[_account] > block.timestamp, "Not in manual mode");
+    manualMode[_account] = 0;
+    emit ChangeAccountMode(_account, "automatic", block.timestamp);
   }
 
-  function freeze() public {
-    require(isRecoverer[msg.sender], "Not a recoverer");
-    frozen = true;
+  function freeze(address _account) public {
+    require(isRecoverer[_account][msg.sender], "Not a recoverer");
+    frozen[_account] = true;
   }
 
 }
