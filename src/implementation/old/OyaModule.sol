@@ -24,7 +24,7 @@ contract OyaModule is OptimisticProposer, Module {
 
   event SetController(address indexed controller);
 
-  event SetRecoverer(address indexed recoverer);
+  event SetRecoverer(address indexed guardian);
 
   event ChangeAccountMode(string mode, uint256 timestamp);
 
@@ -38,13 +38,13 @@ contract OyaModule is OptimisticProposer, Module {
   bool public frozen = false;
 
   mapping(address => bool) public isController; // Says if address is a controller of this Oya account.
-  mapping(address => bool) public isRecoverer; // Says if address is a recoverer of this Oya account.
+  mapping(address => bool) public isRecoverer; // Says if address is a guardian of this Oya account.
 
   /**
    * @notice Construct Oya module.
    * @param _finder UMA Finder contract address.
    * @param _controller Address of the Oya account controller.
-   * @param _recoverer Address of the Oya account recovery address.
+   * @param _guardian Address of the Oya account recovery address.
    * @param _safe Address of the Oya account Safe.
    * @param _collateral Address of the ERC20 collateral used for bonds.
    * @param _bondAmount Amount of collateral currency to make assertions for proposed transactions
@@ -56,7 +56,7 @@ contract OyaModule is OptimisticProposer, Module {
   constructor(
     address _finder,
     address _controller,
-    address _recoverer,
+    address _guardian,
     address _safe,
     address _collateral,
     uint256 _bondAmount,
@@ -66,7 +66,7 @@ contract OyaModule is OptimisticProposer, Module {
     uint64 _liveness
   ) {
     bytes memory initializeParams = abi.encode(
-      _controller, _recoverer, _safe, _collateral, _bondAmount, _accountRules, _globalRules, _identifier, _liveness
+      _controller, _guardian, _safe, _collateral, _bondAmount, _accountRules, _globalRules, _identifier, _liveness
     );
     require(_finder != address(0), "Finder address can not be empty");
     finder = FinderInterface(_finder);
@@ -84,7 +84,7 @@ contract OyaModule is OptimisticProposer, Module {
     __Ownable_init();
     (
       address _controller,
-      address _recoverer,
+      address _guardian,
       address _safe,
       address _collateral,
       uint256 _bondAmount,
@@ -99,7 +99,7 @@ contract OyaModule is OptimisticProposer, Module {
     setIdentifier(_identifier);
     setLiveness(_liveness);
     setController(_controller);
-    setRecoverer(_recoverer);
+    setRecoverer(_guardian);
     setAvatar(_safe);
     setTarget(_safe);
     transferOwnership(_safe);
@@ -113,9 +113,9 @@ contract OyaModule is OptimisticProposer, Module {
     emit SetController(_controller);
   }
 
-  function setRecoverer(address _recoverer) public onlyOwner {
-    isRecoverer[_recoverer] = true;
-    emit SetRecoverer(_recoverer);
+  function setRecoverer(address _guardian) public onlyOwner {
+    isRecoverer[_guardian] = true;
+    emit SetRecoverer(_guardian);
   }
 
   /**
@@ -200,7 +200,7 @@ contract OyaModule is OptimisticProposer, Module {
   }
 
   function freeze() public {
-    require(isRecoverer[msg.sender], "Not a recoverer");
+    require(isRecoverer[msg.sender], "Not a guardian");
     frozen = true;
   }
 

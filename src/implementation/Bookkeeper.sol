@@ -21,7 +21,7 @@ contract Bookkeeper is OptimisticProposer, Executor {
 
   event SetController(address indexed account, address indexed controller);
 
-  event SetRecoverer(address indexed account, address indexed recoverer);
+  event SetRecoverer(address indexed account, address indexed guardian);
 
   event ChangeAccountMode(address indexed account, string mode, uint256 timestamp);
 
@@ -39,7 +39,7 @@ contract Bookkeeper is OptimisticProposer, Executor {
   mapping(address => bool) public frozen;
 
   mapping(address => mapping(address => bool)) public isController; // Says if address is a controller of this Oya account.
-  mapping(address => mapping(address => bool)) public isRecoverer; // Says if address is a recoverer of this Oya account.
+  mapping(address => mapping(address => bool)) public isRecoverer; // Says if address is a guardian of this Oya account.
 
   /**
    * @notice Construct Oya Bookkeeper contract.
@@ -138,10 +138,10 @@ contract Bookkeeper is OptimisticProposer, Executor {
     emit SetController(_account, _controller);
   }
 
-  function setRecoverer(address _account, address _recoverer) public {
+  function setRecoverer(address _account, address _guardian) public {
     require(msg.sender == _account || isController[_account][msg.sender], "Not a controller");
-    isRecoverer[_account][_recoverer] = true;
-    emit SetRecoverer(_account, _recoverer);
+    isRecoverer[_account][_guardian] = true;
+    emit SetRecoverer(_account, _guardian);
   }
 
   /**
@@ -177,7 +177,7 @@ contract Bookkeeper is OptimisticProposer, Executor {
   }
 
   function freeze(address _account) public {
-    require(isRecoverer[_account][msg.sender], "Not a recoverer");
+    require(isRecoverer[_account][msg.sender], "Not a guardian");
     frozen[_account] = true;
   }
 

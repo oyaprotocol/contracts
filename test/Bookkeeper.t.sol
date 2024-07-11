@@ -172,23 +172,23 @@ contract BookkeeperTest is Test {
 
   function testSetRecoverer() public {
     address account = address(5);
-    address recoverer = address(6);
+    address guardian = address(6);
 
-    // Set controller by account owner to ensure the recoverer can be set
+    // Set controller by account owner to ensure the guardian can be set
     vm.prank(account);
     bookkeeper.setController(account, address(this));
 
-    // Set recoverer by account owner
+    // Set guardian by account owner
     vm.prank(account);
-    bookkeeper.setRecoverer(account, recoverer);
-    assertTrue(bookkeeper.isRecoverer(account, recoverer));
+    bookkeeper.setRecoverer(account, guardian);
+    assertTrue(bookkeeper.isRecoverer(account, guardian));
 
-    // Set recoverer by an existing controller
+    // Set guardian by an existing controller
     vm.prank(address(this));
     bookkeeper.setRecoverer(account, address(7));
     assertTrue(bookkeeper.isRecoverer(account, address(7)));
 
-    // Attempt to set recoverer by a non-authorized user
+    // Attempt to set guardian by a non-authorized user
     vm.prank(randomAddress);
     vm.expectRevert("Not a controller");
     bookkeeper.setRecoverer(account, address(8));
@@ -287,24 +287,24 @@ contract BookkeeperTest is Test {
 
   function testFreeze() public {
     address account = address(5);
-    address recoverer = address(6);
+    address guardian = address(6);
 
-    // Set controller by account owner to ensure the recoverer can be set
+    // Set controller by account owner to ensure the guardian can be set
     vm.prank(account);
     bookkeeper.setController(account, address(this));
 
-    // Set recoverer
+    // Set guardian
     vm.prank(account);
-    bookkeeper.setRecoverer(account, recoverer);
+    bookkeeper.setRecoverer(account, guardian);
 
-    // Freeze by recoverer
-    vm.prank(recoverer);
+    // Freeze by guardian
+    vm.prank(guardian);
     bookkeeper.freeze(account);
     assertTrue(bookkeeper.frozen(account));
 
-    // Attempt to freeze by a non-recoverer
+    // Attempt to freeze by a non-guardian
     vm.prank(randomAddress);
-    vm.expectRevert("Not a recoverer");
+    vm.expectRevert("Not a guardian");
     bookkeeper.freeze(account);
   }
 }
