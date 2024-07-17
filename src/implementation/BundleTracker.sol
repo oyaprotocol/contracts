@@ -19,6 +19,9 @@ contract BundleTracker is OptimisticProposer {
   /// @notice The proposal timestamp of the most recently finalized bundle.
   uint256 public lastFinalizedBundle;
 
+  /// @notice The version of the global rules being used.
+  int256 public version;
+
   /// @notice Mapping of proposal block timestamps to strings pointing to the bundle data.
   mapping(uint256 => string) public bundles;
 
@@ -79,6 +82,7 @@ contract BundleTracker is OptimisticProposer {
     setRules(_rules);
     setIdentifier(_identifier);
     setLiveness(_liveness);
+    setVersion(1);
     _sync();
 
     emit BundleTrackerDeployed(_bundler, _rules);
@@ -138,6 +142,10 @@ contract BundleTracker is OptimisticProposer {
     require(msg.sender == address(optimisticOracleV3));
     // If the assertion was true, then the data assertion is resolved.
     if (assertedTruthfully) lastFinalizedBundle = assertions[assertionId];
+  }
+
+  function setVersion(int256 _version) public onlyOwner {
+    version = _version;
   }
 
 }

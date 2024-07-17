@@ -152,6 +152,13 @@ contract BundleTrackerTest is Test {
     vm.stopPrank();
   }
 
+  function testSetVersion() public {
+    vm.startPrank(owner);
+    bundleTracker.setVersion(2);
+    assertEq(bundleTracker.version(), 2);
+    vm.stopPrank();
+  }
+
   function testSync() public {
     vm.startPrank(randomAddress);
     bundleTracker.sync();
