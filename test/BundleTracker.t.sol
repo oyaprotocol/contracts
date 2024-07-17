@@ -34,6 +34,8 @@ contract BundleTrackerTest is Test {
   bytes32 public identifier = keccak256("Identifier");
   uint64 public liveness = 100;
   uint64 public newLiveness = 200;
+  int64 public version = 1;
+  int64 public newVersion = 2;
 
   function setUp() public {
     // Set up the mock contracts
@@ -59,7 +61,7 @@ contract BundleTrackerTest is Test {
 
     vm.startPrank(owner);
     bundleTracker =
-      new BundleTracker(address(mockFinder), bundler, address(mockCollateral), bondAmount, rules, identifier, liveness);
+      new BundleTracker(address(mockFinder), bundler, address(mockCollateral), bondAmount, rules, identifier, liveness, version);
     vm.stopPrank();
   }
 
@@ -154,8 +156,8 @@ contract BundleTrackerTest is Test {
 
   function testSetVersion() public {
     vm.startPrank(owner);
-    bundleTracker.setVersion(2);
-    assertEq(bundleTracker.version(), 2);
+    bundleTracker.setVersion(newVersion);
+    assertEq(bundleTracker.version(), newVersion);
     vm.stopPrank();
   }
 
