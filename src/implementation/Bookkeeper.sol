@@ -15,9 +15,9 @@ contract Bookkeeper is OptimisticProposer, Executor {
 
   event BookkeeperUpdated(address indexed contractAddress, uint256 indexed chainId, bool isApproved);
 
-  event SetGlobalRules(string globalRules);
-
   event SetAccountRules(address indexed account, string accountRules);
+
+  // Global rules are set by setRules, and have a SetRules event. See OptimisticProposer.sol.
 
   event SetController(address indexed account, address indexed controller);
 
@@ -27,8 +27,6 @@ contract Bookkeeper is OptimisticProposer, Executor {
 
   /// @notice Mapping of Bookkeeper contract address to chain IDs, and whether they are authorized.
   mapping(address => mapping(uint256 => bool)) public bookkeepers;
-
-  string public globalRules;
 
   mapping(address => string) public accountRules;
 

@@ -46,7 +46,6 @@ contract BundleTracker is OptimisticProposer {
    * @param _rules Reference to the Oya global rules.
    * @param _identifier The approved identifier to be used with the contract, compatible with Optimistic Oracle V3.
    * @param _liveness The period, in seconds, in which a proposal can be disputed.
-   * @param _version The version of the global rules being used.
    */
   constructor(
     address _finder,
@@ -55,12 +54,11 @@ contract BundleTracker is OptimisticProposer {
     uint256 _bondAmount,
     string memory _rules,
     bytes32 _identifier,
-    uint64 _liveness,
-    int64 _version
+    uint64 _liveness
   ) {
     require(_finder != address(0), "Finder address can not be empty");
     finder = FinderInterface(_finder);
-    bytes memory initializeParams = abi.encode(_bundler, _collateral, _bondAmount, _rules, _identifier, _liveness, _version);
+    bytes memory initializeParams = abi.encode(_bundler, _collateral, _bondAmount, _rules, _identifier, _liveness);
     setUp(initializeParams);
   }
 
@@ -77,15 +75,13 @@ contract BundleTracker is OptimisticProposer {
       uint256 _bondAmount,
       string memory _rules,
       bytes32 _identifier,
-      uint64 _liveness,
-      int64 _version
-    ) = abi.decode(initializeParams, (address, address, uint256, string, bytes32, uint64, int64));
+      uint64 _liveness
+    ) = abi.decode(initializeParams, (address, address, uint256, string, bytes32, uint64));
     addBundler(_bundler);
     setCollateralAndBond(IERC20(_collateral), _bondAmount);
     setRules(_rules);
     setIdentifier(_identifier);
     setLiveness(_liveness);
-    setVersion(_version);
     _sync();
 
     emit BundleTrackerDeployed(_bundler, _rules);
@@ -145,10 +141,6 @@ contract BundleTracker is OptimisticProposer {
     require(msg.sender == address(optimisticOracleV3));
     // If the assertion was true, then the data assertion is resolved.
     if (assertedTruthfully) lastFinalizedBundle = assertions[assertionId];
-  }
-
-  function setVersion(int64 _version) public onlyOwner {
-    version = _version;
   }
 
 }
