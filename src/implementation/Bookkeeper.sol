@@ -25,6 +25,8 @@ contract Bookkeeper is OptimisticProposer, Executor {
 
   event ChangeAccountMode(address indexed account, string mode, uint256 timestamp);
 
+  event AccountUnfrozen(address indexed account);
+
   /// @notice Mapping of Bookkeeper contract address to chain IDs, and whether they are authorized.
   mapping(address => mapping(uint256 => bool)) public bookkeepers;
 
@@ -130,13 +132,13 @@ contract Bookkeeper is OptimisticProposer, Executor {
     emit ProposalExecuted(proposalHash, assertionId);
   }
 
-  function setController(address _account, address _controller) public {
+  function setController(address _account, address _controller) external {
     require(msg.sender == _account || isController[_account][msg.sender], "Not a controller");
     isController[_account][_controller] = true;
     emit SetController(_account, _controller);
   }
 
-  function setRecoverer(address _account, address _guardian) public {
+  function setRecoverer(address _account, address _guardian) external {
     require(msg.sender == _account || isController[_account][msg.sender], "Not a controller");
     isRecoverer[_account][_guardian] = true;
     emit SetRecoverer(_account, _guardian);
@@ -146,7 +148,7 @@ contract Bookkeeper is OptimisticProposer, Executor {
    * @notice Sets the rules that will be used to evaluate future proposals from this account.
    * @param _rules string that outlines or references the location where the rules can be found.
    */
-  function setAccountRules(address _account, string memory _rules) public {
+  function setAccountRules(address _account, string memory _rules) external {
     require(msg.sender == _account || isController[_account][msg.sender], "Not a controller");
     // Set reference to the rules for the Oya module
     require(bytes(_rules).length > 0, "Rules can not be empty");
@@ -158,7 +160,7 @@ contract Bookkeeper is OptimisticProposer, Executor {
   // account while in manual, and controllers may not use the bundler. This is useful for
   // transactions that the bundler can not serve due to lack or liquidity or other reasons.
   // This is enforced through the global rules related to Oya proposals.
-  function goManual(address _account) public {
+  function goManual(address _account) external {
     require(msg.sender == _account || isController[_account][msg.sender], "Not a controller");
     // add a time delay so pending bundler transactions are resolved before going manual
     manualMode[_account] = block.timestamp + 15 minutes;
@@ -167,16 +169,23 @@ contract Bookkeeper is OptimisticProposer, Executor {
 
   // This function takes the account out of manual mode. Controllers may resume using the
   // bundler, and may not propose transactions of their own.
-  function goAutomatic(address _account) public {
+  function goAutomatic(address _account) external {
     require(msg.sender == _account || isController[_account][msg.sender], "Not a controller");
     require(manualMode[_account] > block.timestamp, "Not in manual mode");
     manualMode[_account] = 0;
     emit ChangeAccountMode(_account, "automatic", block.timestamp);
   }
 
-  function freeze(address _account) public {
+  function freeze(address _account) external {
     require(isRecoverer[_account][msg.sender], "Not a guardian");
     frozen[_account] = true;
+  }
+
+  function unfreeze(address _account) external {
+    require(isRecoverer[_account][msg.sender], "Not a guardian");
+    require(frozen[_account], "Account is not frozen");
+    frozen[_account] = false;
+    emit AccountUnfrozen(_account);
   }
 
 }
