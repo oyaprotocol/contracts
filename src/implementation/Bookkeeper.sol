@@ -25,18 +25,13 @@ contract Bookkeeper is OptimisticProposer, Executor {
 
   event ChangeAccountMode(address indexed account, string mode, uint256 timestamp);
 
-  event AccountUnfrozen(address indexed account);
+  enum AccountMode { Automatic, Manual, Frozen }
 
   /// @notice Mapping of Bookkeeper contract address to chain IDs, and whether they are authorized.
   mapping(address => mapping(uint256 => bool)) public bookkeepers;
 
   mapping(address => string) public accountRules;
-
-  // Accounts are in automatic mode by default, with the bundler proposing transactions.
-  // Manual mode is active starting at the timestamp, inactive if value is zero.
-  mapping(address => uint256) public manualMode;
-
-  mapping(address => bool) public frozen;
+  mapping(address => AccountMode) public accountModes;
 
   mapping(address => mapping(address => bool)) public isController; // Says if address is a controller of this Oya account.
   mapping(address => mapping(address => bool)) public isGuardian; // Says if address is a guardian of this Oya account.
@@ -162,30 +157,29 @@ contract Bookkeeper is OptimisticProposer, Executor {
   // This is enforced through the global rules related to Oya proposals.
   function goManual(address _account) external {
     require(msg.sender == _account || isController[_account][msg.sender], "Not a controller");
+    accountModes[_account] = AccountMode.Manual;
     // add a time delay so pending bundler transactions are resolved before going manual
-    manualMode[_account] = block.timestamp + 15 minutes;
-    emit ChangeAccountMode(_account, "manual", manualMode[_account]);
+    emit ChangeAccountMode(_account, "Manual", block.timestamp + 15 minutes);
   }
 
   // This function takes the account out of manual mode. Controllers may resume using the
   // bundler, and may not propose transactions of their own.
   function goAutomatic(address _account) external {
     require(msg.sender == _account || isController[_account][msg.sender], "Not a controller");
-    require(manualMode[_account] > block.timestamp, "Not in manual mode");
-    manualMode[_account] = 0;
-    emit ChangeAccountMode(_account, "automatic", block.timestamp);
+    require(accountModes[_account] == AccountMode.Manual, "Account is not in manual mode");
+    emit ChangeAccountMode(_account, "Automatic", block.timestamp);
   }
 
   function freeze(address _account) external {
     require(isGuardian[_account][msg.sender], "Not a guardian");
-    frozen[_account] = true;
+    accountModes[_account] = AccountMode.Frozen;
+    emit ChangeAccountMode(_account, "Frozen", block.timestamp);
   }
 
   function unfreeze(address _account) external {
     require(isGuardian[_account][msg.sender], "Not a guardian");
-    require(frozen[_account], "Account is not frozen");
-    frozen[_account] = false;
-    emit AccountUnfrozen(_account);
+    accountModes[_account] = AccountMode.Automatic;
+    emit ChangeAccountMode(_account, "Automatic", block.timestamp);
   }
 
 }
