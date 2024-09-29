@@ -15,3 +15,6 @@ docs/
 
 # VS Code settings
 .vscode/
+
+# Foundry stuff
+.gas-snapshot

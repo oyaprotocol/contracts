@@ -17,8 +17,6 @@ contract Bookkeeper is OptimisticProposer, Executor {
 
   event SetAccountRules(address indexed account, string accountRules);
 
-  // Global rules are set by setRules, and have a SetRules event. See OptimisticProposer.sol.
-
   event SetController(address indexed account, address indexed controller);
 
   event SetGuardian(address indexed account, address indexed guardian);
@@ -39,8 +37,8 @@ contract Bookkeeper is OptimisticProposer, Executor {
   // If set to 0, the account is not in manual mode.
   mapping(address => uint256) public manualModeLiveTime;
 
-  mapping(address => mapping(address => bool)) public isController; // Says if address is a controller of this Oya account.
-  mapping(address => mapping(address => bool)) public isGuardian; // Says if address is a guardian of this Oya account.
+  mapping(address => mapping(address => bool)) public isController;
+  mapping(address => mapping(address => bool)) public isGuardian;
 
   modifier notFrozen(address _account) {
     require(getCurrentMode(_account) != AccountMode.Frozen, "Account is frozen");
@@ -129,11 +127,9 @@ contract Bookkeeper is OptimisticProposer, Executor {
     delete assertionIds[proposalHash];
     delete proposalHashes[assertionId];
 
-    // There is no need to check the assertion result as this point can be reached only for non-disputed assertions.
     // This will revert if the assertion has not been settled and can not currently be settled.
     optimisticOracleV3.settleAndGetAssertionResult(assertionId);
 
-    // Execute the transactions.
     for (uint256 i = 0; i < transactions.length; i++) {
       Transaction memory transaction = transactions[i];
 
