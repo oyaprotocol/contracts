@@ -2,8 +2,6 @@ pragma solidity ^0.8.6;
 
 import "./OptimisticProposer.sol";
 
-/// @title BundleTracker
-/// @dev Allows for adding and removing bundlers, and proposing, finalizing, and canceling bundles.
 contract BundleTracker is OptimisticProposer {
   event BundleCanceled(uint256 indexed timestamp);
   event BundleProposed(uint256 indexed timestamp, string bundleData);
