@@ -71,44 +71,52 @@ contract OptimisticProposer is OptimisticOracleV3CallbackRecipientInterface, Loc
   mapping(bytes32 => bytes32) public assertionIds; // Maps proposal hashes to assertionIds.
   mapping(bytes32 => bytes32) public proposalHashes; // Maps assertionIds to proposal hashes.
 
-  function setCollateralAndBond(IERC20 _collateral, uint256 _bondAmount) public onlyOwner {
-    // ERC20 token to be used as collateral (must be approved by UMA governance).
-    AddressWhitelistInterface collateralWhitelist = _getCollateralWhitelist();
-    bool isWhitelisted = collateralWhitelist.isOnWhitelist(address(_collateral));
-    require(isWhitelisted, "Bond token not supported");
-    collateral = _collateral;
-    bondAmount = _bondAmount;
-    emit SetCollateralAndBond(_collateral, _bondAmount);
+  function assertionDisputedCallback(bytes32 assertionId) external {
+    // Callback to automatically delete a proposal that was disputed.
+    bytes32 proposalHash = proposalHashes[assertionId];
+
+    if (msg.sender == address(optimisticOracleV3)) {
+      // Validate the assertionId through existence of non-zero proposalHash. This is the same check as in
+      // deleteProposalOnUpgrade method that is called in the else branch.
+      require(proposalHash != bytes32(0), "Invalid proposal hash");
+
+      // Delete the disputed proposal and associated assertionId.
+      delete assertionIds[proposalHash];
+      delete proposalHashes[assertionId];
+
+      emit ProposalDeleted(proposalHash, assertionId);
+    } else {
+      deleteProposalOnUpgrade(proposalHash);
+    }
   }
 
-  function setIdentifier(bytes32 _identifier) public onlyOwner {
-    // Set identifier which is used along with the rules to determine if transactions are valid.
-    require(_getIdentifierWhitelist().isIdentifierSupported(_identifier), "Identifier not supported");
-    identifier = _identifier;
-    emit SetIdentifier(_identifier);
+  // This function does nothing and is only here to satisfy the callback recipient interface.
+  function assertionResolvedCallback(bytes32 assertionId, bool assertedTruthfully) external virtual {}
+
+  function deleteProposalOnUpgrade(bytes32 proposalHash) public nonReentrant {
+    // Function to delete a proposal on an Optimistic Oracle V3 upgrade.
+    require(proposalHash != bytes32(0), "Invalid proposal hash");
+    bytes32 assertionId = assertionIds[proposalHash];
+    require(assertionId != bytes32(0), "Proposal hash does not exist");
+
+    // Detect Optimistic Oracle V3 upgrade by checking if it has the matching assertionId.
+    require(optimisticOracleV3.getAssertion(assertionId).asserter == address(0), "OOv3 upgrade not detected");
+
+    // Remove proposal hash and assertionId so that transactions can be re-proposed if needed.
+    delete assertionIds[proposalHash];
+    delete proposalHashes[assertionId];
+
+    emit ProposalDeleted(proposalHash, assertionId);
   }
 
-  function setEscalationManager(address _escalationManager) external onlyOwner {
-    require(_isContract(_escalationManager) || _escalationManager == address(0), "EM is not a contract");
-    escalationManager = _escalationManager;
-    emit SetEscalationManager(_escalationManager);
+  // This only exists so it can be overridden for testing.
+  function getCurrentTime() public view virtual returns (uint256) {
+    return block.timestamp;
   }
 
-  function sync() external nonReentrant {
-    _sync();
-  }
-
-  function setRules(string memory _rules) public onlyOwner {
-    require(bytes(_rules).length > 0, "Rules can not be empty");
-    rules = _rules;
-    emit SetRules(_rules);
-  }
-
-  function setLiveness(uint64 _liveness) public onlyOwner {
-    require(_liveness > 0, "Liveness can't be 0");
-    require(_liveness < 5200 weeks, "Liveness must be less than 5200 weeks");
-    liveness = _liveness;
-    emit SetLiveness(_liveness);
+  function getProposalBond() public view returns (uint256) {
+    uint256 minimumBond = optimisticOracleV3.getMinimumBond(address(collateral));
+    return minimumBond > bondAmount ? minimumBond : bondAmount;
   }
 
   function proposeTransactions(Transaction[] memory transactions, bytes memory explanation) external nonReentrant {
@@ -164,56 +172,44 @@ contract OptimisticProposer is OptimisticOracleV3CallbackRecipientInterface, Loc
     emit TransactionsProposed(proposer, time, assertionId, proposal, proposalHash, explanation, rules, time + liveness);
   }
 
-  function deleteProposalOnUpgrade(bytes32 proposalHash) public nonReentrant {
-    // Function to delete a proposal on an Optimistic Oracle V3 upgrade.
-    require(proposalHash != bytes32(0), "Invalid proposal hash");
-    bytes32 assertionId = assertionIds[proposalHash];
-    require(assertionId != bytes32(0), "Proposal hash does not exist");
-
-    // Detect Optimistic Oracle V3 upgrade by checking if it has the matching assertionId.
-    require(optimisticOracleV3.getAssertion(assertionId).asserter == address(0), "OOv3 upgrade not detected");
-
-    // Remove proposal hash and assertionId so that transactions can be re-proposed if needed.
-    delete assertionIds[proposalHash];
-    delete proposalHashes[assertionId];
-
-    emit ProposalDeleted(proposalHash, assertionId);
+  function setCollateralAndBond(IERC20 _collateral, uint256 _bondAmount) public onlyOwner {
+    // ERC20 token to be used as collateral (must be approved by UMA governance).
+    AddressWhitelistInterface collateralWhitelist = _getCollateralWhitelist();
+    bool isWhitelisted = collateralWhitelist.isOnWhitelist(address(_collateral));
+    require(isWhitelisted, "Bond token not supported");
+    collateral = _collateral;
+    bondAmount = _bondAmount;
+    emit SetCollateralAndBond(_collateral, _bondAmount);
   }
 
-  function assertionDisputedCallback(bytes32 assertionId) external {
-    // Callback to automatically delete a proposal that was disputed.
-    bytes32 proposalHash = proposalHashes[assertionId];
-
-    if (msg.sender == address(optimisticOracleV3)) {
-      // Validate the assertionId through existence of non-zero proposalHash. This is the same check as in
-      // deleteProposalOnUpgrade method that is called in the else branch.
-      require(proposalHash != bytes32(0), "Invalid proposal hash");
-
-      // Delete the disputed proposal and associated assertionId.
-      delete assertionIds[proposalHash];
-      delete proposalHashes[assertionId];
-
-      emit ProposalDeleted(proposalHash, assertionId);
-    } else {
-      deleteProposalOnUpgrade(proposalHash);
-    }
+  function setEscalationManager(address _escalationManager) external onlyOwner {
+    require(_isContract(_escalationManager) || _escalationManager == address(0), "EM is not a contract");
+    escalationManager = _escalationManager;
+    emit SetEscalationManager(_escalationManager);
   }
 
-  // This function does nothing and is only here to satisfy the callback recipient interface.
-  function assertionResolvedCallback(bytes32 assertionId, bool assertedTruthfully) external virtual {}
-
-  function getProposalBond() public view returns (uint256) {
-    uint256 minimumBond = optimisticOracleV3.getMinimumBond(address(collateral));
-    return minimumBond > bondAmount ? minimumBond : bondAmount;
+  function setIdentifier(bytes32 _identifier) public onlyOwner {
+    // Set identifier which is used along with the rules to determine if transactions are valid.
+    require(_getIdentifierWhitelist().isIdentifierSupported(_identifier), "Identifier not supported");
+    identifier = _identifier;
+    emit SetIdentifier(_identifier);
   }
 
-  // This only exists so it can be overridden for testing.
-  function getCurrentTime() public view virtual returns (uint256) {
-    return block.timestamp;
+  function setLiveness(uint64 _liveness) public onlyOwner {
+    require(_liveness > 0, "Liveness can't be 0");
+    require(_liveness < 5200 weeks, "Liveness must be less than 5200 weeks");
+    liveness = _liveness;
+    emit SetLiveness(_liveness);
   }
 
-  function _isContract(address addr) internal view returns (bool) {
-    return addr.code.length > 0;
+  function setRules(string memory _rules) public onlyOwner {
+    require(bytes(_rules).length > 0, "Rules can not be empty");
+    rules = _rules;
+    emit SetRules(_rules);
+  }
+
+  function sync() external nonReentrant {
+    _sync();
   }
 
   // Constructs the claim that will be asserted at the Optimistic Oracle V3.
@@ -243,7 +239,11 @@ contract OptimisticProposer is OptimisticOracleV3CallbackRecipientInterface, Loc
   function _getStore() internal view returns (StoreInterface) {
     return StoreInterface(finder.getImplementationAddress(OracleInterfaces.Store));
   }
-  
+
+  function _isContract(address addr) internal view returns (bool) {
+    return addr.code.length > 0;
+  }
+
   function _sync() internal {
     address newOptimisticOracleV3 = finder.getImplementationAddress(OracleInterfaces.OptimisticOracleV3);
     if (newOptimisticOracleV3 != address(optimisticOracleV3)) {
