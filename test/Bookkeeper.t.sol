@@ -235,11 +235,13 @@ contract BookkeeperTest is Test {
     // Go manual by account owner
     vm.prank(account);
     bookkeeper.setAccountMode(account, Bookkeeper.AccountMode.Manual);
+    assertEq(uint8(bookkeeper.accountModes(account)), uint8(Bookkeeper.AccountMode.Manual));
     assertTrue(bookkeeper.manualModeLiveTime(account) > block.timestamp);
 
     // Go manual by an existing controller
     vm.prank(controller);
     bookkeeper.setAccountMode(account, Bookkeeper.AccountMode.Manual);
+    assertEq(uint8(bookkeeper.accountModes(account)), uint8(Bookkeeper.AccountMode.Manual));
     assertTrue(bookkeeper.manualModeLiveTime(account) > block.timestamp);
 
     // Attempt to go manual by a non-authorized user
@@ -259,19 +261,23 @@ contract BookkeeperTest is Test {
       // First, go manual
       vm.prank(account);
       bookkeeper.setAccountMode(account, Bookkeeper.AccountMode.Manual);
+      assertEq(uint8(bookkeeper.accountModes(account)), uint8(Bookkeeper.AccountMode.Manual));
 
       // Go automatic by account owner
       vm.prank(account);
       bookkeeper.setAccountMode(account, Bookkeeper.AccountMode.Automatic);
+      assertEq(uint8(bookkeeper.accountModes(account)), uint8(Bookkeeper.AccountMode.Automatic));
       assertEq(bookkeeper.manualModeLiveTime(account), 0);
 
       // Go manual again
       vm.prank(account);
       bookkeeper.setAccountMode(account, Bookkeeper.AccountMode.Manual);
+      assertEq(uint8(bookkeeper.accountModes(account)), uint8(Bookkeeper.AccountMode.Manual));
 
       // Go automatic by an existing controller
       vm.prank(controller);
       bookkeeper.setAccountMode(account, Bookkeeper.AccountMode.Automatic);
+      assertEq(uint8(bookkeeper.accountModes(account)), uint8(Bookkeeper.AccountMode.Automatic));
       assertEq(bookkeeper.manualModeLiveTime(account), 0);
 
       // Attempt to go automatic by a non-authorized user
@@ -295,7 +301,7 @@ contract BookkeeperTest is Test {
     // Freeze by guardian
     vm.prank(guardian);
     bookkeeper.setAccountMode(account, Bookkeeper.AccountMode.Frozen);
-    assertEq(bookkeeper.accountModes(account), Bookkeeper.AccountMode.Frozen);
+    assertEq(uint8(bookkeeper.accountModes(account)), uint8(Bookkeeper.AccountMode.Frozen));
 
     // Attempt to freeze by a non-guardian
     vm.prank(randomAddress);
