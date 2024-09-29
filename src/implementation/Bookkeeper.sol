@@ -23,7 +23,9 @@ contract Bookkeeper is OptimisticProposer, Executor {
 
   event SetGuardian(address indexed account, address indexed guardian);
 
-  event ChangeAccountMode(address indexed account, string mode, uint256 timestamp);
+  event RecoverAccount(address indexed account, address indexed newAccount);
+
+  event ChangeAccountMode(address indexed account, AccountMode mode, uint256 timestamp);
 
   enum AccountMode { Automatic, Manual, Frozen }
 
@@ -33,8 +35,17 @@ contract Bookkeeper is OptimisticProposer, Executor {
   mapping(address => string) public accountRules;
   mapping(address => AccountMode) public accountModes;
 
+  // Time at which manual mode is active. 15 minute delay to switch from automatic to manual.
+  // If set to 0, the account is not in manual mode.
+  mapping(address => uint256) public manualModeLiveTime;
+
   mapping(address => mapping(address => bool)) public isController; // Says if address is a controller of this Oya account.
   mapping(address => mapping(address => bool)) public isGuardian; // Says if address is a guardian of this Oya account.
+
+  modifier notFrozen(address _account) {
+    require(getCurrentMode(_account) != AccountMode.Frozen, "Account is frozen");
+    _;
+  }
 
   /**
    * @notice Construct Oya Bookkeeper contract.
@@ -75,6 +86,15 @@ contract Bookkeeper is OptimisticProposer, Executor {
     _sync();
 
     emit BookkeeperDeployed(_rules);
+  }
+
+  function getCurrentMode(address _account) public view returns (AccountMode) {
+    AccountMode mode = accountModes[_account];
+    if (mode == AccountMode.Manual && block.timestamp < manualModeLiveTime[_account]) {
+      // Manual mode is scheduled but not yet active; treat as Automatic
+      return AccountMode.Automatic;
+    }
+    return mode;
   }
 
   /// @notice Updates the address of a Bookkeeper contract for a specific chain.
@@ -127,13 +147,13 @@ contract Bookkeeper is OptimisticProposer, Executor {
     emit ProposalExecuted(proposalHash, assertionId);
   }
 
-  function setController(address _account, address _controller) external {
+  function setController(address _account, address _controller) external notFrozen(_account) {
     require(msg.sender == _account || isController[_account][msg.sender], "Not a controller");
     isController[_account][_controller] = true;
     emit SetController(_account, _controller);
   }
 
-  function setGuardian(address _account, address _guardian) external {
+  function setGuardian(address _account, address _guardian) external notFrozen(_account) {
     require(msg.sender == _account || isController[_account][msg.sender], "Not a controller");
     isGuardian[_account][_guardian] = true;
     emit SetGuardian(_account, _guardian);
@@ -143,7 +163,7 @@ contract Bookkeeper is OptimisticProposer, Executor {
    * @notice Sets the rules that will be used to evaluate future proposals from this account.
    * @param _rules string that outlines or references the location where the rules can be found.
    */
-  function setAccountRules(address _account, string memory _rules) external {
+  function setAccountRules(address _account, string memory _rules) external notFrozen(_account) {
     require(msg.sender == _account || isController[_account][msg.sender], "Not a controller");
     // Set reference to the rules for the Oya module
     require(bytes(_rules).length > 0, "Rules can not be empty");
@@ -155,31 +175,40 @@ contract Bookkeeper is OptimisticProposer, Executor {
   // account while in manual, and controllers may not use the bundler. This is useful for
   // transactions that the bundler can not serve due to lack or liquidity or other reasons.
   // This is enforced through the global rules related to Oya proposals.
-  function goManual(address _account) external {
+  function goManual(address _account) external notFrozen(_account) {
     require(msg.sender == _account || isController[_account][msg.sender], "Not a controller");
     accountModes[_account] = AccountMode.Manual;
+    manualModeLiveTime[_account] = block.timestamp + 15 minutes;
     // add a time delay so pending bundler transactions are resolved before going manual
-    emit ChangeAccountMode(_account, "Manual", block.timestamp + 15 minutes);
+    emit ChangeAccountMode(_account, AccountMode.Manual, manualModeLiveTime[_account]);
   }
 
   // This function takes the account out of manual mode. Controllers may resume using the
   // bundler, and may not propose transactions of their own.
-  function goAutomatic(address _account) external {
+  function goAutomatic(address _account) external notFrozen(_account) {
     require(msg.sender == _account || isController[_account][msg.sender], "Not a controller");
     require(accountModes[_account] == AccountMode.Manual, "Account is not in manual mode");
-    emit ChangeAccountMode(_account, "Automatic", block.timestamp);
+    accountModes[_account] = AccountMode.Automatic;
+    manualModeLiveTime[_account] = 0;
+    emit ChangeAccountMode(_account, AccountMode.Automatic, block.timestamp);
   }
 
   function freeze(address _account) external {
     require(isGuardian[_account][msg.sender], "Not a guardian");
     accountModes[_account] = AccountMode.Frozen;
-    emit ChangeAccountMode(_account, "Frozen", block.timestamp);
+    manualModeLiveTime[_account] = 0; // Cancel any scheduled manual mode activation
+    emit ChangeAccountMode(_account, AccountMode.Frozen, block.timestamp);
   }
 
   function unfreeze(address _account) external {
     require(isGuardian[_account][msg.sender], "Not a guardian");
     accountModes[_account] = AccountMode.Automatic;
-    emit ChangeAccountMode(_account, "Automatic", block.timestamp);
+    emit ChangeAccountMode(_account, AccountMode.Automatic, block.timestamp);
   }
+
+  // Account recovery is done on the virtual chain. A proposed bundle can include account recovery
+  // instructions, sweeping all virtual chain assets from a compromised account address to a new 
+  // address. If the proposed recovery does not follow the global rules and account rules, the 
+  // proposal will be rejected. No need for an additional function here, I think.
 
 }
