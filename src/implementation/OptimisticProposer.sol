@@ -19,8 +19,6 @@ import "@uma/core/optimistic-oracle-v3/interfaces/OptimisticOracleV3Interface.so
 
 import "@uma/core/optimistic-oracle-v3/implementation/ClaimData.sol";
 
-import "forge-std/console.sol";
-
 contract OptimisticProposer is OptimisticOracleV3CallbackRecipientInterface, Lockable, OwnableUpgradeable {
 
   using SafeERC20 for IERC20;

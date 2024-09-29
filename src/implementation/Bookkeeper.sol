@@ -3,7 +3,6 @@ pragma solidity ^0.8.6;
 import "@gnosis.pm/safe-contracts/contracts/base/Executor.sol";
 
 import "./OptimisticProposer.sol";
-import "forge-std/console.sol";
 
 /// @title Bookkeeper
 /// @dev Holds assets on behalf of account holders in the Oya network.
