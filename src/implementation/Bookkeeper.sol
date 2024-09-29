@@ -171,44 +171,46 @@ contract Bookkeeper is OptimisticProposer, Executor {
     emit SetAccountRules(_account, _rules);
   }
   
-  // This function goes into manual mode. Only controllers may propose transactions for this
-  // account while in manual, and controllers may not use the bundler. This is useful for
-  // transactions that the bundler can not serve due to lack or liquidity or other reasons.
-  // This is enforced through the global rules related to Oya proposals.
-  function goManual(address _account) external notFrozen(_account) {
-    require(msg.sender == _account || isController[_account][msg.sender], "Not a controller");
-    accountModes[_account] = AccountMode.Manual;
-    manualModeLiveTime[_account] = block.timestamp + 15 minutes;
-    // add a time delay so pending bundler transactions are resolved before going manual
-    emit ChangeAccountMode(_account, AccountMode.Manual, manualModeLiveTime[_account]);
-  }
+  function setAccountMode(address _account, AccountMode _mode) external {
+    AccountMode currentMode = getCurrentMode(_account);
 
-  // This function takes the account out of manual mode. Controllers may resume using the
-  // bundler, and may not propose transactions of their own.
-  function goAutomatic(address _account) external notFrozen(_account) {
-    require(msg.sender == _account || isController[_account][msg.sender], "Not a controller");
-    require(accountModes[_account] == AccountMode.Manual, "Account is not in manual mode");
-    accountModes[_account] = AccountMode.Automatic;
-    manualModeLiveTime[_account] = 0;
-    emit ChangeAccountMode(_account, AccountMode.Automatic, block.timestamp);
-  }
-
-  function freeze(address _account) external {
-    require(isGuardian[_account][msg.sender], "Not a guardian");
-    accountModes[_account] = AccountMode.Frozen;
-    manualModeLiveTime[_account] = 0; // Cancel any scheduled manual mode activation
-    emit ChangeAccountMode(_account, AccountMode.Frozen, block.timestamp);
-  }
-
-  function unfreeze(address _account) external {
-    require(isGuardian[_account][msg.sender], "Not a guardian");
-    accountModes[_account] = AccountMode.Automatic;
-    emit ChangeAccountMode(_account, AccountMode.Automatic, block.timestamp);
+    if (_mode == AccountMode.Manual) {
+      // Only the account owner or a controller can set to Manual
+      require(msg.sender == _account || isController[_account][msg.sender], "Not a controller");
+      // Cannot set to Manual if the account is frozen
+      require(currentMode != AccountMode.Frozen, "Account is frozen");
+      // Set to Manual mode with a 15-minute delay
+      accountModes[_account] = AccountMode.Manual;
+      manualModeLiveTime[_account] = block.timestamp + 15 minutes;
+      emit ChangeAccountMode(_account, AccountMode.Manual, manualModeLiveTime[_account]);
+    } else if (_mode == AccountMode.Automatic) {
+      if (currentMode == AccountMode.Frozen) {
+        // Only a guardian can unfreeze the account
+        require(isGuardian[_account][msg.sender], "Not a guardian");
+      } else {
+        // Only the account owner or a controller can set to Automatic
+        require(msg.sender == _account || isController[_account][msg.sender], "Not a controller");
+      }
+      // Set to Automatic mode immediately
+      accountModes[_account] = AccountMode.Automatic;
+      manualModeLiveTime[_account] = 0; // Cancel any scheduled manual mode activation
+      emit ChangeAccountMode(_account, AccountMode.Automatic, block.timestamp);
+    } else if (_mode == AccountMode.Frozen) {
+      // Only a guardian can freeze the account
+      require(isGuardian[_account][msg.sender], "Not a guardian");
+      // Set to Frozen mode immediately
+      accountModes[_account] = AccountMode.Frozen;
+      manualModeLiveTime[_account] = 0; // Cancel any scheduled manual mode activation
+      emit ChangeAccountMode(_account, AccountMode.Frozen, block.timestamp);
+    } else {
+      revert("Invalid mode");
+    }
   }
 
   // Account recovery is done on the virtual chain. A proposed bundle can include account recovery
   // instructions, sweeping all virtual chain assets from a compromised account address to a new 
   // address. If the proposed recovery does not follow the global rules and account rules, the 
-  // proposal will be rejected. No need for an additional function here, I think.
+  // proposal will be rejected. No need for an additional function here, I think. Any funds deposited
+  // from this address in the future will be assigned to the new address on the virtual chain.
 
 }

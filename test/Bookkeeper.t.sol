@@ -170,7 +170,7 @@ contract BookkeeperTest is Test {
     bookkeeper.setController(account, address(8));
   }
 
-  function testSetRecoverer() public {
+  function testSetGuardian() public {
     address account = address(5);
     address guardian = address(6);
 
@@ -180,18 +180,18 @@ contract BookkeeperTest is Test {
 
     // Set guardian by account owner
     vm.prank(account);
-    bookkeeper.setRecoverer(account, guardian);
-    assertTrue(bookkeeper.isRecoverer(account, guardian));
+    bookkeeper.setGuardian(account, guardian);
+    assertTrue(bookkeeper.isGuardian(account, guardian));
 
     // Set guardian by an existing controller
     vm.prank(address(this));
-    bookkeeper.setRecoverer(account, address(7));
-    assertTrue(bookkeeper.isRecoverer(account, address(7)));
+    bookkeeper.setGuardian(account, address(7));
+    assertTrue(bookkeeper.isGuardian(account, address(7)));
 
     // Attempt to set guardian by a non-authorized user
     vm.prank(randomAddress);
     vm.expectRevert("Not a controller");
-    bookkeeper.setRecoverer(account, address(8));
+    bookkeeper.setGuardian(account, address(8));
   }
 
   function testSetAccountRules() public {
@@ -234,55 +234,50 @@ contract BookkeeperTest is Test {
 
     // Go manual by account owner
     vm.prank(account);
-    bookkeeper.goManual(account);
-    assertTrue(bookkeeper.manualMode(account) > 0);
+    bookkeeper.setAccountMode(account, Bookkeeper.AccountMode.Manual);
+    assertTrue(bookkeeper.manualModeLiveTime(account) > block.timestamp);
 
     // Go manual by an existing controller
     vm.prank(controller);
-    bookkeeper.goManual(account);
-    assertTrue(bookkeeper.manualMode(account) > 0);
+    bookkeeper.setAccountMode(account, Bookkeeper.AccountMode.Manual);
+    assertTrue(bookkeeper.manualModeLiveTime(account) > block.timestamp);
 
     // Attempt to go manual by a non-authorized user
     vm.prank(randomAddress);
     vm.expectRevert("Not a controller");
-    bookkeeper.goManual(account);
+    bookkeeper.setAccountMode(account, Bookkeeper.AccountMode.Manual);
   }
 
   function testGoAutomatic() public {
     address account = address(5);
-    address controller = address(6);
+      address controller = address(6);
 
-    // Set controller by account owner to ensure the controller can set automatic mode
-    vm.prank(account);
-    bookkeeper.setController(account, controller);
+      // Set controller by account owner to ensure the controller can set automatic mode
+      vm.prank(account);
+      bookkeeper.setController(account, controller);
 
-    // First, go manual
-    vm.prank(account);
-    bookkeeper.goManual(account);
+      // First, go manual
+      vm.prank(account);
+      bookkeeper.setAccountMode(account, Bookkeeper.AccountMode.Manual);
 
-    // Go automatic by account owner
-    vm.prank(account);
-    bookkeeper.goAutomatic(account);
-    assertEq(bookkeeper.manualMode(account), 0);
+      // Go automatic by account owner
+      vm.prank(account);
+      bookkeeper.setAccountMode(account, Bookkeeper.AccountMode.Automatic);
+      assertEq(bookkeeper.manualModeLiveTime(account), 0);
 
-    // Go manual again
-    vm.prank(account);
-    bookkeeper.goManual(account);
+      // Go manual again
+      vm.prank(account);
+      bookkeeper.setAccountMode(account, Bookkeeper.AccountMode.Manual);
 
-    // Go automatic by an existing controller
-    vm.prank(controller);
-    bookkeeper.goAutomatic(account);
-    assertEq(bookkeeper.manualMode(account), 0);
+      // Go automatic by an existing controller
+      vm.prank(controller);
+      bookkeeper.setAccountMode(account, Bookkeeper.AccountMode.Automatic);
+      assertEq(bookkeeper.manualModeLiveTime(account), 0);
 
-    // Attempt to go automatic when not in manual mode
-    vm.prank(account);
-    vm.expectRevert("Not in manual mode");
-    bookkeeper.goAutomatic(account);
-
-    // Attempt to go automatic by a non-authorized user
-    vm.prank(randomAddress);
-    vm.expectRevert("Not a controller");
-    bookkeeper.goAutomatic(account);
+      // Attempt to go automatic by a non-authorized user
+      vm.prank(randomAddress);
+      vm.expectRevert("Not a controller");
+      bookkeeper.setAccountMode(account, Bookkeeper.AccountMode.Automatic);
   }
 
   function testFreeze() public {
@@ -295,16 +290,17 @@ contract BookkeeperTest is Test {
 
     // Set guardian
     vm.prank(account);
-    bookkeeper.setRecoverer(account, guardian);
+    bookkeeper.setGuardian(account, guardian);
 
     // Freeze by guardian
     vm.prank(guardian);
-    bookkeeper.freeze(account);
-    assertTrue(bookkeeper.frozen(account));
+    bookkeeper.setAccountMode(account, Bookkeeper.AccountMode.Frozen);
+    assertEq(bookkeeper.accountModes(account), Bookkeeper.AccountMode.Frozen);
 
     // Attempt to freeze by a non-guardian
     vm.prank(randomAddress);
     vm.expectRevert("Not a guardian");
-    bookkeeper.freeze(account);
+    bookkeeper.setAccountMode(account, Bookkeeper.AccountMode.Frozen);
   }
+
 }
