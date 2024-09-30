@@ -71,7 +71,7 @@ contract OptimisticProposer is OptimisticOracleV3CallbackRecipientInterface, Loc
   mapping(bytes32 => bytes32) public assertionIds; // Maps proposal hashes to assertionIds.
   mapping(bytes32 => bytes32) public proposalHashes; // Maps assertionIds to proposal hashes.
 
-  function assertionDisputedCallback(bytes32 assertionId) external {
+  function assertionDisputedCallback(bytes32 assertionId) external virtual {
     // Callback to automatically delete a proposal that was disputed.
     bytes32 proposalHash = proposalHashes[assertionId];
 

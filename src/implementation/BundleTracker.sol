@@ -56,6 +56,26 @@ contract BundleTracker is OptimisticProposer {
     emit BundleTrackerDeployed(_bundler, _rules);
   }
 
+  function assertionDisputedCallback(bytes32 assertionId) external override {
+    // Callback to automatically delete a proposal that was disputed.
+    bytes32 proposalHash = proposalHashes[assertionId];
+
+    if (msg.sender == address(optimisticOracleV3)) {
+      // Validate the assertionId through existence of non-zero proposalHash. This is the same check as in
+      // deleteProposalOnUpgrade method that is called in the else branch.
+      require(proposalHash != bytes32(0), "Invalid proposal hash");
+
+      // Delete the disputed proposal and associated assertionId.
+      delete assertionIds[proposalHash];
+      delete proposalHashes[assertionId];
+      delete bundles[assertions[assertionId]];
+
+      emit ProposalDeleted(proposalHash, assertionId);
+    } else {
+      deleteProposalOnUpgrade(proposalHash);
+    }
+  }
+
   function proposeBundle(string memory _bundleData) external onlyBundler {
     // _bundleData references the offchain bundle data being proposed.
     bundles[block.timestamp] = _bundleData;
@@ -71,10 +91,6 @@ contract BundleTracker is OptimisticProposer {
       0 // no domain id
     );
     assertions[_assertionID] = block.timestamp;
-  }
-
-  function cancelBundle(uint256 _bundleTimestamp) external onlyBundler {
-    delete bundles[_bundleTimestamp];
   }
 
   function addBundler(address _bundler) public onlyOwner {

@@ -72,17 +72,6 @@ contract BundleTrackerTest is Test {
     vm.stopPrank();
   }
 
-  function testCancelBundle() public {
-    vm.startPrank(bundler);
-    string memory bundleData = "Bundle data";
-    bundleTracker.proposeBundle(bundleData);
-
-    bundleTracker.cancelBundle(block.timestamp);
-
-    assertEq(bundleTracker.bundles(block.timestamp), "");
-    vm.stopPrank();
-  }
-
   function testAddBundler() public {
     vm.startPrank(owner);
     bundleTracker.addBundler(newBundler);
