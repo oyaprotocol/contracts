@@ -19,8 +19,8 @@ import "@uma/core/optimistic-oracle-v3/implementation/ClaimData.sol";
 contract OptimisticProposer is OptimisticOracleV3CallbackRecipientInterface, Lockable, OwnableUpgradeable {
   using SafeERC20 for IERC20;
 
-  bytes public constant PROPOSAL_HASH_KEY = "proposalHash";
   bytes public constant EXPLANATION_KEY = "explanation";
+  bytes public constant PROPOSAL_HASH_KEY = "proposalHash";
   bytes public constant RULES_KEY = "rules";
 
   event OptimisticOracleChanged(address indexed newOptimisticOracleV3);
