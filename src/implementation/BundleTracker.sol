@@ -4,7 +4,7 @@ import "./OptimisticProposer.sol";
 
 contract BundleTracker is OptimisticProposer {
   event BundleCanceled(uint256 indexed timestamp);
-  event BundleProposed(uint256 indexed timestamp, string bundleData);
+  event BundleProposed(uint256 indexed timestamp, address indexed bundler, string bundleData);
   event BundlerAdded(address indexed bundler);
   event BundlerRemoved(address indexed bundler);
   event BundleTrackerDeployed(address indexed bundler, string rules);
@@ -91,6 +91,7 @@ contract BundleTracker is OptimisticProposer {
       0 // no domain id
     );
     assertions[_assertionID] = block.timestamp;
+    emit BundleProposed(block.timestamp, msg.sender, _bundleData);
   }
 
   function addBundler(address _bundler) public onlyOwner {

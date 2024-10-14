@@ -13,12 +13,14 @@ contract Bookkeeper is OptimisticProposer, Executor {
   event BookkeeperUpdated(address indexed contractAddress, uint256 indexed chainId, bool isApproved);
   event ChangeAccountMode(address indexed account, AccountMode mode, uint256 timestamp);
   event SetAccountRules(address indexed account, string accountRules);
+  event SetBundler(address indexed account, address indexed bundler);
   event SetController(address indexed account, address indexed controller);
   event SetGuardian(address indexed account, address indexed guardian);
 
   mapping(address => mapping(uint256 => bool)) public bookkeepers;
   mapping(address => string) public accountRules;
   mapping(address => AccountMode) public accountModes;
+  mapping(address => address) public bundlers;
   mapping(address => mapping(address => bool)) public isController;
   mapping(address => mapping(address => bool)) public isGuardian;
 
@@ -101,6 +103,12 @@ contract Bookkeeper is OptimisticProposer, Executor {
     return mode;
   }
 
+  function setBundler(address _account, address _bundler) external notFrozen(_account) {
+    require(msg.sender == _account || isController[_account][msg.sender], "Not a controller");
+    bundlers[_account] = _bundler;
+    emit SetBundler(_account, _bundler);
+  }
+  
   function setController(address _account, address _controller) external notFrozen(_account) {
     require(msg.sender == _account || isController[_account][msg.sender], "Not a controller");
     isController[_account][_controller] = true;
