@@ -20,7 +20,6 @@ contract Bookkeeper is OptimisticProposer, Executor {
   event SetGuardian(address indexed account, address indexed guardian);
 
   mapping (address => bool) public authorizedBundlers;
-  // mapping(address => mapping(uint256 => bool)) public bookkeepers;
   mapping(address => string) public accountRules;
   mapping(address => AccountMode) public accountModes;
   mapping(address => address) public bundlers;
@@ -178,10 +177,5 @@ contract Bookkeeper is OptimisticProposer, Executor {
     } else {
       revert("Invalid mode");
     }
-  }
-
-  function updateBookkeeper(address _contractAddress, uint256 _chainId, bool _isApproved) external onlyOwner {
-    bookkeepers[_contractAddress][_chainId] = _isApproved;
-    emit BookkeeperUpdated(_contractAddress, _chainId, _isApproved);
   }
 }
