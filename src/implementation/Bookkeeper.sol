@@ -12,10 +12,15 @@ contract Bookkeeper is OptimisticProposer, Executor {
   event BookkeeperDeployed(string rules);
   event BookkeeperUpdated(address indexed contractAddress, uint256 indexed chainId, bool isApproved);
   event ChangeAccountMode(address indexed account, AccountMode mode, uint256 timestamp);
+  event OyaShutdown();
   event SetAccountRules(address indexed account, string accountRules);
   event SetBundler(address indexed account, address indexed bundler);
   event SetController(address indexed account, address indexed controller);
   event SetGuardian(address indexed account, address indexed guardian);
+
+  address cat; // Crisis Action Team multisig can trigger Oya shutdown
+  bool public oyaShutdown = false;
+  bytes public finalState;
 
   mapping(address => bool) public authorizedBundlers;
   mapping(address => string) public accountRules;
@@ -30,6 +35,11 @@ contract Bookkeeper is OptimisticProposer, Executor {
 
   modifier notFrozen(address _account) {
     require(getCurrentMode(_account) != AccountMode.Frozen, "Account is frozen");
+    _;
+  }
+
+  modifier onlyCat() {
+    require(msg.sender == cat, "Only the CAT can trigger Oya shutdown");
     _;
   }
 
@@ -62,6 +72,8 @@ contract Bookkeeper is OptimisticProposer, Executor {
   }
 
   function executeProposal(Transaction[] memory transactions) external nonReentrant {
+    require(oyaShutdown == false, "Oya is shutdown");
+
     // Recreate the proposal hash from the inputs and check that it matches the stored proposal hash.
     bytes32 proposalHash = keccak256(abi.encode(transactions));
 
@@ -162,6 +174,23 @@ contract Bookkeeper is OptimisticProposer, Executor {
       emit ChangeAccountMode(_account, AccountMode.Frozen, block.timestamp);
     } else {
       revert("Invalid mode");
+    }
+  }
+
+  function shutdownOya(bytes _finalState /* pass in merkle root of last good virtual chain state? */) external onlyCat {
+    finalState = _finalState;
+    oyaShutdown = true;
+    emit OyaShutdown();
+  }
+
+  function withdrawAfterShutdown(address _token, address _to) external {
+    require(oyaShutdown, "Oya is not shutdown");
+    // need to look at a merkle root of the last good virtual chain state to get balance to check
+    // account should withdraw their token balance
+    if (_token == address(0)) {
+      payable(_to).transfer(address(this).balance);
+    } else {
+      IERC20(_token).safeTransfer(_to, IERC20(_token).balanceOf(address(this)));
     }
   }
 }
