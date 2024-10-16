@@ -179,6 +179,7 @@ contract Bookkeeper is OptimisticProposer, Executor {
 
   function shutdownOya(bytes _finalState /* pass in merkle root of last good virtual chain state? */) external onlyCat {
     finalState = _finalState;
+    // need to check that final state matches merkle root of last good virtual chain state
     oyaShutdown = true;
     emit OyaShutdown();
   }
