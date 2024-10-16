@@ -9,17 +9,15 @@ contract Bookkeeper is OptimisticProposer, Executor {
 
   enum AccountMode { Automatic, Manual, Frozen }
 
-  event AddBundler(address indexed bundler);
   event BookkeeperDeployed(string rules);
   event BookkeeperUpdated(address indexed contractAddress, uint256 indexed chainId, bool isApproved);
   event ChangeAccountMode(address indexed account, AccountMode mode, uint256 timestamp);
-  event RemoveBundler(address indexed bundler);
   event SetAccountRules(address indexed account, string accountRules);
   event SetBundler(address indexed account, address indexed bundler);
   event SetController(address indexed account, address indexed controller);
   event SetGuardian(address indexed account, address indexed guardian);
 
-  mapping (address => bool) public authorizedBundlers;
+  mapping(address => bool) public authorizedBundlers;
   mapping(address => string) public accountRules;
   mapping(address => AccountMode) public accountModes;
   mapping(address => address) public bundlers;
@@ -61,12 +59,6 @@ contract Bookkeeper is OptimisticProposer, Executor {
     _sync();
 
     emit BookkeeperDeployed(_rules);
-  }
-
-  function addBundler(address _bundler) external onlyOwner {
-    require(_bundler != address(0), "Bundler address can not be empty");
-    authorizedBundlers[_bundler] = true;
-    emit AddBundler(_bundler);
   }
 
   function executeProposal(Transaction[] memory transactions) external nonReentrant {
@@ -115,12 +107,6 @@ contract Bookkeeper is OptimisticProposer, Executor {
     require(authorizedBundlers[_bundler], "Bundler is not authorized");
     delete authorizedBundlers[_bundler];
     emit RemoveBundler(_bundler);
-  }
-
-  function setBundler(address _account, address _bundler) external notFrozen(_account) {
-    require(msg.sender == _account || isController[_account][msg.sender], "Not a controller");
-    bundlers[_account] = _bundler;
-    emit SetBundler(_account, _bundler);
   }
 
   function setController(address _account, address _controller) external notFrozen(_account) {
