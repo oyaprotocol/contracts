@@ -183,14 +183,19 @@ contract Bookkeeper is OptimisticProposer, Executor {
     emit OyaShutdown();
   }
 
-  function withdrawAfterShutdown(address _token, address _to) external {
+  function withdrawFungibleTokenAfterShutdown(address _token, address _to) external {
     require(oyaShutdown, "Oya is not shutdown");
     // need to look at a merkle root of the last good virtual chain state to get balance to check
-    // account should withdraw their token balance
     if (_token == address(0)) {
-      payable(_to).transfer(address(this).balance);
+      payable(_to).transfer(tokenId);
     } else {
-      IERC20(_token).safeTransfer(_to, IERC20(_token).balanceOf(address(this)));
+      IERC20(_token).safeTransfer(_to, tokenId);
     }
+  }
+
+  function withdrawNFTAfterShutdown(address _token, uint256 _tokenId, address _to) external {
+    require(oyaShutdown, "Oya is not shutdown");
+    // need to look at a merkle root of the last good virtual chain state to get balance to check
+    IERC721(_token).safeTransferFrom(address(this), _to, _tokenId);
   }
 }
