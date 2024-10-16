@@ -72,7 +72,7 @@ contract Bookkeeper is OptimisticProposer, Executor {
   }
 
   function executeProposal(Transaction[] memory transactions) external nonReentrant {
-    require(oyaShutdown == false, "Oya is shutdown");
+    require(oyaShutdown == false, "Oya virtual chain is shut down, please withdraw your funds");
 
     // Recreate the proposal hash from the inputs and check that it matches the stored proposal hash.
     bytes32 proposalHash = keccak256(abi.encode(transactions));
