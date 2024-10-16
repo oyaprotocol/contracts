@@ -19,8 +19,8 @@ contract Bookkeeper is OptimisticProposer, Executor {
   event SetController(address indexed account, address indexed controller);
   event SetGuardian(address indexed account, address indexed guardian);
 
-  address[] public bundlerList;
-  mapping(address => mapping(uint256 => bool)) public bookkeepers;
+  mapping (address => bool) public authorizedBundlers;
+  // mapping(address => mapping(uint256 => bool)) public bookkeepers;
   mapping(address => string) public accountRules;
   mapping(address => AccountMode) public accountModes;
   mapping(address => address) public bundlers;
@@ -65,9 +65,8 @@ contract Bookkeeper is OptimisticProposer, Executor {
   }
 
   function addBundler(address _bundler) external onlyOwner {
-    require(bundlers[_bundler] == address(0), "Bundler already exists");
-    bundlers[_bundler] = _bundler;
-    bundlerList.push(_bundler);
+    require(_bundler != address(0), "Bundler address can not be empty");
+    authorizedBundlers[_bundler] = true;
     emit AddBundler(_bundler);
   }
 
@@ -113,10 +112,10 @@ contract Bookkeeper is OptimisticProposer, Executor {
     return mode;
   }
 
-  function RemoveBundler(bundler) external onlyOwner {
-    require(bundlers[bundler] != address(0), "Bundler does not exist");
-    delete bundlers[bundler];
-    emit RemoveBundler(bundler);
+  function removeBundler(address _bundler) external onlyOwner {
+    require(authorizedBundlers[_bundler], "Bundler is not authorized");
+    delete authorizedBundlers[_bundler];
+    emit RemoveBundler(_bundler);
   }
 
   function setBundler(address _account, address _bundler) external notFrozen(_account) {
