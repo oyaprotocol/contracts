@@ -13,6 +13,7 @@ contract BundleTracker is OptimisticProposer {
 
   mapping(bytes32 => uint256) public assertions; // Mapping of oracle assertion IDs to bundle timestamps.
   mapping(uint256 => string) public bundles; // Mapping of proposal timestamps to strings pointing to the bundle data.
+  // maybe we only have one bundler after all?
   mapping(address => bool) public bundlers; // Approved bundlers
 
   modifier onlyBundler() {
