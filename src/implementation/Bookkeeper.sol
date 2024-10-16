@@ -9,14 +9,17 @@ contract Bookkeeper is OptimisticProposer, Executor {
 
   enum AccountMode { Automatic, Manual, Frozen }
 
+  event AddBundler(address indexed bundler);
   event BookkeeperDeployed(string rules);
   event BookkeeperUpdated(address indexed contractAddress, uint256 indexed chainId, bool isApproved);
   event ChangeAccountMode(address indexed account, AccountMode mode, uint256 timestamp);
+  event RemoveBundler(address indexed bundler);
   event SetAccountRules(address indexed account, string accountRules);
   event SetBundler(address indexed account, address indexed bundler);
   event SetController(address indexed account, address indexed controller);
   event SetGuardian(address indexed account, address indexed guardian);
 
+  address[] public bundlerList;
   mapping(address => mapping(uint256 => bool)) public bookkeepers;
   mapping(address => string) public accountRules;
   mapping(address => AccountMode) public accountModes;
@@ -61,6 +64,13 @@ contract Bookkeeper is OptimisticProposer, Executor {
     emit BookkeeperDeployed(_rules);
   }
 
+  function addBundler(address _bundler) external onlyOwner {
+    require(bundlers[_bundler] == address(0), "Bundler already exists");
+    bundlers[_bundler] = _bundler;
+    bundlerList.push(_bundler);
+    emit AddBundler(_bundler);
+  }
+
   function executeProposal(Transaction[] memory transactions) external nonReentrant {
     // Recreate the proposal hash from the inputs and check that it matches the stored proposal hash.
     bytes32 proposalHash = keccak256(abi.encode(transactions));
@@ -103,12 +113,18 @@ contract Bookkeeper is OptimisticProposer, Executor {
     return mode;
   }
 
+  function RemoveBundler(bundler) external onlyOwner {
+    require(bundlers[bundler] != address(0), "Bundler does not exist");
+    delete bundlers[bundler];
+    emit RemoveBundler(bundler);
+  }
+
   function setBundler(address _account, address _bundler) external notFrozen(_account) {
     require(msg.sender == _account || isController[_account][msg.sender], "Not a controller");
     bundlers[_account] = _bundler;
     emit SetBundler(_account, _bundler);
   }
-  
+
   function setController(address _account, address _controller) external notFrozen(_account) {
     require(msg.sender == _account || isController[_account][msg.sender], "Not a controller");
     isController[_account][_controller] = true;
