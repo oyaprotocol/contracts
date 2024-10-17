@@ -18,7 +18,8 @@ contract Bookkeeper is OptimisticProposer, Executor {
   event SetController(address indexed account, address indexed controller);
   event SetGuardian(address indexed account, address indexed guardian);
 
-  address cat; // Crisis Action Team multisig can trigger Oya shutdown
+  address _cat; // Crisis Action Team multisig can trigger Oya shutdown
+  // emergency shutdown drops Oya virtual chain into being a simpler zk chain, with no natural lang?
   bool public oyaShutdown = false;
   bytes public finalState;
 
@@ -39,7 +40,7 @@ contract Bookkeeper is OptimisticProposer, Executor {
   }
 
   modifier onlyCat() {
-    require(msg.sender == cat, "Only the CAT can trigger Oya shutdown");
+    require(msg.sender == _cat, "Only the CAT can trigger Oya shutdown");
     _;
   }
 
