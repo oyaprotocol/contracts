@@ -46,25 +46,6 @@ contract BlockTracker is OptimisticProposer {
     emit BlockTrackerDeployed(_rules);
   }
 
-  function assertionDisputedCallback(bytes32 assertionId) public override {
-    // Callback to automatically delete a proposal that was disputed.
-    bytes32 proposalHash = proposalHashes[assertionId];
-
-    if (msg.sender == address(optimisticOracleV3)) {
-      // Validate the assertionId through existence of non-zero proposalHash. This is the same check as in
-      // deleteProposalOnUpgrade method that is called in the else branch.
-      require(proposalHash != bytes32(0), "Invalid proposal hash");
-
-      // Delete the disputed proposal and associated assertionId.
-      delete assertionIds[proposalHash];
-      delete proposalHashes[assertionId];
-
-      emit ProposalDeleted(proposalHash, assertionId);
-    } else {
-      deleteProposalOnUpgrade(proposalHash);
-    }
-  }
-
   function proposeBlock(string memory _blockData) external {
     blocks[block.timestamp][msg.sender] = _blockData;
 
