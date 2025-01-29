@@ -3,7 +3,6 @@ pragma solidity ^0.8.6;
 import "./OptimisticProposer.sol";
 
 contract BlockTracker is OptimisticProposer {
-  event BlockCanceled(uint256 indexed timestamp);
   event BlockProposed(uint256 indexed timestamp, address indexed blockProposer, string blockData);
   event BlockProposerAdded(address indexed blockProposer);
   event BlockProposerRemoved(address indexed blockProposer);
