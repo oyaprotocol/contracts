@@ -3,7 +3,7 @@ pragma solidity ^0.8.6;
 
 import "@uma/core/optimistic-oracle-v3/interfaces/EscalationManagerInterface.sol";
 
-import "../src/implementation/BundleTracker.sol";
+import "../src/implementation/BlockTracker.sol";
 import "../src/mocks/MockAddressWhitelist.sol";
 import "../src/mocks/MockERC20.sol";
 import "../src/mocks/MockFinder.sol";
@@ -12,9 +12,9 @@ import "../src/mocks/MockOptimisticOracleV3.sol";
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
 
-contract BundleTrackerTest is Test {
+contract BlockTrackerTest is Test {
 
-  BundleTracker public bundleTracker;
+  BlockTracker public blockTracker;
   MockFinder public mockFinder;
   MockAddressWhitelist public mockAddressWhitelist;
   MockIdentifierWhitelist public mockIdentifierWhitelist;
@@ -23,9 +23,9 @@ contract BundleTrackerTest is Test {
   MockERC20 public newMockCollateral;
   EscalationManagerInterface public mockEscalationManager;
   address public owner = address(1);
-  address public bundler = address(2);
-  address public nonBundler = address(3);
-  address public newBundler = address(4);
+  address public blockProposer = address(2);
+  address public nonBlockProposer = address(3);
+  address public newBlockProposer = address(4);
   address public newOwner = address(5);
   address public randomAddress = address(6);
   uint256 public bondAmount = 1000;
@@ -58,106 +58,106 @@ contract BundleTrackerTest is Test {
     mockIdentifierWhitelist.addIdentifier(identifier);
 
     vm.startPrank(owner);
-    bundleTracker =
-      new BundleTracker(address(mockFinder), bundler, address(mockCollateral), bondAmount, rules, identifier, liveness);
+    blockTracker =
+      new BlockTracker(address(mockFinder), blockProposer, address(mockCollateral), bondAmount, rules, identifier, liveness);
     vm.stopPrank();
   }
 
-  function testProposeBundle() public {
-    vm.startPrank(bundler);
-    string memory bundleData = "Bundle data";
-    bundleTracker.proposeBundle(bundleData);
+  function testProposeBlock() public {
+    vm.startPrank(blockProposer);
+    string memory blockData = "Block data";
+    blockTracker.proposeBlock(blockData);
 
-    assertEq(bundleTracker.bundles(block.timestamp), bundleData);
+    assertEq(blockTracker.blocks(block.timestamp), blockData);
     vm.stopPrank();
   }
 
-  function testAddBundler() public {
+  function testAddBlockProposer() public {
     vm.startPrank(owner);
-    bundleTracker.addBundler(newBundler);
+    blockTracker.addBlockProposer(newBlockProposer);
 
-    assertTrue(bundleTracker.bundlers(newBundler));
+    assertTrue(blockTracker.blockProposers(newBlockProposer));
     vm.stopPrank();
   }
 
-  function testRemoveBundler() public {
+  function testRemoveBlockProposer() public {
     vm.startPrank(owner);
-    bundleTracker.addBundler(newBundler);
-    assertTrue(bundleTracker.bundlers(newBundler));
+    blockTracker.addBlockProposer(newBlockProposer);
+    assertTrue(blockTracker.blockProposers(newBlockProposer));
 
-    bundleTracker.removeBundler(newBundler);
-    assertFalse(bundleTracker.bundlers(newBundler));
+    blockTracker.removeBlockProposer(newBlockProposer);
+    assertFalse(blockTracker.blockProposers(newBlockProposer));
     vm.stopPrank();
   }
 
   // Optimistic Proposer inherited tests
   function testTransferOwnership() public {
     vm.startPrank(owner);
-    bundleTracker.transferOwnership(newOwner);
+    blockTracker.transferOwnership(newOwner);
 
-    assertEq(bundleTracker.owner(), newOwner);
+    assertEq(blockTracker.owner(), newOwner);
     vm.stopPrank();
   }
 
   function testRenounceOwnership() public {
     vm.startPrank(owner);
-    bundleTracker.renounceOwnership();
-    assertEq(bundleTracker.owner(), address(0));
+    blockTracker.renounceOwnership();
+    assertEq(blockTracker.owner(), address(0));
     vm.stopPrank();
   }
 
   function testNonOwnerCallShouldRevert() public {
     vm.startPrank(randomAddress);
     vm.expectRevert();
-    bundleTracker.transferOwnership(randomAddress);
+    blockTracker.transferOwnership(randomAddress);
     vm.stopPrank();
   }
 
   function testSetEscalationManager() public {
     vm.startPrank(owner);
-    bundleTracker.setEscalationManager(address(mockEscalationManager));
-    assertEq(bundleTracker.escalationManager(), address(mockEscalationManager));
+    blockTracker.setEscalationManager(address(mockEscalationManager));
+    assertEq(blockTracker.escalationManager(), address(mockEscalationManager));
     vm.stopPrank();
   }
 
   function testSetRules() public {
     vm.startPrank(owner);
-    bundleTracker.setRules(newRules);
-    assertEq(bundleTracker.rules(), newRules);
+    blockTracker.setRules(newRules);
+    assertEq(blockTracker.rules(), newRules);
     vm.stopPrank();
   }
 
   function testSetLiveness() public {
     vm.startPrank(owner);
-    bundleTracker.setLiveness(newLiveness);
-    assertEq(bundleTracker.liveness(), newLiveness);
+    blockTracker.setLiveness(newLiveness);
+    assertEq(blockTracker.liveness(), newLiveness);
     vm.stopPrank();
   }
 
   function testSetIdentifier() public {
     vm.startPrank(owner);
-    bundleTracker.setIdentifier(identifier);
-    assertEq(bundleTracker.identifier(), identifier);
+    blockTracker.setIdentifier(identifier);
+    assertEq(blockTracker.identifier(), identifier);
     vm.stopPrank();
   }
 
   function testSync() public {
     vm.startPrank(randomAddress);
-    bundleTracker.sync();
+    blockTracker.sync();
     vm.stopPrank();
   }
 
   function testSetCollateralAndBond() public {
     vm.startPrank(owner);
-    bundleTracker.setCollateralAndBond(newMockCollateral, bondAmount);
-    assertEq(address(bundleTracker.collateral()), address(newMockCollateral));
-    assertEq(bundleTracker.bondAmount(), bondAmount);
+    blockTracker.setCollateralAndBond(newMockCollateral, bondAmount);
+    assertEq(address(blockTracker.collateral()), address(newMockCollateral));
+    assertEq(blockTracker.bondAmount(), bondAmount);
     vm.stopPrank();
   }
 
   function testProposeTransactions() public {
     vm.startPrank(owner);
-    mockCollateral.approve(address(bundleTracker), 1000 * 10 ** 18);
+    mockCollateral.approve(address(blockTracker), 1000 * 10 ** 18);
     OptimisticProposer.Transaction[] memory testTransactions = new OptimisticProposer.Transaction[](2);
     
     testTransactions[0] = OptimisticProposer.Transaction(
@@ -165,7 +165,7 @@ contract BundleTrackerTest is Test {
     testTransactions[1] = OptimisticProposer.Transaction(
       address(mockOptimisticOracleV3), Enum.Operation(0), 0, "0x");
     
-    bundleTracker.proposeTransactions(
+    blockTracker.proposeTransactions(
       testTransactions, 
       "0x6f79612074657374000000000000000000000000000000000000000000000000"
     ); // "oya test" is the explanation

@@ -2,28 +2,28 @@ pragma solidity ^0.8.6;
 
 import "./OptimisticProposer.sol";
 
-contract BundleTracker is OptimisticProposer {
-  event BundleCanceled(uint256 indexed timestamp);
-  event BundleProposed(uint256 indexed timestamp, address indexed bundler, string bundleData);
-  event BundlerAdded(address indexed bundler);
-  event BundlerRemoved(address indexed bundler);
-  event BundleTrackerDeployed(address indexed bundler, string rules);
+contract BlockTracker is OptimisticProposer {
+  event BlockCanceled(uint256 indexed timestamp);
+  event BlockProposed(uint256 indexed timestamp, address indexed blockr, string blockData);
+  event BlockrAdded(address indexed blockr);
+  event BlockrRemoved(address indexed blockr);
+  event BlockTrackerDeployed(address indexed blockr, string rules);
 
-  uint256 public lastFinalizedBundle;
+  uint256 public lastFinalizedBlock;
 
-  mapping(bytes32 => uint256) public assertions; // Mapping of oracle assertion IDs to bundle timestamps.
-  mapping(uint256 => string) public bundles; // Mapping of proposal timestamps to strings pointing to the bundle data.
-  // maybe we only have one bundler after all?
-  mapping(address => bool) public bundlers; // Approved bundlers
+  mapping(bytes32 => uint256) public assertions; // Mapping of oracle assertion IDs to block timestamps.
+  mapping(uint256 => string) public blocks; // Mapping of proposal timestamps to strings pointing to the block data.
+  // maybe we only have one blockr after all?
+  mapping(address => bool) public blockrs; // Approved blockrs
 
-  modifier onlyBundler() {
-    require(bundlers[msg.sender], "Caller is not a bundler");
+  modifier onlyBlockProposer() {
+    require(blockrs[msg.sender], "Caller is not a blockr");
     _;
   }
 
   constructor(
     address _finder,
-    address _bundler,
+    address _blockr,
     address _collateral,
     uint256 _bondAmount,
     string memory _rules, // Oya global rules
@@ -32,7 +32,7 @@ contract BundleTracker is OptimisticProposer {
   ) {
     require(_finder != address(0), "Finder address can not be empty");
     finder = FinderInterface(_finder);
-    bytes memory initializeParams = abi.encode(_bundler, _collateral, _bondAmount, _rules, _identifier, _liveness);
+    bytes memory initializeParams = abi.encode(_blockr, _collateral, _bondAmount, _rules, _identifier, _liveness);
     setUp(initializeParams);
   }
 
@@ -40,21 +40,21 @@ contract BundleTracker is OptimisticProposer {
     _startReentrantGuardDisabled();
     __Ownable_init();
     (
-      address _bundler,
+      address _blockr,
       address _collateral,
       uint256 _bondAmount,
       string memory _rules,
       bytes32 _identifier,
       uint64 _liveness
     ) = abi.decode(initializeParams, (address, address, uint256, string, bytes32, uint64));
-    addBundler(_bundler);
+    addBlockr(_blockr);
     setCollateralAndBond(IERC20(_collateral), _bondAmount);
     setRules(_rules);
     setIdentifier(_identifier);
     setLiveness(_liveness);
     _sync();
 
-    emit BundleTrackerDeployed(_bundler, _rules);
+    emit BlockTrackerDeployed(_blockr, _rules);
   }
 
   function assertionDisputedCallback(bytes32 assertionId) external override {
@@ -69,7 +69,7 @@ contract BundleTracker is OptimisticProposer {
       // Delete the disputed proposal and associated assertionId.
       delete assertionIds[proposalHash];
       delete proposalHashes[assertionId];
-      delete bundles[assertions[assertionId]];
+      delete blocks[assertions[assertionId]];
 
       emit ProposalDeleted(proposalHash, assertionId);
     } else {
@@ -77,13 +77,13 @@ contract BundleTracker is OptimisticProposer {
     }
   }
 
-  function proposeBundle(string memory _bundleData) external onlyBundler {
-    // _bundleData references the offchain bundle data being proposed.
-    bundles[block.timestamp] = _bundleData;
+  function proposeBlock(string memory _blockData) external onlyBlockProposer {
+    // _blockData references the offchain block data being proposed.
+    blocks[block.timestamp] = _blockData;
     bytes32 _assertionID = optimisticOracleV3.assertTruth(
-      bytes(_bundleData),
-      msg.sender, // bundler is the proposer
-      address(this), // callback to the bundle tracker contract
+      bytes(_blockData),
+      msg.sender, // blockr is the proposer
+      address(this), // callback to the block tracker contract
       address(0), // no escalation manager
       liveness, // these and other oracle values set in OptimisticProposer setup
       collateral,
@@ -92,22 +92,22 @@ contract BundleTracker is OptimisticProposer {
       0 // no domain id
     );
     assertions[_assertionID] = block.timestamp;
-    emit BundleProposed(block.timestamp, msg.sender, _bundleData);
+    emit BlockProposed(block.timestamp, msg.sender, _blockData);
   }
 
-  function addBundler(address _bundler) public onlyOwner {
-    bundlers[_bundler] = true;
-    emit BundlerAdded(_bundler);
+  function addBlockr(address _blockr) public onlyOwner {
+    blockrs[_blockr] = true;
+    emit BlockrAdded(_blockr);
   }
 
-  function removeBundler(address _bundler) external onlyOwner {
-    delete bundlers[_bundler];
-    emit BundlerRemoved(_bundler);
+  function removeBlockr(address _blockr) external onlyOwner {
+    delete blockrs[_blockr];
+    emit BlockrRemoved(_blockr);
   }
 
   function assertionResolvedCallback(bytes32 assertionId, bool assertedTruthfully) public override {
     require(msg.sender == address(optimisticOracleV3));
     // If the assertion was true, then the data assertion is resolved.
-    if (assertedTruthfully) lastFinalizedBundle = assertions[assertionId];
+    if (assertedTruthfully) lastFinalizedBlock = assertions[assertionId];
   }
 }
