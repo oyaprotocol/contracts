@@ -4,19 +4,12 @@ import "./OptimisticProposer.sol";
 
 contract BlockTracker is OptimisticProposer {
   event BlockProposed(uint256 indexed timestamp, address indexed blockProposer, string blockData);
-  event BlockProposerSet(address indexed vaultController, address indexed blockProposer);
   event BlockTrackerDeployed(address indexed blockProposer, string rules);
 
   uint256 public lastFinalizedBlock;
 
   mapping(bytes32 => uint256) public assertions; // Mapping of oracle assertion IDs to block timestamps.
   mapping(uint256 => string) public blocks; // Mapping of proposal timestamps to strings pointing to the block data.
-  mapping(address => address) public blockProposers; // Map vaultController to blockProposer
-
-  modifier onlyBlockProposer() {
-    require(blockProposers[msg.sender], "Caller is not a blockProposer");
-    _;
-  }
 
   constructor(
     address _finder,
@@ -87,13 +80,6 @@ contract BlockTracker is OptimisticProposer {
     );
     assertions[_assertionID] = block.timestamp;
     emit BlockProposed(block.timestamp, msg.sender, _blockData);
-  }
-
-  function setBlockProposer(address _vaultController, address _blockProposer) public {
-    // maybe this can only be called by VaultTracker
-    require(msg.sender == _vaultController, "Only the vault controller can set their block proposer");
-    blockProposers[_blockProposer] = true;
-    emit BlockProposerSet(_vaultController, _blockProposer);
   }
 
   function assertionResolvedCallback(bytes32 assertionId, bool assertedTruthfully) public override {
