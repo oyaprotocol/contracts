@@ -90,7 +90,7 @@ contract BlockTracker is OptimisticProposer {
   }
 
   function setBlockProposer(address _vaultController, address _blockProposer) public {
-    // Need a better check than this
+    // maybe this can only be called by VaultTracker
     require(msg.sender == _vaultController, "Only the vault controller can set their block proposer");
     blockProposers[_blockProposer] = true;
     emit BlockProposerSet(_vaultController, _blockProposer);
