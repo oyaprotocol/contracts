@@ -8,7 +8,9 @@ contract BlockTracker is OptimisticProposer {
 
   uint256 public lastFinalizedBlock;
 
-  mapping(bytes32 => mapping(address => uint256)) public assertions; // oracle assertion IDs => proposer => block timestamps
+  mapping(bytes32 => uint256) public assertionTimestamps;
+  mapping(bytes32 => address) public assertionProposer;
+
   mapping(uint256 => mapping(address => string)) public blocks; // proposal timestamp => proposer => pointer to the block data
 
   constructor(
@@ -44,28 +46,30 @@ contract BlockTracker is OptimisticProposer {
     emit BlockTrackerDeployed(_rules);
   }
 
-  function assertionDisputedCallback(bytes32 assertionId) external override {
-    // Callback to automatically delete a proposal that was disputed.
+  function assertionDisputedCallback(bytes32 assertionId) public override {
+    address proposer = assertionProposer[assertionId];
+    uint256 when = assertionTimestamps[assertionId];
     bytes32 proposalHash = proposalHashes[assertionId];
 
     if (msg.sender == address(optimisticOracleV3)) {
-      // Validate the assertionId through existence of non-zero proposalHash. This is the same check as in
-      // deleteProposalOnUpgrade method that is called in the else branch.
       require(proposalHash != bytes32(0), "Invalid proposal hash");
 
-      // Delete the disputed proposal and associated assertionId.
-      delete assertionIds[proposalHash];
+      delete assertionProposer[assertionId];
+      delete assertionTimestamps[assertionId];
+      delete blocks[when][proposer]; 
       delete proposalHashes[assertionId];
-      delete blocks[assertions[assertionId]];
+      delete assertionIds[proposalHash];
 
       emit ProposalDeleted(proposalHash, assertionId);
     } else {
       deleteProposalOnUpgrade(proposalHash);
+      delete blocks[when][proposer]; 
     }
   }
 
   function proposeBlock(string memory _blockData) external {
     blocks[block.timestamp][msg.sender] = _blockData;
+
     bytes32 _assertionID = optimisticOracleV3.assertTruth(
       bytes(_blockData),
       msg.sender,
@@ -75,9 +79,12 @@ contract BlockTracker is OptimisticProposer {
       collateral,
       bondAmount,
       identifier,
-      0 // no domain id
+      0
     );
-    assertions[_assertionID][msg.sender] = block.timestamp;
+
+    assertionProposer[_assertionID] = msg.sender;
+    assertionTimestamps[_assertionID] = block.timestamp;
+
     emit BlockProposed(block.timestamp, msg.sender, _blockData);
   }
 
@@ -85,4 +92,5 @@ contract BlockTracker is OptimisticProposer {
     require(msg.sender == address(optimisticOracleV3));
     if (assertedTruthfully) lastFinalizedBlock = assertions[assertionId];
   }
+
 }
