@@ -4,13 +4,13 @@ import "@gnosis.pm/safe-contracts/contracts/base/Executor.sol";
 
 import "./OptimisticProposer.sol";
 
-contract Bookkeeper is OptimisticProposer, Executor {
+contract VaultTracker is OptimisticProposer, Executor {
   using SafeERC20 for IERC20;
 
   enum AccountMode { Automatic, Manual, Frozen }
 
-  event BookkeeperDeployed(string rules);
-  event BookkeeperUpdated(address indexed contractAddress, uint256 indexed chainId, bool isApproved);
+  event VaultTrackerDeployed(string rules);
+  event VaultTrackerUpdated(address indexed contractAddress, uint256 indexed chainId, bool isApproved);
   event ChangeAccountMode(address indexed account, AccountMode mode, uint256 timestamp);
   event OyaShutdown();
   event SetAccountRules(address indexed account, string accountRules);
@@ -69,7 +69,7 @@ contract Bookkeeper is OptimisticProposer, Executor {
     setLiveness(_liveness);
     _sync();
 
-    emit BookkeeperDeployed(_rules);
+    emit VaultTrackerDeployed(_rules);
   }
 
   function executeProposal(Transaction[] memory transactions) external nonReentrant {

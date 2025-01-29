@@ -31,7 +31,7 @@ contract OptimisticProposer is OptimisticOracleV3CallbackRecipientInterface, Loc
   event SetLiveness(uint64 indexed liveness);
   event SetIdentifier(bytes32 indexed identifier);
   event SetEscalationManager(address indexed escalationManager);
-  event SetBookkeeper(address indexed bookkeeper);
+  event SetVaultTracker(address indexed vaultTracker);
   event TransactionsProposed(
     address indexed proposer,
     uint256 indexed proposalTime,
