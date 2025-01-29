@@ -4,26 +4,26 @@ import "./OptimisticProposer.sol";
 
 contract BlockTracker is OptimisticProposer {
   event BlockCanceled(uint256 indexed timestamp);
-  event BlockProposed(uint256 indexed timestamp, address indexed blockr, string blockData);
-  event BlockrAdded(address indexed blockr);
-  event BlockrRemoved(address indexed blockr);
-  event BlockTrackerDeployed(address indexed blockr, string rules);
+  event BlockProposed(uint256 indexed timestamp, address indexed blockProposer, string blockData);
+  event BlockProposerAdded(address indexed blockProposer);
+  event BlockProposerRemoved(address indexed blockProposer);
+  event BlockTrackerDeployed(address indexed blockProposer, string rules);
 
   uint256 public lastFinalizedBlock;
 
   mapping(bytes32 => uint256) public assertions; // Mapping of oracle assertion IDs to block timestamps.
   mapping(uint256 => string) public blocks; // Mapping of proposal timestamps to strings pointing to the block data.
-  // maybe we only have one blockr after all?
-  mapping(address => bool) public blockrs; // Approved blockrs
+  // maybe we only have one blockProposer after all?
+  mapping(address => bool) public blockProposers; // Approved blockProposers
 
   modifier onlyBlockProposer() {
-    require(blockrs[msg.sender], "Caller is not a blockr");
+    require(blockProposers[msg.sender], "Caller is not a blockProposer");
     _;
   }
 
   constructor(
     address _finder,
-    address _blockr,
+    address _blockProposer,
     address _collateral,
     uint256 _bondAmount,
     string memory _rules, // Oya global rules
@@ -32,7 +32,7 @@ contract BlockTracker is OptimisticProposer {
   ) {
     require(_finder != address(0), "Finder address can not be empty");
     finder = FinderInterface(_finder);
-    bytes memory initializeParams = abi.encode(_blockr, _collateral, _bondAmount, _rules, _identifier, _liveness);
+    bytes memory initializeParams = abi.encode(_blockProposer, _collateral, _bondAmount, _rules, _identifier, _liveness);
     setUp(initializeParams);
   }
 
@@ -40,21 +40,21 @@ contract BlockTracker is OptimisticProposer {
     _startReentrantGuardDisabled();
     __Ownable_init();
     (
-      address _blockr,
+      address _blockProposer,
       address _collateral,
       uint256 _bondAmount,
       string memory _rules,
       bytes32 _identifier,
       uint64 _liveness
     ) = abi.decode(initializeParams, (address, address, uint256, string, bytes32, uint64));
-    addBlockr(_blockr);
+    addBlockProposer(_blockProposer);
     setCollateralAndBond(IERC20(_collateral), _bondAmount);
     setRules(_rules);
     setIdentifier(_identifier);
     setLiveness(_liveness);
     _sync();
 
-    emit BlockTrackerDeployed(_blockr, _rules);
+    emit BlockTrackerDeployed(_blockProposer, _rules);
   }
 
   function assertionDisputedCallback(bytes32 assertionId) external override {
@@ -82,7 +82,7 @@ contract BlockTracker is OptimisticProposer {
     blocks[block.timestamp] = _blockData;
     bytes32 _assertionID = optimisticOracleV3.assertTruth(
       bytes(_blockData),
-      msg.sender, // blockr is the proposer
+      msg.sender, // blockProposer is the proposer
       address(this), // callback to the block tracker contract
       address(0), // no escalation manager
       liveness, // these and other oracle values set in OptimisticProposer setup
@@ -95,14 +95,14 @@ contract BlockTracker is OptimisticProposer {
     emit BlockProposed(block.timestamp, msg.sender, _blockData);
   }
 
-  function addBlockr(address _blockr) public onlyOwner {
-    blockrs[_blockr] = true;
-    emit BlockrAdded(_blockr);
+  function addBlockProposer(address _blockProposer) public onlyOwner {
+    blockProposers[_blockProposer] = true;
+    emit BlockProposerAdded(_blockProposer);
   }
 
-  function removeBlockr(address _blockr) external onlyOwner {
-    delete blockrs[_blockr];
-    emit BlockrRemoved(_blockr);
+  function removeBlockProposer(address _blockProposer) external onlyOwner {
+    delete blockProposers[_blockProposer];
+    emit BlockProposerRemoved(_blockProposer);
   }
 
   function assertionResolvedCallback(bytes32 assertionId, bool assertedTruthfully) public override {
