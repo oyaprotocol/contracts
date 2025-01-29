@@ -4,16 +4,14 @@ import "./OptimisticProposer.sol";
 
 contract BlockTracker is OptimisticProposer {
   event BlockProposed(uint256 indexed timestamp, address indexed blockProposer, string blockData);
-  event BlockProposerAdded(address indexed blockProposer);
-  event BlockProposerRemoved(address indexed blockProposer);
+  event BlockProposerSet(address indexed vaultController, address indexed blockProposer);
   event BlockTrackerDeployed(address indexed blockProposer, string rules);
 
   uint256 public lastFinalizedBlock;
 
   mapping(bytes32 => uint256) public assertions; // Mapping of oracle assertion IDs to block timestamps.
   mapping(uint256 => string) public blocks; // Mapping of proposal timestamps to strings pointing to the block data.
-  // maybe we only have one blockProposer after all?
-  mapping(address => bool) public blockProposers; // Approved blockProposers
+  mapping(address => address) public blockProposers; // Map vaultController to blockProposer
 
   modifier onlyBlockProposer() {
     require(blockProposers[msg.sender], "Caller is not a blockProposer");
@@ -22,7 +20,6 @@ contract BlockTracker is OptimisticProposer {
 
   constructor(
     address _finder,
-    address _blockProposer,
     address _collateral,
     uint256 _bondAmount,
     string memory _rules, // Oya global rules
@@ -31,7 +28,7 @@ contract BlockTracker is OptimisticProposer {
   ) {
     require(_finder != address(0), "Finder address can not be empty");
     finder = FinderInterface(_finder);
-    bytes memory initializeParams = abi.encode(_blockProposer, _collateral, _bondAmount, _rules, _identifier, _liveness);
+    bytes memory initializeParams = abi.encode(_collateral, _bondAmount, _rules, _identifier, _liveness);
     setUp(initializeParams);
   }
 
@@ -39,14 +36,12 @@ contract BlockTracker is OptimisticProposer {
     _startReentrantGuardDisabled();
     __Ownable_init();
     (
-      address _blockProposer,
       address _collateral,
       uint256 _bondAmount,
       string memory _rules,
       bytes32 _identifier,
       uint64 _liveness
-    ) = abi.decode(initializeParams, (address, address, uint256, string, bytes32, uint64));
-    addBlockProposer(_blockProposer);
+    ) = abi.decode(initializeParams, (address, uint256, string, bytes32, uint64));
     setCollateralAndBond(IERC20(_collateral), _bondAmount);
     setRules(_rules);
     setIdentifier(_identifier);
@@ -76,7 +71,7 @@ contract BlockTracker is OptimisticProposer {
     }
   }
 
-  function proposeBlock(string memory _blockData) external onlyBlockProposer {
+  function proposeBlock(string memory _blockData) external {
     // _blockData references the offchain block data being proposed.
     blocks[block.timestamp] = _blockData;
     bytes32 _assertionID = optimisticOracleV3.assertTruth(
@@ -94,14 +89,11 @@ contract BlockTracker is OptimisticProposer {
     emit BlockProposed(block.timestamp, msg.sender, _blockData);
   }
 
-  function addBlockProposer(address _blockProposer) public onlyOwner {
+  function setBlockProposer(address _vaultController, address _blockProposer) public {
+    // Need a better check than this
+    require(msg.sender == _vaultController, "Only the vault controller can set their block proposer");
     blockProposers[_blockProposer] = true;
-    emit BlockProposerAdded(_blockProposer);
-  }
-
-  function removeBlockProposer(address _blockProposer) external onlyOwner {
-    delete blockProposers[_blockProposer];
-    emit BlockProposerRemoved(_blockProposer);
+    emit BlockProposerSet(_vaultController, _blockProposer);
   }
 
   function assertionResolvedCallback(bytes32 assertionId, bool assertedTruthfully) public override {
