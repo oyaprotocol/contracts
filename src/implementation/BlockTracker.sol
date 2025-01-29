@@ -4,12 +4,12 @@ import "./OptimisticProposer.sol";
 
 contract BlockTracker is OptimisticProposer {
   event BlockProposed(uint256 indexed timestamp, address indexed blockProposer, string blockData);
-  event BlockTrackerDeployed(address indexed blockProposer, string rules);
+  event BlockTrackerDeployed(string rules);
 
   uint256 public lastFinalizedBlock;
 
-  mapping(bytes32 => uint256) public assertions; // Mapping of oracle assertion IDs to block timestamps.
-  mapping(uint256 => string) public blocks; // Mapping of proposal timestamps to strings pointing to the block data.
+  mapping(bytes32 => mapping(address => uint256)) public assertions; // oracle assertion IDs => proposer => block timestamps
+  mapping(uint256 => mapping(address => string)) public blocks; // proposal timestamp => proposer => pointer to the block data
 
   constructor(
     address _finder,
@@ -41,7 +41,7 @@ contract BlockTracker is OptimisticProposer {
     setLiveness(_liveness);
     _sync();
 
-    emit BlockTrackerDeployed(_blockProposer, _rules);
+    emit BlockTrackerDeployed(_rules);
   }
 
   function assertionDisputedCallback(bytes32 assertionId) external override {
@@ -65,11 +65,10 @@ contract BlockTracker is OptimisticProposer {
   }
 
   function proposeBlock(string memory _blockData) external {
-    // _blockData references the offchain block data being proposed.
-    blocks[block.timestamp] = _blockData;
+    blocks[block.timestamp][msg.sender] = _blockData;
     bytes32 _assertionID = optimisticOracleV3.assertTruth(
       bytes(_blockData),
-      msg.sender, // blockProposer is the proposer
+      msg.sender,
       address(this), // callback to the block tracker contract
       address(0), // no escalation manager
       liveness, // these and other oracle values set in OptimisticProposer setup
@@ -78,13 +77,12 @@ contract BlockTracker is OptimisticProposer {
       identifier,
       0 // no domain id
     );
-    assertions[_assertionID] = block.timestamp;
+    assertions[_assertionID][msg.sender] = block.timestamp;
     emit BlockProposed(block.timestamp, msg.sender, _blockData);
   }
 
   function assertionResolvedCallback(bytes32 assertionId, bool assertedTruthfully) public override {
     require(msg.sender == address(optimisticOracleV3));
-    // If the assertion was true, then the data assertion is resolved.
     if (assertedTruthfully) lastFinalizedBlock = assertions[assertionId];
   }
 }
