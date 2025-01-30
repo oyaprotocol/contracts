@@ -23,7 +23,6 @@ contract VaultTracker is OptimisticProposer, Executor {
   bool public oyaShutdown = false;
   bytes public finalState;
 
-  mapping(address => bool) public authorizedBlockProposers;
   mapping(address => string) public vaultRules;
   mapping(address => VaultMode) public vaultModes;
   mapping(address => address) public blockProposers;
@@ -114,12 +113,6 @@ contract VaultTracker is OptimisticProposer, Executor {
       return VaultMode.Automatic;
     }
     return mode;
-  }
-
-  function removeBlockProposer(address _blockProposer) external onlyOwner {
-    require(authorizedBlockProposers[_blockProposer], "BlockProposer is not authorized");
-    delete authorizedBlockProposers[_blockProposer];
-    emit RemoveBlockProposer(_blockProposer);
   }
 
   function setController(address _vault, address _controller) external notFrozen(_vault) {
