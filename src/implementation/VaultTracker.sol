@@ -7,6 +7,7 @@ import "./OptimisticProposer.sol";
 contract VaultTracker is OptimisticProposer, Executor {
   using SafeERC20 for IERC20;
 
+  // Have frozen be a bool, manual mode is just being your own block proposer
   enum VaultMode { Automatic, Manual, Frozen }
 
   event VaultTrackerDeployed(string rules);
