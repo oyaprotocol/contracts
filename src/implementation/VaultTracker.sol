@@ -7,35 +7,35 @@ import "./OptimisticProposer.sol";
 contract VaultTracker is OptimisticProposer, Executor {
   using SafeERC20 for IERC20;
 
-  enum AccountMode { Automatic, Manual, Frozen }
+  enum VaultMode { Automatic, Manual, Frozen }
 
   event VaultTrackerDeployed(string rules);
   event VaultTrackerUpdated(address indexed contractAddress, uint256 indexed chainId, bool isApproved);
-  event ChangeAccountMode(address indexed account, AccountMode mode, uint256 timestamp);
+  event ChangeVaultMode(address indexed vault, VaultMode mode, uint256 timestamp);
   event OyaShutdown();
-  event SetAccountRules(address indexed account, string accountRules);
-  event SetBundler(address indexed account, address indexed bundler);
-  event SetController(address indexed account, address indexed controller);
-  event SetGuardian(address indexed account, address indexed guardian);
+  event SetVaultRules(address indexed vault, string vaultRules);
+  event SetBlockProposer(address indexed vault, address indexed blockProposer);
+  event SetController(address indexed vault, address indexed controller);
+  event SetGuardian(address indexed vault, address indexed guardian);
 
   address _cat; // Crisis Action Team multisig can trigger Oya shutdown
   // emergency shutdown drops Oya virtual chain into being a simpler zk chain, with no natural lang?
   bool public oyaShutdown = false;
   bytes public finalState;
 
-  mapping(address => bool) public authorizedBundlers;
-  mapping(address => string) public accountRules;
-  mapping(address => AccountMode) public accountModes;
-  mapping(address => address) public bundlers;
+  mapping(address => bool) public authorizedBlockProposers;
+  mapping(address => string) public vaultRules;
+  mapping(address => VaultMode) public vaultModes;
+  mapping(address => address) public blockProposers;
   mapping(address => mapping(address => bool)) public isController;
   mapping(address => mapping(address => bool)) public isGuardian;
 
   // Timestamp at which manual mode is active. 15 minute delay to switch from automatic to manual.
-  // If set to 0, the account is not in manual mode.
+  // If set to 0, the vault is not in manual mode.
   mapping(address => uint256) public manualModeLiveTime;
 
-  modifier notFrozen(address _account) {
-    require(getCurrentMode(_account) != AccountMode.Frozen, "Account is frozen");
+  modifier notFrozen(address _vault) {
+    require(getCurrentMode(_vault) != VaultMode.Frozen, "Vault is frozen");
     _;
   }
 
@@ -107,72 +107,72 @@ contract VaultTracker is OptimisticProposer, Executor {
     emit ProposalExecuted(proposalHash, assertionId);
   }
 
-  function getCurrentMode(address _account) public view returns (AccountMode) {
-    AccountMode mode = accountModes[_account];
-    if (mode == AccountMode.Manual && block.timestamp < manualModeLiveTime[_account]) {
+  function getCurrentMode(address _vault) public view returns (VaultMode) {
+    VaultMode mode = vaultModes[_vault];
+    if (mode == VaultMode.Manual && block.timestamp < manualModeLiveTime[_vault]) {
       // Manual mode is scheduled but not yet active; treat as Automatic
-      return AccountMode.Automatic;
+      return VaultMode.Automatic;
     }
     return mode;
   }
 
-  function removeBundler(address _bundler) external onlyOwner {
-    require(authorizedBundlers[_bundler], "Bundler is not authorized");
-    delete authorizedBundlers[_bundler];
-    emit RemoveBundler(_bundler);
+  function removeBlockProposer(address _blockProposer) external onlyOwner {
+    require(authorizedBlockProposers[_blockProposer], "BlockProposer is not authorized");
+    delete authorizedBlockProposers[_blockProposer];
+    emit RemoveBlockProposer(_blockProposer);
   }
 
-  function setController(address _account, address _controller) external notFrozen(_account) {
-    require(msg.sender == _account || isController[_account][msg.sender], "Not a controller");
-    isController[_account][_controller] = true;
-    emit SetController(_account, _controller);
+  function setController(address _vault, address _controller) external notFrozen(_vault) {
+    require(msg.sender == _vault || isController[_vault][msg.sender], "Not a controller");
+    isController[_vault][_controller] = true;
+    emit SetController(_vault, _controller);
   }
 
-  function setGuardian(address _account, address _guardian) external notFrozen(_account) {
-    require(msg.sender == _account || isController[_account][msg.sender], "Not a controller");
-    isGuardian[_account][_guardian] = true;
-    emit SetGuardian(_account, _guardian);
+  function setGuardian(address _vault, address _guardian) external notFrozen(_vault) {
+    require(msg.sender == _vault || isController[_vault][msg.sender], "Not a controller");
+    isGuardian[_vault][_guardian] = true;
+    emit SetGuardian(_vault, _guardian);
   }
 
-  function setAccountRules(address _account, string memory _rules) external notFrozen(_account) {
-    require(msg.sender == _account || isController[_account][msg.sender], "Not a controller");
+  function setVaultRules(address _vault, string memory _rules) external notFrozen(_vault) {
+    require(msg.sender == _vault || isController[_vault][msg.sender], "Not a controller");
     // Set reference to the rules for the Oya module
     require(bytes(_rules).length > 0, "Rules can not be empty");
-    accountRules[_account] = _rules;
-    emit SetAccountRules(_account, _rules);
+    vaultRules[_vault] = _rules;
+    emit SetVaultRules(_vault, _rules);
   }
   
-  function setAccountMode(address _account, AccountMode _mode) external {
-    AccountMode currentMode = getCurrentMode(_account);
+  function setVaultMode(address _vault, VaultMode _mode) external {
+    VaultMode currentMode = getCurrentMode(_vault);
 
-    if (_mode == AccountMode.Manual) {
-      // Only the account owner or a controller can set to Manual
-      require(msg.sender == _account || isController[_account][msg.sender], "Not a controller");
-      // Cannot set to Manual if the account is frozen
-      require(currentMode != AccountMode.Frozen, "Account is frozen");
+    if (_mode == VaultMode.Manual) {
+      // Only the vault owner or a controller can set to Manual
+      require(msg.sender == _vault || isController[_vault][msg.sender], "Not a controller");
+      // Cannot set to Manual if the vault is frozen
+      require(currentMode != VaultMode.Frozen, "Vault is frozen");
       // Set to Manual mode with a 15-minute delay
-      accountModes[_account] = AccountMode.Manual;
-      manualModeLiveTime[_account] = block.timestamp + 15 minutes;
-      emit ChangeAccountMode(_account, AccountMode.Manual, manualModeLiveTime[_account]);
-    } else if (_mode == AccountMode.Automatic) {
-      if (currentMode == AccountMode.Frozen) {
-        // Only a guardian can unfreeze the account
-        require(isGuardian[_account][msg.sender], "Not a guardian");
+      vaultModes[_vault] = VaultMode.Manual;
+      manualModeLiveTime[_vault] = block.timestamp + 15 minutes;
+      emit ChangeVaultMode(_vault, VaultMode.Manual, manualModeLiveTime[_vault]);
+    } else if (_mode == VaultMode.Automatic) {
+      if (currentMode == VaultMode.Frozen) {
+        // Only a guardian can unfreeze the vault
+        require(isGuardian[_vault][msg.sender], "Not a guardian");
       } else {
-        // Only the account owner or a controller can set to Automatic
-        require(msg.sender == _account || isController[_account][msg.sender], "Not a controller");
+        // Only the vault owner or a controller can set to Automatic
+        require(msg.sender == _vault || isController[_vault][msg.sender], "Not a controller");
       }
       // Set to Automatic mode immediately
-      accountModes[_account] = AccountMode.Automatic;
-      manualModeLiveTime[_account] = 0; // Cancel any scheduled manual mode activation
-      emit ChangeAccountMode(_account, AccountMode.Automatic, block.timestamp);
-    } else if (_mode == AccountMode.Frozen) {
-      // Only a guardian can freeze the account
-      require(isGuardian[_account][msg.sender], "Not a guardian");
+      vaultModes[_vault] = VaultMode.Automatic;
+      manualModeLiveTime[_vault] = 0; // Cancel any scheduled manual mode activation
+      emit ChangeVaultMode(_vault, VaultMode.Automatic, block.timestamp);
+    } else if (_mode == VaultMode.Frozen) {
+      // Only a guardian can freeze the vault
+      require(isGuardian[_vault][msg.sender], "Not a guardian");
       // Set to Frozen mode immediately
-      accountModes[_account] = AccountMode.Frozen;
-      manualModeLiveTime[_account] = 0; // Cancel any scheduled manual mode activation
-      emit ChangeAccountMode(_account, AccountMode.Frozen, block.timestamp);
+      vaultModes[_vault] = VaultMode.Frozen;
+      manualModeLiveTime[_vault] = 0; // Cancel any scheduled manual mode activation
+      emit ChangeVaultMode(_vault, VaultMode.Frozen, block.timestamp);
     } else {
       revert("Invalid mode");
     }
