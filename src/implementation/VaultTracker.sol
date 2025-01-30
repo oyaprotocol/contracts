@@ -184,13 +184,13 @@ contract VaultTracker is OptimisticProposer, Executor {
     emit OyaShutdown();
   }
 
-  function withdrawFungibleTokenAfterShutdown(address _token, address _to) external {
+  function withdrawFungibleTokenAfterShutdown(address _token, address _to, uint256 _amount) external {
     require(oyaShutdown, "Oya is not shutdown");
-    // need to look at a merkle root of the last good virtual chain state to get balance to check
+    // _amount needs to be checked
     if (_token == address(0)) {
-      payable(_to).transfer(tokenId);
+      payable(_to).transfer(_amount);
     } else {
-      IERC20(_token).safeTransfer(_to, tokenId);
+      IERC20(_token).safeTransfer(_to, _amount);
     }
   }
 
