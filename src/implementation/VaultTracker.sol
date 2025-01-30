@@ -115,6 +115,12 @@ contract VaultTracker is OptimisticProposer, Executor {
     return mode;
   }
 
+  function setBlockProposer(address _vault, address _blockProposer) external notFrozen(_vault) {
+    require(msg.sender == _vault || isController[_vault][msg.sender], "Not a controller");
+    authorizedBlockProposers[_blockProposer] = true;
+    emit SetBlockProposer(_vault, _blockProposer);
+  }
+
   function setController(address _vault, address _controller) external notFrozen(_vault) {
     require(msg.sender == _vault || isController[_vault][msg.sender], "Not a controller");
     isController[_vault][_controller] = true;
