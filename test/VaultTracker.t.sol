@@ -60,7 +60,7 @@ contract VaultTrackerTest is Test {
         );
 
         vm.prank(owner);
-        createdVaultId = vaultTracker.createVault();
+        createdVaultId = vaultTracker.createVault(controller);
     }
 
     function testSetController() public {

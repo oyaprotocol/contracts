@@ -9,7 +9,7 @@ contract VaultTracker is OptimisticProposer, Executor {
   event VaultTrackerDeployed(string rules);
   event ChainFrozen();
   event ChainUnfrozen();
-  event VaultCreated(uint256 indexed vaultId);
+  event VaultCreated(uint256 indexed vaultId, address indexed controller);
   event VaultFrozen(uint256 indexed vaultId);
   event VaultUnfrozen(uint256 indexed vaultId);
   event SetVaultRules(uint256 indexed vaultId, string vaultRules);
@@ -65,9 +65,10 @@ contract VaultTracker is OptimisticProposer, Executor {
     emit VaultTrackerDeployed(_rules);
   }
 
-  function createVault() external returns (uint256) {
+  function createVault(address _controller) external returns (uint256) {
     nextVaultId++;
-    emit VaultCreated(nextVaultId);
+    _setController(nextVaultId, _controller);
+    emit VaultCreated(nextVaultId, _controller);
     return nextVaultId;
   }
 
@@ -94,43 +95,42 @@ contract VaultTracker is OptimisticProposer, Executor {
     _cat = _catAddress;
   }
 
-  function setBlockProposer(uint256 vaultId, address _blockProposer) external notFrozen(vaultId) {
-    require(msg.sender == address(this) || isController[vaultId][msg.sender], "Not a controller");
+  function setBlockProposer(uint256 _vaultId, address _blockProposer) external notFrozen(_vaultId) {
+    require(msg.sender == address(this) || isController[_vaultId][msg.sender], "Not a controller");
     uint256 _liveTime = block.timestamp + 15 minutes;
-    proposerChangeLiveTime[vaultId] = _liveTime;
-    blockProposers[vaultId] = _blockProposer;
-    emit SetBlockProposer(vaultId, _blockProposer, _liveTime);
+    proposerChangeLiveTime[_vaultId] = _liveTime;
+    blockProposers[_vaultId] = _blockProposer;
+    emit SetBlockProposer(_vaultId, _blockProposer, _liveTime);
   }
 
-  function setController(uint256 vaultId, address _controller) external notFrozen(vaultId) {
-    require(msg.sender == address(this) || isController[vaultId][msg.sender], "Not a controller");
-    isController[vaultId][_controller] = true;
-    emit SetController(vaultId, _controller);
+  function setController(uint256 _vaultId, address _controller) external notFrozen(_vaultId) {
+    require(msg.sender == address(this) || isController[_vaultId][msg.sender], "Not a controller");
+    _setController(_vaultId, _controller);
   }
 
-  function setGuardian(uint256 vaultId, address _guardian) external notFrozen(vaultId) {
-    require(msg.sender == address(this) || isController[vaultId][msg.sender], "Not a controller");
-    isGuardian[vaultId][_guardian] = true;
-    emit SetGuardian(vaultId, _guardian);
+  function setGuardian(uint256 _vaultId, address _guardian) external notFrozen(_vaultId) {
+    require(msg.sender == address(this) || isController[_vaultId][msg.sender], "Not a controller");
+    isGuardian[_vaultId][_guardian] = true;
+    emit SetGuardian(_vaultId, _guardian);
   }
 
-  function setVaultRules(uint256 vaultId, string memory _rules) external notFrozen(vaultId) {
-    require(msg.sender == address(this) || isController[vaultId][msg.sender], "Not a controller");
+  function setVaultRules(uint256 _vaultId, string memory _rules) external notFrozen(_vaultId) {
+    require(msg.sender == address(this) || isController[_vaultId][msg.sender], "Not a controller");
     require(bytes(_rules).length > 0, "Rules can not be empty");
-    vaultRules[vaultId] = _rules;
-    emit SetVaultRules(vaultId, _rules);
+    vaultRules[_vaultId] = _rules;
+    emit SetVaultRules(_vaultId, _rules);
   }
 
-  function freezeVault(uint256 vaultId) external notFrozen(vaultId) {
-    require(isGuardian[vaultId][msg.sender], "Not a guardian");
-    vaultFrozen[vaultId] = true;
-    emit VaultFrozen(vaultId);
+  function freezeVault(uint256 _vaultId) external notFrozen(_vaultId) {
+    require(isGuardian[_vaultId][msg.sender], "Not a guardian");
+    vaultFrozen[_vaultId] = true;
+    emit VaultFrozen(_vaultId);
   }
 
-  function unfreezeVault(uint256 vaultId) external {
-    require(isGuardian[vaultId][msg.sender], "Not a guardian");
-    vaultFrozen[vaultId] = false;
-    emit VaultUnfrozen(vaultId);
+  function unfreezeVault(uint256 _vaultId) external {
+    require(isGuardian[_vaultId][msg.sender], "Not a guardian");
+    vaultFrozen[_vaultId] = false;
+    emit VaultUnfrozen(_vaultId);
   }
 
   function freezeChain() external onlyCat {
@@ -141,5 +141,10 @@ contract VaultTracker is OptimisticProposer, Executor {
   function unfreezeChain() external onlyCat {
     chainFrozen = false;
     emit ChainUnfrozen();
+  }
+
+  function _setController(uint256 _vaultId, address _controller) internal {
+    isController[_vaultId][_controller] = true;
+    emit SetController(_vaultId, _controller);
   }
 }
