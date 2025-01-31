@@ -94,31 +94,31 @@ contract VaultTracker is OptimisticProposer, Executor {
     _cat = _catAddress;
   }
 
-  function setBlockProposer(uint256 _vaultId, address _blockProposer) public notFrozen(_vaultId) {
+  function setBlockProposer(uint256 _vaultId, address _blockProposer) external notFrozen(_vaultId) {
     require(msg.sender == address(this) || isController[_vaultId][msg.sender], "Not a controller");
     uint256 _liveTime = block.timestamp + 3 hours;
     blockProposers[_vaultId] = _blockProposer;
     emit SetBlockProposer(_vaultId, _blockProposer, _liveTime);
   }
 
-  function setController(uint256 _vaultId, address _controller) public notFrozen(_vaultId) {
+  function setController(uint256 _vaultId, address _controller) external notFrozen(_vaultId) {
     require(msg.sender == address(this) || isController[_vaultId][msg.sender], "Not a controller");
     _setController(_vaultId, _controller);
   }
 
-  function setGuardian(uint256 _vaultId, address _guardian) public notFrozen(_vaultId) {
+  function setGuardian(uint256 _vaultId, address _guardian) external notFrozen(_vaultId) {
     require(msg.sender == address(this) || isController[_vaultId][msg.sender], "Not a controller");
     isGuardian[_vaultId][_guardian] = true;
     emit SetGuardian(_vaultId, _guardian);
   }
 
-  function removeGuardian(uint256 _vaultId, address _guardian) public notFrozen(_vaultId) {
+  function removeGuardian(uint256 _vaultId, address _guardian) external notFrozen(_vaultId) {
     require(msg.sender == address(this) || isController[_vaultId][msg.sender], "Not a controller");
     isGuardian[_vaultId][_guardian] = false;
     emit SetGuardian(_vaultId, _guardian);
   }
 
-  function setVaultRules(uint256 _vaultId, string memory _rules) public notFrozen(_vaultId) {
+  function setVaultRules(uint256 _vaultId, string memory _rules) external notFrozen(_vaultId) {
     require(msg.sender == address(this) || isController[_vaultId][msg.sender], "Not a controller");
     require(bytes(_rules).length > 0, "Rules can not be empty");
     vaultRules[_vaultId] = _rules;
