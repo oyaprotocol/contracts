@@ -104,7 +104,7 @@ contract VaultTracker is OptimisticProposer, Executor {
   // Many setter functions should be possible to set through executing a proposal instead of
   // using a controller address
   function setBlockProposer(address _vault, address _blockProposer) external notFrozen(_vault) {
-    require(msg.sender == _vault || isController[_vault][msg.sender], "Not a controller");
+    require(msg.sender == address(this) || isController[_vault][msg.sender], "Not a controller");
     uint256 _liveTime = block.timestamp + 15 minutes;
     proposerChangeLiveTime[_vault] = _liveTime;
     blockProposers[_vault] = _blockProposer;
@@ -112,19 +112,19 @@ contract VaultTracker is OptimisticProposer, Executor {
   }
 
   function setController(address _vault, address _controller) external notFrozen(_vault) {
-    require(msg.sender == _vault || isController[_vault][msg.sender], "Not a controller");
+    require(msg.sender == address(this) || isController[_vault][msg.sender], "Not a controller");
     isController[_vault][_controller] = true;
     emit SetController(_vault, _controller);
   }
 
   function setGuardian(address _vault, address _guardian) external notFrozen(_vault) {
-    require(msg.sender == _vault || isController[_vault][msg.sender], "Not a controller");
+    require(msg.sender == address(this) || isController[_vault][msg.sender], "Not a controller");
     isGuardian[_vault][_guardian] = true;
     emit SetGuardian(_vault, _guardian);
   }
 
   function setVaultRules(address _vault, string memory _rules) external notFrozen(_vault) {
-    require(msg.sender == _vault || isController[_vault][msg.sender], "Not a controller");
+    require(msg.sender == address(this) || isController[_vault][msg.sender], "Not a controller");
     // Set reference to the rules for the Oya module
     require(bytes(_rules).length > 0, "Rules can not be empty");
     vaultRules[_vault] = _rules;
