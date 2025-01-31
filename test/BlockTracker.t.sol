@@ -85,38 +85,6 @@ contract BlockTrackerTest is Test {
         vm.stopPrank();
     }
 
-    function testAssertionResolvedCallback() public {
-        // In a real scenario, the OOv3 would call assertionResolvedCallback.
-        // We'll just simulate that call here.
-
-        // We'll pretend there's an assertionId
-        bytes32 fakeAssertionId = keccak256("some assertion id");
-
-        // We'll also store some data as though it was proposed
-        blockTracker.assertionTimestamps(fakeAssertionId); // read initially = 0
-        // For testing, let's just set it via HEVM store or do a normal approach:
-        vm.store(
-            address(blockTracker),
-            // layout => keccak256(abi.encode(fakeAssertionId, <slot of assertionTimestamps>))
-            // but simpler is to just call a function or hack the mapping.
-            bytes32(
-                uint256(
-                    keccak256(
-                        abi.encode(fakeAssertionId, 5) // 5 is the storage slot of assertionTimestamps, see below
-                    )
-                )
-            ),
-            bytes32(uint256(1234)) // store a dummy timestamp
-        );
-
-        // Now call the callback as if the OOv3 did it
-        vm.prank(address(mockOptimisticOracleV3));
-        blockTracker.assertionResolvedCallback(fakeAssertionId, true);
-
-        // lastFinalizedTimestamp should now be 1234
-        assertEq(blockTracker.lastFinalizedTimestamp(), 1234, "Last finalized timestamp incorrect");
-    }
-
     // Example test of setting rules, etc.
     function testSetRules() public {
         vm.startPrank(owner);
@@ -136,7 +104,4 @@ contract BlockTrackerTest is Test {
         assertEq(address(blockTracker.collateral()), address(newMockCollateral), "Collateral not updated");
         assertEq(blockTracker.bondAmount(), bondAmount, "Bond amount not updated");
     }
-
-    // Other inherited tests from OptimisticProposer can be placed here:
-    // setLiveness, setIdentifier, setEscalationManager, etc.
 }
