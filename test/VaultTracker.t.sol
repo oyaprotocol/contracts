@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.6;
 
 import "forge-std/Test.sol";
@@ -31,7 +30,6 @@ contract VaultTrackerTest is Test {
     string public newRules = "New rules";
     bytes32 public identifier = keccak256("Identifier");
     uint64 public liveness = 100;
-    uint256 public createdVaultId;
 
     function setUp() public {
         mockFinder = new MockFinder();
@@ -58,84 +56,101 @@ contract VaultTrackerTest is Test {
             identifier,
             liveness
         );
+    }
 
-        vm.prank(owner);
-        createdVaultId = vaultTracker.createVault(controller);
+    function testCreateVaultWithController() public {
+        vm.startPrank(owner);
+        uint256 newVaultId = vaultTracker.createVault(controller);
+        vm.stopPrank();
+        bool isCtrl = vaultTracker.isController(newVaultId, controller);
+        assertTrue(isCtrl, "Specified controller should be initial controller");
     }
 
     function testSetController() public {
+        vm.startPrank(owner);
+        uint256 vaultId = vaultTracker.createVault(controller);
+        vm.stopPrank();
+
         vm.prank(randomAddress);
         vm.expectRevert("Not a controller");
-        vaultTracker.setController(createdVaultId, controller);
+        vaultTracker.setController(vaultId, address(5));
 
-        vm.prank(address(vaultTracker));
-        vaultTracker.setController(createdVaultId, controller);
-        assertTrue(vaultTracker.isController(createdVaultId, controller));
+        vm.prank(controller);
+        vaultTracker.setController(vaultId, address(6));
+        assertTrue(vaultTracker.isController(vaultId, address(6)));
     }
 
     function testSetGuardian() public {
-        vm.prank(address(vaultTracker));
-        vaultTracker.setController(createdVaultId, controller);
+        vm.startPrank(owner);
+        uint256 vaultId = vaultTracker.createVault(controller);
+        vm.stopPrank();
+
         vm.prank(controller);
-        vaultTracker.setGuardian(createdVaultId, guardian);
-        assertTrue(vaultTracker.isGuardian(createdVaultId, guardian));
+        vaultTracker.setGuardian(vaultId, guardian);
+        assertTrue(vaultTracker.isGuardian(vaultId, guardian));
     }
 
     function testSetVaultRules() public {
-        vm.prank(address(vaultTracker));
-        vaultTracker.setController(createdVaultId, controller);
+        vm.startPrank(owner);
+        uint256 vaultId = vaultTracker.createVault(controller);
+        vm.stopPrank();
 
         vm.prank(controller);
         vm.expectRevert("Rules can not be empty");
-        vaultTracker.setVaultRules(createdVaultId, "");
+        vaultTracker.setVaultRules(vaultId, "");
 
         vm.prank(controller);
-        vaultTracker.setVaultRules(createdVaultId, "Vault policy 1");
-        assertEq(vaultTracker.vaultRules(createdVaultId), "Vault policy 1");
+        vaultTracker.setVaultRules(vaultId, "Vault policy 1");
+        assertEq(vaultTracker.vaultRules(vaultId), "Vault policy 1");
     }
 
     function testFreezeVault() public {
-        vm.prank(address(vaultTracker));
-        vaultTracker.setController(createdVaultId, controller);
+        vm.startPrank(owner);
+        uint256 vaultId = vaultTracker.createVault(controller);
+        vm.stopPrank();
+
         vm.prank(controller);
-        vaultTracker.setGuardian(createdVaultId, guardian);
+        vaultTracker.setGuardian(vaultId, guardian);
 
         vm.prank(randomAddress);
         vm.expectRevert("Not a guardian");
-        vaultTracker.freezeVault(createdVaultId);
+        vaultTracker.freezeVault(vaultId);
 
         vm.prank(guardian);
-        vaultTracker.freezeVault(createdVaultId);
-        assertTrue(vaultTracker.vaultFrozen(createdVaultId));
+        vaultTracker.freezeVault(vaultId);
+        assertTrue(vaultTracker.vaultFrozen(vaultId));
     }
 
     function testUnfreezeVault() public {
-        vm.prank(address(vaultTracker));
-        vaultTracker.setController(createdVaultId, controller);
+        vm.startPrank(owner);
+        uint256 vaultId = vaultTracker.createVault(controller);
+        vm.stopPrank();
+
         vm.prank(controller);
-        vaultTracker.setGuardian(createdVaultId, guardian);
+        vaultTracker.setGuardian(vaultId, guardian);
 
         vm.prank(guardian);
-        vaultTracker.freezeVault(createdVaultId);
+        vaultTracker.freezeVault(vaultId);
 
         vm.prank(randomAddress);
         vm.expectRevert("Not a guardian");
-        vaultTracker.unfreezeVault(createdVaultId);
+        vaultTracker.unfreezeVault(vaultId);
 
         vm.prank(guardian);
-        vaultTracker.unfreezeVault(createdVaultId);
-        assertFalse(vaultTracker.vaultFrozen(createdVaultId));
+        vaultTracker.unfreezeVault(vaultId);
+        assertFalse(vaultTracker.vaultFrozen(vaultId));
     }
 
     function testSetBlockProposer() public {
-        vm.prank(address(vaultTracker));
-        vaultTracker.setController(createdVaultId, controller);
+        vm.startPrank(owner);
+        uint256 vaultId = vaultTracker.createVault(controller);
+        vm.stopPrank();
 
         vm.warp(1000);
         vm.prank(controller);
-        vaultTracker.setBlockProposer(createdVaultId, address(999));
-        assertEq(vaultTracker.blockProposers(createdVaultId), address(999));
-        assertEq(vaultTracker.proposerChangeLiveTime(createdVaultId), 1900);
+        vaultTracker.setBlockProposer(vaultId, address(999));
+        assertEq(vaultTracker.blockProposers(vaultId), address(999));
+        assertEq(vaultTracker.proposerChangeLiveTime(vaultId), 1900);
     }
 
     function testSetRules() public {
