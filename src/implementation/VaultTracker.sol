@@ -13,15 +13,15 @@ contract VaultTracker is OptimisticProposer, Executor {
   event VaultTrackerDeployed(string rules);
   event VaultTrackerUpdated(address indexed contractAddress, uint256 indexed chainId, bool isApproved);
   event ChangeVaultMode(address indexed vault, VaultMode mode, uint256 timestamp);
-  event OyaShutdown();
+  event OyaFrozen();
+  event OyaUnfrozen();
   event SetVaultRules(address indexed vault, string vaultRules);
   event SetBlockProposer(address indexed vault, address indexed blockProposer);
   event SetController(address indexed vault, address indexed controller);
   event SetGuardian(address indexed vault, address indexed guardian);
 
-  address _cat; // Crisis Action Team multisig can trigger Oya shutdown
-  // emergency shutdown drops Oya virtual chain into being a simpler zk chain, with no natural lang?
-  bool public oyaShutdown = false;
+  address _cat; // Crisis Action Team can trigger Oya chain freeze
+  bool public oyaFrozen = false;
   bytes public finalState;
 
   mapping(address => string) public vaultRules;
@@ -73,7 +73,7 @@ contract VaultTracker is OptimisticProposer, Executor {
   }
 
   function executeProposal(Transaction[] memory transactions) external nonReentrant {
-    require(oyaShutdown == false, "Oya virtual chain is shut down, please withdraw your funds");
+    require(oyaFrozen == false, "Oya chain is currently frozen");
 
     // Recreate the proposal hash from the inputs and check that it matches the stored proposal hash.
     bytes32 proposalHash = keccak256(abi.encode(transactions));
@@ -178,26 +178,13 @@ contract VaultTracker is OptimisticProposer, Executor {
     }
   }
 
-  function shutdownOya(bytes _finalState /* pass in merkle root of last good virtual chain state? */) external onlyCat {
-    finalState = _finalState;
-    // need to check that final state matches merkle root of last good virtual chain state
-    oyaShutdown = true;
-    emit OyaShutdown();
+  function freezeOya() external onlyCat {
+    oyaFrozen = true;
+    emit OyaFrozen();
   }
 
-  function withdrawFungibleTokenAfterShutdown(address _token, address _to, uint256 _amount) external {
-    require(oyaShutdown, "Oya is not shutdown");
-    // _amount needs to be checked
-    if (_token == address(0)) {
-      payable(_to).transfer(_amount);
-    } else {
-      IERC20(_token).safeTransfer(_to, _amount);
-    }
-  }
-
-  function withdrawNFTAfterShutdown(address _token, uint256 _tokenId, address _to) external {
-    require(oyaShutdown, "Oya is not shutdown");
-    // need to look at a merkle root of the last good virtual chain state to get balance to check
-    IERC721(_token).safeTransferFrom(address(this), _to, _tokenId);
+  function unfreezeOya() external onlyCat {
+    oyaFrozen = false;
+    emit OyaUnfrozen();
   }
 }
