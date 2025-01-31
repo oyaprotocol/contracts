@@ -8,7 +8,6 @@ contract VaultTracker is OptimisticProposer, Executor {
   using SafeERC20 for IERC20;
 
   event VaultTrackerDeployed(string rules);
-  event VaultTrackerUpdated(address indexed contractAddress, uint256 indexed chainId, bool isApproved);
   event ChainFrozen();
   event ChainUnfrozen();
   event VaultFrozen(address indexed vault);
