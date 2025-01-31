@@ -13,7 +13,8 @@ contract BlockTracker is OptimisticProposer {
   mapping(bytes32 => uint256) public assertionTimestamps;
   mapping(bytes32 => address) public assertionProposer;
 
-  mapping(uint256 => mapping(address => string)) public blocks; // proposal timestamp => proposer => pointer to the block data
+  // proposal timestamp => proposer => pointer to the block data
+  mapping(uint256 => mapping(address => string)) public blocks;
 
   constructor(
     address _finder,
