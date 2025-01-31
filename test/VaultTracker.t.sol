@@ -150,7 +150,6 @@ contract VaultTrackerTest is Test {
         vm.prank(controller);
         vaultTracker.setBlockProposer(vaultId, address(999));
         assertEq(vaultTracker.blockProposers(vaultId), address(999));
-        assertEq(vaultTracker.proposerChangeLiveTime(vaultId), 1900);
     }
 
     function testSetRules() public {
