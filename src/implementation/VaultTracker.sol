@@ -71,16 +71,9 @@ contract VaultTracker is OptimisticProposer, Executor {
   function executeProposal(Transaction[] memory transactions) external nonReentrant {
     require(chainFrozen == false, "Oya chain is currently frozen");
 
-    // Recreate the proposal hash from the inputs and check that it matches the stored proposal hash.
     bytes32 proposalHash = keccak256(abi.encode(transactions));
-
-    // Get the original proposal assertionId.
     bytes32 assertionId = assertionIds[proposalHash];
-
-    // This will reject the transaction if the proposal hash generated from the inputs does not have the associated
-    // assertionId stored. This is possible when a) the transactions have not been proposed, b) transactions have
-    // already been executed, c) the proposal was disputed or d) the proposal was deleted after Optimistic Oracle V3
-    // upgrade.
+    
     require(assertionId != bytes32(0), "Proposal hash does not exist");
 
     // Remove proposal hash and assertionId so transactions can not be executed again.
