@@ -13,7 +13,7 @@ contract VaultTracker is OptimisticProposer, Executor {
   event VaultFrozen(address indexed vault);
   event VaultUnfrozen(address indexed vault);
   event SetVaultRules(address indexed vault, string vaultRules);
-  event SetBlockProposer(address indexed vault, address indexed blockProposer);
+  event SetBlockProposer(address indexed vault, address indexed blockProposer, uint256 liveTime);
   event SetController(address indexed vault, address indexed controller);
   event SetGuardian(address indexed vault, address indexed guardian);
 
@@ -101,9 +101,10 @@ contract VaultTracker is OptimisticProposer, Executor {
 
   function setBlockProposer(address _vault, address _blockProposer) external notFrozen(_vault) {
     require(msg.sender == _vault || isController[_vault][msg.sender], "Not a controller");
-    proposerChangeLiveTime[_vault] = block.timestamp + 15 minutes;
+    uint256 _liveTime = block.timestamp + 15 minutes;
+    proposerChangeLiveTime[_vault] = _liveTime;
     blockProposers[_vault] = _blockProposer;
-    emit SetBlockProposer(_vault, _blockProposer);
+    emit SetBlockProposer(_vault, _blockProposer, _liveTime);
   }
 
   function setController(address _vault, address _controller) external notFrozen(_vault) {
