@@ -112,8 +112,8 @@ contract VaultTracker is OptimisticProposer, Executor {
     emit SetGuardian(_vaultId, _guardian);
   }
 
-  function removeGuardian(uint256 _vaultId, address _guardian) external notFrozen(_vaultId) {
-    require(msg.sender == address(this) || isController[_vaultId][msg.sender], "Not a controller");
+  function removeGuardian(uint256 _vaultId, address _guardian) external {
+    require(msg.sender == address(this), "Guardians must be removed by a proposal");
     isGuardian[_vaultId][_guardian] = false;
     emit SetGuardian(_vaultId, _guardian);
   }
