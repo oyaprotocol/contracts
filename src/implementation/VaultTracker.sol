@@ -101,8 +101,6 @@ contract VaultTracker is OptimisticProposer, Executor {
     _cat = _catAddress;
   }
 
-  // Many setter functions should be possible to set through executing a proposal instead of
-  // using a controller address
   function setBlockProposer(address _vault, address _blockProposer) external notFrozen(_vault) {
     require(msg.sender == address(this) || isController[_vault][msg.sender], "Not a controller");
     uint256 _liveTime = block.timestamp + 15 minutes;
