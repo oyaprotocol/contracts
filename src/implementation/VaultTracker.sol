@@ -7,35 +7,31 @@ import "./OptimisticProposer.sol";
 contract VaultTracker is OptimisticProposer, Executor {
   using SafeERC20 for IERC20;
 
-  // Have frozen be a bool, manual mode is just being your own block proposer
-  enum VaultMode { Automatic, Manual, Frozen }
-
   event VaultTrackerDeployed(string rules);
   event VaultTrackerUpdated(address indexed contractAddress, uint256 indexed chainId, bool isApproved);
-  event ChangeVaultMode(address indexed vault, VaultMode mode, uint256 timestamp);
-  event OyaFrozen();
-  event OyaUnfrozen();
+  event ChainFrozen();
+  event ChainUnfrozen();
+  event VaultFrozen(address indexed vault);
+  event VaultUnfrozen(address indexed vault);
   event SetVaultRules(address indexed vault, string vaultRules);
   event SetBlockProposer(address indexed vault, address indexed blockProposer);
   event SetController(address indexed vault, address indexed controller);
   event SetGuardian(address indexed vault, address indexed guardian);
 
   address _cat; // Crisis Action Team can trigger Oya chain freeze
-  bool public oyaFrozen = false;
-  bytes public finalState;
+  bool public chainFrozen = false;
 
   mapping(address => string) public vaultRules;
-  mapping(address => VaultMode) public vaultModes;
+  mapping(address => bool) public vaultFrozen;
   mapping(address => address) public blockProposers;
   mapping(address => mapping(address => bool)) public isController;
   mapping(address => mapping(address => bool)) public isGuardian;
 
-  // Timestamp at which manual mode is active. 15 minute delay to switch from automatic to manual.
-  // If set to 0, the vault is not in manual mode.
-  mapping(address => uint256) public manualModeLiveTime;
+  // Timestamp at which proposer change is active. 15 minute delay to switch.
+  mapping(address => uint256) public proposerChange;
 
   modifier notFrozen(address _vault) {
-    require(getCurrentMode(_vault) != VaultMode.Frozen, "Vault is frozen");
+    require(vaultFrozen[_vault] == false, "Vault is frozen");
     _;
   }
 
@@ -73,7 +69,7 @@ contract VaultTracker is OptimisticProposer, Executor {
   }
 
   function executeProposal(Transaction[] memory transactions) external nonReentrant {
-    require(oyaFrozen == false, "Oya chain is currently frozen");
+    require(chainFrozen == false, "Oya chain is currently frozen");
 
     // Recreate the proposal hash from the inputs and check that it matches the stored proposal hash.
     bytes32 proposalHash = keccak256(abi.encode(transactions));
@@ -107,17 +103,9 @@ contract VaultTracker is OptimisticProposer, Executor {
     emit ProposalExecuted(proposalHash, assertionId);
   }
 
-  function getCurrentMode(address _vault) public view returns (VaultMode) {
-    VaultMode mode = vaultModes[_vault];
-    if (mode == VaultMode.Manual && block.timestamp < manualModeLiveTime[_vault]) {
-      // Manual mode is scheduled but not yet active; treat as Automatic
-      return VaultMode.Automatic;
-    }
-    return mode;
-  }
-
   function setBlockProposer(address _vault, address _blockProposer) external notFrozen(_vault) {
     require(msg.sender == _vault || isController[_vault][msg.sender], "Not a controller");
+    proposerChangeLiveTime[_vault] = block.timestamp + 15 minutes;
     blockProposers[_vault] = _blockProposer;
     emit SetBlockProposer(_vault, _blockProposer);
   }
@@ -141,50 +129,28 @@ contract VaultTracker is OptimisticProposer, Executor {
     vaultRules[_vault] = _rules;
     emit SetVaultRules(_vault, _rules);
   }
-  
-  function setVaultMode(address _vault, VaultMode _mode) external {
-    VaultMode currentMode = getCurrentMode(_vault);
 
-    if (_mode == VaultMode.Manual) {
-      // Only the vault owner or a controller can set to Manual
-      require(msg.sender == _vault || isController[_vault][msg.sender], "Not a controller");
-      // Cannot set to Manual if the vault is frozen
-      require(currentMode != VaultMode.Frozen, "Vault is frozen");
-      // Set to Manual mode with a 15-minute delay
-      vaultModes[_vault] = VaultMode.Manual;
-      manualModeLiveTime[_vault] = block.timestamp + 15 minutes;
-      emit ChangeVaultMode(_vault, VaultMode.Manual, manualModeLiveTime[_vault]);
-    } else if (_mode == VaultMode.Automatic) {
-      if (currentMode == VaultMode.Frozen) {
-        // Only a guardian can unfreeze the vault
-        require(isGuardian[_vault][msg.sender], "Not a guardian");
-      } else {
-        // Only the vault owner or a controller can set to Automatic
-        require(msg.sender == _vault || isController[_vault][msg.sender], "Not a controller");
-      }
-      // Set to Automatic mode immediately
-      vaultModes[_vault] = VaultMode.Automatic;
-      manualModeLiveTime[_vault] = 0; // Cancel any scheduled manual mode activation
-      emit ChangeVaultMode(_vault, VaultMode.Automatic, block.timestamp);
-    } else if (_mode == VaultMode.Frozen) {
-      // Only a guardian can freeze the vault
-      require(isGuardian[_vault][msg.sender], "Not a guardian");
-      // Set to Frozen mode immediately
-      vaultModes[_vault] = VaultMode.Frozen;
-      manualModeLiveTime[_vault] = 0; // Cancel any scheduled manual mode activation
-      emit ChangeVaultMode(_vault, VaultMode.Frozen, block.timestamp);
-    } else {
-      revert("Invalid mode");
-    }
+  function freezeVault(address _vault) external notFrozen(_vault) {
+    // Only a guardian can freeze the vault
+    require(isGuardian[_vault][msg.sender], "Not a guardian");
+    vaultFrozen[_vault] = true;
+    emit VaultFrozen(_vault);
   }
 
-  function freezeOya() external onlyCat {
-    oyaFrozen = true;
-    emit OyaFrozen();
+  function unfreezeVault(address _vault) external {
+    // Only a guardian can unfreeze the vault
+    require(isGuardian[_vault][msg.sender], "Not a guardian");
+    vaultFrozen[_vault] = false;
+    emit VaultUnfrozen(_vault);
   }
 
-  function unfreezeOya() external onlyCat {
-    oyaFrozen = false;
-    emit OyaUnfrozen();
+  function freezeChain() external onlyCat {
+    chainFrozen = true;
+    emit ChainFrozen();
+  }
+
+  function unfreezeChain() external onlyCat {
+    chainFrozen = false;
+    emit ChainUnfrozen();
   }
 }
