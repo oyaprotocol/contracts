@@ -4,8 +4,6 @@ import "@gnosis.pm/safe-contracts/contracts/base/Executor.sol";
 
 import "./OptimisticProposer.sol";
 
-// Do I need to block setting of escalation manager by the owner?
-
 contract VaultTracker is OptimisticProposer, Executor {
   using SafeERC20 for IERC20;
 
@@ -123,21 +121,18 @@ contract VaultTracker is OptimisticProposer, Executor {
 
   function setVaultRules(address _vault, string memory _rules) external notFrozen(_vault) {
     require(msg.sender == address(this) || isController[_vault][msg.sender], "Not a controller");
-    // Set reference to the rules for the Oya module
     require(bytes(_rules).length > 0, "Rules can not be empty");
     vaultRules[_vault] = _rules;
     emit SetVaultRules(_vault, _rules);
   }
 
   function freezeVault(address _vault) external notFrozen(_vault) {
-    // Only a guardian can freeze the vault
     require(isGuardian[_vault][msg.sender], "Not a guardian");
     vaultFrozen[_vault] = true;
     emit VaultFrozen(_vault);
   }
 
   function unfreezeVault(address _vault) external {
-    // Only a guardian can unfreeze the vault
     require(isGuardian[_vault][msg.sender], "Not a guardian");
     vaultFrozen[_vault] = false;
     emit VaultUnfrozen(_vault);
