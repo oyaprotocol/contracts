@@ -24,7 +24,6 @@ contract VaultTracker is OptimisticProposer, Executor {
   mapping(uint256 => string) public vaultRules;
   mapping(uint256 => bool) public vaultFrozen;
   mapping(uint256 => address) public blockProposers;
-  mapping(uint256 => uint256) public proposerChangeLiveTime;
   mapping(uint256 => mapping(address => bool)) public isController;
   mapping(uint256 => mapping(address => bool)) public isGuardian;
 
@@ -97,8 +96,7 @@ contract VaultTracker is OptimisticProposer, Executor {
 
   function setBlockProposer(uint256 _vaultId, address _blockProposer) external notFrozen(_vaultId) {
     require(msg.sender == address(this) || isController[_vaultId][msg.sender], "Not a controller");
-    uint256 _liveTime = block.timestamp + 15 minutes;
-    proposerChangeLiveTime[_vaultId] = _liveTime;
+    uint256 _liveTime = block.timestamp + 3 hours;
     blockProposers[_vaultId] = _blockProposer;
     emit SetBlockProposer(_vaultId, _blockProposer, _liveTime);
   }
@@ -108,6 +106,7 @@ contract VaultTracker is OptimisticProposer, Executor {
     _setController(_vaultId, _controller);
   }
 
+  // Need a way to remove malicious guardians
   function setGuardian(uint256 _vaultId, address _guardian) external notFrozen(_vaultId) {
     require(msg.sender == address(this) || isController[_vaultId][msg.sender], "Not a controller");
     isGuardian[_vaultId][_guardian] = true;
