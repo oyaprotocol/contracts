@@ -106,7 +106,6 @@ contract VaultTracker is OptimisticProposer, Executor {
     _setController(_vaultId, _controller);
   }
 
-  // Need a way to remove malicious guardians
   function setGuardian(uint256 _vaultId, address _guardian) external notFrozen(_vaultId) {
     require(msg.sender == address(this) || isController[_vaultId][msg.sender], "Not a controller");
     isGuardian[_vaultId][_guardian] = true;
@@ -127,7 +126,7 @@ contract VaultTracker is OptimisticProposer, Executor {
   }
 
   function unfreezeVault(uint256 _vaultId) external {
-    require(isGuardian[_vaultId][msg.sender], "Not a guardian");
+    require(msg.sender == address(this) || isGuardian[_vaultId][msg.sender], "Not a guardian");
     vaultFrozen[_vaultId] = false;
     emit VaultUnfrozen(_vaultId);
   }
