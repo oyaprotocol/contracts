@@ -69,7 +69,7 @@ contract BlockTracker is OptimisticProposer {
 
   function assertionResolvedCallback(bytes32 assertionId, bool assertedTruthfully) public override {
     require(msg.sender == address(optimisticOracleV3));
-    if (assertedTruthfully) lastFinalizedBlock = assertions[assertionId];
+    if (assertedTruthfully) lastFinalizedBlock = assertionTimestamps[assertionId];
   }
 
 }
