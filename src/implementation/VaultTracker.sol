@@ -4,6 +4,8 @@ import "@gnosis.pm/safe-contracts/contracts/base/Executor.sol";
 
 import "./OptimisticProposer.sol";
 
+// Do I need to block setting of escalation manager by the owner?
+
 contract VaultTracker is OptimisticProposer, Executor {
   using SafeERC20 for IERC20;
 

@@ -2,6 +2,8 @@ pragma solidity ^0.8.6;
 
 import "./OptimisticProposer.sol";
 
+// Do I need to block setting of escalation manager by the owner?
+
 contract BlockTracker is OptimisticProposer {
   event BlockProposed(uint256 indexed timestamp, address indexed blockProposer, string blockData);
   event BlockTrackerDeployed(string rules);
