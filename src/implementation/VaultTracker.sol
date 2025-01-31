@@ -1,7 +1,6 @@
 pragma solidity ^0.8.6;
 
 import "@gnosis.pm/safe-contracts/contracts/base/Executor.sol";
-
 import "./OptimisticProposer.sol";
 
 contract VaultTracker is OptimisticProposer, Executor {
@@ -10,27 +9,27 @@ contract VaultTracker is OptimisticProposer, Executor {
   event VaultTrackerDeployed(string rules);
   event ChainFrozen();
   event ChainUnfrozen();
-  event VaultFrozen(address indexed vault);
-  event VaultUnfrozen(address indexed vault);
-  event SetVaultRules(address indexed vault, string vaultRules);
-  event SetBlockProposer(address indexed vault, address indexed blockProposer, uint256 liveTime);
-  event SetController(address indexed vault, address indexed controller);
-  event SetGuardian(address indexed vault, address indexed guardian);
+  event VaultCreated(uint256 indexed vaultId);
+  event VaultFrozen(uint256 indexed vaultId);
+  event VaultUnfrozen(uint256 indexed vaultId);
+  event SetVaultRules(uint256 indexed vaultId, string vaultRules);
+  event SetBlockProposer(uint256 indexed vaultId, address indexed blockProposer, uint256 liveTime);
+  event SetController(uint256 indexed vaultId, address indexed controller);
+  event SetGuardian(uint256 indexed vaultId, address indexed guardian);
 
-  address _cat; // Crisis Action Team can trigger Oya chain freeze
+  address _cat;
   bool public chainFrozen = false;
+  uint256 public nextVaultId;
 
-  mapping(address => string) public vaultRules;
-  mapping(address => bool) public vaultFrozen;
-  mapping(address => address) public blockProposers;
-  mapping(address => mapping(address => bool)) public isController;
-  mapping(address => mapping(address => bool)) public isGuardian;
+  mapping(uint256 => string) public vaultRules;
+  mapping(uint256 => bool) public vaultFrozen;
+  mapping(uint256 => address) public blockProposers;
+  mapping(uint256 => uint256) public proposerChangeLiveTime;
+  mapping(uint256 => mapping(address => bool)) public isController;
+  mapping(uint256 => mapping(address => bool)) public isGuardian;
 
-  // Timestamp at which proposer change is active. 15 minute delay to switch.
-  mapping(address => uint256) public proposerChangeLiveTime;
-
-  modifier notFrozen(address _vault) {
-    require(vaultFrozen[_vault] == false, "Vault is frozen");
+  modifier notFrozen(uint256 vaultId) {
+    require(!vaultFrozen[vaultId], "Vault is frozen");
     _;
   }
 
@@ -63,35 +62,31 @@ contract VaultTracker is OptimisticProposer, Executor {
     setIdentifier(_identifier);
     setLiveness(_liveness);
     _sync();
-
     emit VaultTrackerDeployed(_rules);
   }
 
-  function executeProposal(Transaction[] memory transactions) external nonReentrant {
-    require(chainFrozen == false, "Oya chain is currently frozen");
+  function createVault() external returns (uint256) {
+    nextVaultId++;
+    emit VaultCreated(nextVaultId);
+    return nextVaultId;
+  }
 
+  function executeProposal(Transaction[] memory transactions) external nonReentrant {
+    require(!chainFrozen, "Oya chain is currently frozen");
     bytes32 proposalHash = keccak256(abi.encode(transactions));
     bytes32 assertionId = assertionIds[proposalHash];
-    
     require(assertionId != bytes32(0), "Proposal hash does not exist");
-
-    // Remove proposal hash and assertionId so transactions can not be executed again.
     delete assertionIds[proposalHash];
     delete proposalHashes[assertionId];
-
-    // This will revert if the assertion has not been settled and can not currently be settled.
     optimisticOracleV3.settleAndGetAssertionResult(assertionId);
-
     for (uint256 i = 0; i < transactions.length; i++) {
       Transaction memory transaction = transactions[i];
-
       require(
         execute(transaction.to, transaction.value, transaction.data, transaction.operation, type(uint256).max),
         "Failed to execute transaction"
       );
       emit TransactionExecuted(proposalHash, assertionId, i);
     }
-
     emit ProposalExecuted(proposalHash, assertionId);
   }
 
@@ -99,43 +94,43 @@ contract VaultTracker is OptimisticProposer, Executor {
     _cat = _catAddress;
   }
 
-  function setBlockProposer(address _vault, address _blockProposer) external notFrozen(_vault) {
-    require(msg.sender == address(this) || isController[_vault][msg.sender], "Not a controller");
+  function setBlockProposer(uint256 vaultId, address _blockProposer) external notFrozen(vaultId) {
+    require(msg.sender == address(this) || isController[vaultId][msg.sender], "Not a controller");
     uint256 _liveTime = block.timestamp + 15 minutes;
-    proposerChangeLiveTime[_vault] = _liveTime;
-    blockProposers[_vault] = _blockProposer;
-    emit SetBlockProposer(_vault, _blockProposer, _liveTime);
+    proposerChangeLiveTime[vaultId] = _liveTime;
+    blockProposers[vaultId] = _blockProposer;
+    emit SetBlockProposer(vaultId, _blockProposer, _liveTime);
   }
 
-  function setController(address _vault, address _controller) external notFrozen(_vault) {
-    require(msg.sender == address(this) || isController[_vault][msg.sender], "Not a controller");
-    isController[_vault][_controller] = true;
-    emit SetController(_vault, _controller);
+  function setController(uint256 vaultId, address _controller) external notFrozen(vaultId) {
+    require(msg.sender == address(this) || isController[vaultId][msg.sender], "Not a controller");
+    isController[vaultId][_controller] = true;
+    emit SetController(vaultId, _controller);
   }
 
-  function setGuardian(address _vault, address _guardian) external notFrozen(_vault) {
-    require(msg.sender == address(this) || isController[_vault][msg.sender], "Not a controller");
-    isGuardian[_vault][_guardian] = true;
-    emit SetGuardian(_vault, _guardian);
+  function setGuardian(uint256 vaultId, address _guardian) external notFrozen(vaultId) {
+    require(msg.sender == address(this) || isController[vaultId][msg.sender], "Not a controller");
+    isGuardian[vaultId][_guardian] = true;
+    emit SetGuardian(vaultId, _guardian);
   }
 
-  function setVaultRules(address _vault, string memory _rules) external notFrozen(_vault) {
-    require(msg.sender == address(this) || isController[_vault][msg.sender], "Not a controller");
+  function setVaultRules(uint256 vaultId, string memory _rules) external notFrozen(vaultId) {
+    require(msg.sender == address(this) || isController[vaultId][msg.sender], "Not a controller");
     require(bytes(_rules).length > 0, "Rules can not be empty");
-    vaultRules[_vault] = _rules;
-    emit SetVaultRules(_vault, _rules);
+    vaultRules[vaultId] = _rules;
+    emit SetVaultRules(vaultId, _rules);
   }
 
-  function freezeVault(address _vault) external notFrozen(_vault) {
-    require(isGuardian[_vault][msg.sender], "Not a guardian");
-    vaultFrozen[_vault] = true;
-    emit VaultFrozen(_vault);
+  function freezeVault(uint256 vaultId) external notFrozen(vaultId) {
+    require(isGuardian[vaultId][msg.sender], "Not a guardian");
+    vaultFrozen[vaultId] = true;
+    emit VaultFrozen(vaultId);
   }
 
-  function unfreezeVault(address _vault) external {
-    require(isGuardian[_vault][msg.sender], "Not a guardian");
-    vaultFrozen[_vault] = false;
-    emit VaultUnfrozen(_vault);
+  function unfreezeVault(uint256 vaultId) external {
+    require(isGuardian[vaultId][msg.sender], "Not a guardian");
+    vaultFrozen[vaultId] = false;
+    emit VaultUnfrozen(vaultId);
   }
 
   function freezeChain() external onlyCat {
