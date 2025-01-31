@@ -6,7 +6,7 @@ contract BlockTracker is OptimisticProposer {
   event BlockProposed(uint256 indexed timestamp, address indexed blockProposer, string blockData);
   event BlockTrackerDeployed(string rules);
 
-  uint256 public lastFinalizedBlock;
+  uint256 public lastFinalizedTimestamp;
 
   mapping(bytes32 => uint256) public assertionTimestamps;
   mapping(bytes32 => address) public assertionProposer;
@@ -69,7 +69,7 @@ contract BlockTracker is OptimisticProposer {
 
   function assertionResolvedCallback(bytes32 assertionId, bool assertedTruthfully) public override {
     require(msg.sender == address(optimisticOracleV3));
-    if (assertedTruthfully) lastFinalizedBlock = assertionTimestamps[assertionId];
+    if (assertedTruthfully) lastFinalizedTimestamp = assertionTimestamps[assertionId];
   }
 
 }
