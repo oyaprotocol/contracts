@@ -28,7 +28,7 @@ contract VaultTracker is OptimisticProposer, Executor {
   mapping(address => mapping(address => bool)) public isGuardian;
 
   // Timestamp at which proposer change is active. 15 minute delay to switch.
-  mapping(address => uint256) public proposerChange;
+  mapping(address => uint256) public proposerChangeLiveTime;
 
   modifier notFrozen(address _vault) {
     require(vaultFrozen[_vault] == false, "Vault is frozen");
@@ -94,6 +94,10 @@ contract VaultTracker is OptimisticProposer, Executor {
     }
 
     emit ProposalExecuted(proposalHash, assertionId);
+  }
+
+  function setCat(address _catAddress) external onlyOwner {
+    _cat = _catAddress;
   }
 
   function setBlockProposer(address _vault, address _blockProposer) external notFrozen(_vault) {
