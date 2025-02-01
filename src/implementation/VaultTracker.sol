@@ -96,7 +96,7 @@ contract VaultTracker is OptimisticProposer, Executor {
 
   function setBlockProposer(uint256 _vaultId, address _blockProposer) external notFrozen(_vaultId) {
     require(msg.sender == address(this) || isController[_vaultId][msg.sender], "Not a controller");
-    uint256 _liveTime = block.timestamp + 3 hours;
+    uint256 _liveTime = block.timestamp + 30 minutes;
     blockProposers[_vaultId] = _blockProposer;
     emit SetBlockProposer(_vaultId, _blockProposer, _liveTime);
   }
