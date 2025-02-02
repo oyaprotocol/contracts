@@ -1,31 +1,31 @@
 These are the global rules of the Oya protocol.
 
-- Only ERC20 and ERC721 tokens are supported. Unsupported tokens deposited by mistake may be withdrawn by the original depositor.
+Only ERC20 and ERC721 tokens are supported. Unsupported tokens deposited by mistake may be withdrawn by the original depositor.
 
-- Supported actions are deposit, withdraw, and transfer.
+Supported actions are deposit, withdraw, and transfer.
 
-- After a vault is created, a signed intention from the vault's controller address included in a block from any block proposer may set its other parameters. The first block proposer to submit a signed message from the controller address for that vault shall be set as that vault's initial block producer.
+After a vault is created, a signed intention from the vault's controller address included in a block from any block proposer may set its other parameters. The first block proposer to submit a signed message from the controller address for that vault shall be set as that vault's initial block producer.
 
-- Each vault may only have one block proposer, which can be changed by a signed intention included in a block or by a transaction called directly by the vault's controller address. Changing block proposers requires a delay of no less than thirty minutes, as noted in the event logs.
+Each vault may only have one block proposer, which can be changed by a signed intention included in a block or by a transaction called directly by the vault's controller address. Changing block proposers requires a delay of no less than thirty minutes, as noted in the event logs.
 
-- Oya vault balances can be increased through deposits or transfers, or decreased through withdrawals or transfers.
+Oya vault balances can be increased through deposits or transfers, or decreased through withdrawals or transfers.
 
-- A transfer within the Oya blockchain is recorded in a natural language block and verified by the optimistic oracle, and does not require any movement of the actual tokens within the VaultTracker contract, or any state changes on the host blockchain for the VaultTracker contract.
+A transfer within the Oya blockchain is recorded in a natural language block and verified by the optimistic oracle, and does not require any movement of the actual tokens within the VaultTracker contract, or any state changes on the host blockchain for the VaultTracker contract.
 
-- State changes in the Oya natural language blockchain must be respected when checking if a vault has an appropriate balance to execute a withdrawal or transfer.
+State changes in the Oya natural language blockchain must be respected when checking if a vault has an appropriate balance to execute a withdrawal or transfer.
 
-- To execute a withdrawal or transfer, the vault must have a large enough balance of the token to be withdrawn or transferred.
+To execute a withdrawal or transfer, the vault must have a large enough balance of the token to be withdrawn or transferred.
 
-- State changes in a proposed block are assumed to be valid unless disputed within the optimistic oracle challenge period, and the block producer may build and propose new blocks on top of non-finalized state.
+State changes in a proposed block are assumed to be valid unless disputed within the optimistic oracle challenge period, and the block producer may build and propose new blocks on top of non-finalized state.
 
-- Disputed blocks are discarded, and any valid state changes must be proposed again as part of a new block. If new blocks were built on top of a disputed block, any valid state changes in those blocks must also be included in a new block.
+Disputed blocks are discarded, and any valid state changes must be proposed again as part of a new block. If new blocks were built on top of a disputed block, any valid state changes in those blocks must also be included in a new block.
 
-- If a disputed block included valid state changes, those state changes must be included in the replacement block, or else the replacement block shall be considered invalid.
+If a disputed block included valid state changes, those state changes must be included in the replacement block, or else the replacement block shall be considered invalid.
 
-- Signed intentions for a vault shall have incrementing nonces (0, 1, 2...n), and each new intention included in a block must have a nonce value one unit higher than the previous intention.
+Signed intentions for a vault shall have incrementing nonces (0, 1, 2...n), and each new intention included in a block must have a nonce value one unit higher than the previous intention.
 
-- Each block from a particular block proposer shall have incrementing nonces (0, 1, 2...n), and each new block must have a nonce value one unit higher than the previous block. If a block is disputed, the replacement block shall have the same nonce as the disputed block.
+Each block from a particular block proposer shall have incrementing nonces (0, 1, 2...n), and each new block must have a nonce value one unit higher than the previous block. If a block is disputed, the replacement block shall have the same nonce as the disputed block.
 
-- Changes to the global rules must be approved by protocol governance, with a time delay before the new rules are in place. New features for the Oya natural language blockchain may be implemented as changes to the global rules.
+Changes to the global rules must be approved by protocol governance, with a time delay before the new rules are in place. New features for the Oya natural language blockchain may be implemented as changes to the global rules.
 
-- Every signed intention for a vault must follow the vault's rules, or it shall be invalid.
+Every signed intention for a vault must follow the vault's rules, or it shall be invalid.

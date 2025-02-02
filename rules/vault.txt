@@ -1,1 +1,11 @@
-These are the rules for this vault.
+This vault accepts transfers of all tokens on all chains supported by the Oya protocol.
+
+The keys to the controller address shall be considered lost and unrecoverable if this vault has no transactions over a six month period. In such a case, the designated guardian for the vault may propose to change the controller to a different address.
+
+A guardian address may be removed by a signed intention from the controller address, but only after a thirty day wait period. If, during that period, the controller address signs an intention to keep the guardian address, the removal shall be canceled.
+
+This vault will not transfer out more than $10,000 in token value within the same 24-hour period.
+
+Changes to this vault's rules must be signed by both the controller address and the guardian address. The changes may not be finalized until seven days after the intention is proposed. If the controller address or guardian address signs an intention to cancel the change during that time period, the change will be canceled.
+
+If the controller address signs an intention stating that the controller key has been compromised, the vault should be placed in a frozen state by the vault guardian. The controller address may then be changed by an intention signed by both the controller address and the guardian address.
