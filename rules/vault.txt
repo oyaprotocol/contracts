@@ -1,11 +1,24 @@
-This vault accepts transfers of all tokens on all chains supported by the Oya protocol.
+These are example rules for an individual vault.
 
-The keys to the controller address shall be considered lost and unrecoverable if this vault has no transactions over a six month period. In such a case, the designated guardian for the vault may propose to change the controller to a different address.
+1. **Token and Chain Support:**  
+   - This vault accepts transfers of all tokens on all chains supported by the Oya protocol.
 
-A guardian address may be removed by a signed intention from the controller address, but only after a thirty day wait period. If, during that period, the controller address signs an intention to keep the guardian address, the removal shall be canceled.
+2. **Controller Key Inactivity:**  
+   - If the vault experiences no transactions for a period of six months, the keys to the controller address shall be considered lost and unrecoverable.
+   - In such a case, the designated guardian may propose a change of the controller to a new address.
 
-This vault will not transfer out more than $10,000 in token value within the same 24-hour period.
+3. **Guardian Removal:**  
+   - A guardian may be removed by a signed intention from the controller address, but only after a mandatory 30-day waiting period.
+   - If, during that period, the controller address signs an intention to retain the guardian, the removal shall be canceled.
 
-Changes to this vault's rules must be signed by both the controller address and the guardian address. The changes may not be finalized until seven days after the intention is proposed. If the controller address or guardian address signs an intention to cancel the change during that time period, the change will be canceled.
+4. **Daily Transfer Limits:**  
+   - The vault shall not transfer more than $10,000 in token value within any given 24-hour period.
 
-If the controller address signs an intention stating that the controller key has been compromised, the vault should be placed in a frozen state by the vault guardian. The controller address may then be changed by an intention signed by both the controller address and the guardian address.
+5. **Vault Rule Amendments:**  
+   - Changes to the vault’s rules must be signed by both the controller address and the guardian address.
+   - Any proposed change shall not be finalized until at least seven days have passed since the intention was proposed.
+   - If either the controller or the guardian signs an intention to cancel the change during this period, the proposed amendment shall be canceled.
+
+6. **Compromise Protocol:**  
+   - If the controller address signs an intention indicating that its key has been compromised, the vault should be placed in a frozen state by the vault guardian.
+   - Following such an event, the controller address may be changed by an intention signed by both the controller and the guardian.
