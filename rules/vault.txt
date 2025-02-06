@@ -4,11 +4,11 @@ These are example rules for an individual vault.
    - This vault accepts transfers of all tokens on all chains supported by the Oya protocol.
 
 2. **Controller Key Inactivity:**  
-   - If the vault experiences no transactions for a period of six months, the keys to the controller address shall be considered lost and unrecoverable.
+   - If the controller key produces no signed intentions for a period of six months, the keys to the controller address shall be considered lost and unrecoverable.
    - In such a case, the designated guardian may propose a change of the controller to a new address.
 
 3. **Guardian Removal:**  
-   - A guardian may be removed by a signed intention from the controller address, but only after a mandatory 30-day waiting period.
+   - A guardian may be removed by a signed intention from the controller address, but only after a mandatory 14-day waiting period.
    - If, during that period, the controller address signs an intention to retain the guardian, the removal shall be canceled.
 
 4. **Daily Transfer Limits:**  
@@ -19,6 +19,6 @@ These are example rules for an individual vault.
    - Any proposed change shall not be finalized until at least seven days have passed since the intention was proposed.
    - If either the controller or the guardian signs an intention to cancel the change during this period, the proposed amendment shall be canceled.
 
-6. **Compromise Protocol:**  
+6. **Key Compromise Protocol:**  
    - If the controller address signs an intention indicating that its key has been compromised, the vault should be placed in a frozen state by the vault guardian.
    - Following such an event, the controller address may be changed by an intention signed by both the controller and the guardian.
