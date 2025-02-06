@@ -120,9 +120,7 @@ forge create \
   --private-key <your_private_key>
 ```
 
-Replace <finderAddress>, <collateralAddress>, <bondAmount>, <rules>, <identifier>, <liveness>, <your_rpc_url>, and <your_private_key> with your actual deployment parameters.
-
-Adjust the deployment commands and parameters as needed for your specific environment and requirements.
+Replace the constructor arguments, RPC URL, and private key with your actual deployment parameters.
 
 ---
 
