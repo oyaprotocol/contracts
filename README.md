@@ -106,20 +106,22 @@ Example deployment using Foundry:
 
 ```bash
 # Deploy BlockTracker
+RULES="$(cat ./rules/global.txt)"
 forge create \
   --etherscan-api-key <etherscan-api-key> --verify \
   --constructor-args <finderAddress> <collateralAddress> <bondAmount> "<rules>" <identifier> <liveness> \
-  src/BlockTracker.sol:BlockTracker \
   --rpc-url <your_rpc_url> \
-  --private-key <your_private_key>
+  --private-key <your_private_key> \
+  src/BlockTracker.sol:BlockTracker
 
 # Deploy VaultTracker
+RULES="$(cat ./rules/global.txt)"
 forge create \
   --etherscan-api-key <etherscan-api-key> --verify \
-  --constructor-args <finderAddress> <collateralAddress> <bondAmount> "<rules>" <identifier> <liveness> \
-  src/VaultTracker.sol:VaultTracker \
+  --constructor-args <finderAddress> <collateralAddress> <bondAmount> "$<rules>$" <identifier> <liveness> \
   --rpc-url <your_rpc_url> \
-  --private-key <your_private_key>
+  --private-key <your_private_key> \
+  src/VaultTracker.sol:VaultTracker
 ```
 
 Replace the constructor arguments, Etherscan API key, RPC URL, and private key with your actual deployment parameters.
