@@ -107,6 +107,7 @@ Example deployment using Foundry:
 ```bash
 # Deploy BlockTracker
 forge create \
+  --etherscan-api-key <etherscan-api-key> --verify \
   --constructor-args <finderAddress> <collateralAddress> <bondAmount> "<rules>" <identifier> <liveness> \
   src/BlockTracker.sol:BlockTracker \
   --rpc-url <your_rpc_url> \
@@ -114,13 +115,14 @@ forge create \
 
 # Deploy VaultTracker
 forge create \
+  --etherscan-api-key <etherscan-api-key> --verify \
   --constructor-args <finderAddress> <collateralAddress> <bondAmount> "<rules>" <identifier> <liveness> \
   src/VaultTracker.sol:VaultTracker \
   --rpc-url <your_rpc_url> \
   --private-key <your_private_key>
 ```
 
-Replace the constructor arguments, RPC URL, and private key with your actual deployment parameters.
+Replace the constructor arguments, Etherscan API key, RPC URL, and private key with your actual deployment parameters.
 
 ---
 
