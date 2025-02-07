@@ -112,7 +112,7 @@ forge create \
   --constructor-args <finderAddress> <collateralAddress> <bondAmount> "<rules>" <identifier> <liveness> \
   --rpc-url <your_rpc_url> \
   --private-key <your_private_key> \
-  src/BlockTracker.sol:BlockTracker
+  src/implementation/BlockTracker.sol:BlockTracker
 
 # Deploy VaultTracker
 RULES="$(cat ./rules/global.txt)"
@@ -121,7 +121,7 @@ forge create \
   --constructor-args <finderAddress> <collateralAddress> <bondAmount> "$<rules>$" <identifier> <liveness> \
   --rpc-url <your_rpc_url> \
   --private-key <your_private_key> \
-  src/VaultTracker.sol:VaultTracker
+  src/implementation/VaultTracker.sol:VaultTracker
 ```
 
 Replace the constructor arguments, Etherscan API key, RPC URL, and private key with your actual deployment parameters.
