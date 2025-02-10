@@ -4,8 +4,6 @@
 
 > _“Oya is a blockchain that interprets natural language rules and transactions, enabling a new paradigm for decentralized applications, ideal for both humans and AI agents.”_
 
----
-
 ## Table of Contents
 
 - [Overview](#overview)
@@ -22,8 +20,6 @@
 - [Contributing](#contributing)
 - [Contact](#contact)
 
----
-
 ## Overview
 
 The Oya Onchain repository contains the Solidity smart contracts that enable a natural language blockchain by integrating with UMA’s Optimistic Oracle for dispute resolution. The main components include:
@@ -33,8 +29,6 @@ The Oya Onchain repository contains the Solidity smart contracts that enable a n
 - **VaultTracker:** Manages vaults that control assets deposited into the smart contracts. It enables vault creation, management (controllers, guardians), and chain-level freeze/unfreeze functionality.
 
 Together, these contracts allow any ERC20 or ERC721 assets on existing EVM chains to be bridged to the Oya blockchain and governed by natural language rules.
-
----
 
 ## Architecture
 
@@ -63,8 +57,6 @@ The `VaultTracker` contract manages vaults that hold assets bridged to the Oya b
 - **Proposal Execution:** Inherits the OptimisticProposer functionality to propose and execute transactions affecting vault states.
 - **Inheritance from Safe:** Inherits from the [Safe](https://safe.global/) `Executor` contract to allow secure execution of proposals.
 
----
-
 ## Getting Started
 
 ### Prerequisites
@@ -84,8 +76,6 @@ forge install
 ```
 
 Make sure to configure your Foundry settings (such as network endpoints and private keys) according to the [Foundry Book](https://book.getfoundry.sh/).
-
----
 
 ## Deployment
 
@@ -126,8 +116,6 @@ forge create \
 
 Replace the constructor arguments, Etherscan API key, RPC URL, and private key with your actual deployment parameters.
 
----
-
 ## Usage
 
 ### Proposing a Block
@@ -163,8 +151,6 @@ Both the `BlockTracker` and `VaultTracker` rely on UMA’s Optimistic Oracle for
 
 For more details on interacting with UMA’s Optimistic Oracle, please refer to [UMA’s documentation](https://docs.umaproject.org/).
 
----
-
 ## Testing
 
 Our tests are located in the `./test/` directory, with the following files:
@@ -191,8 +177,6 @@ These tests cover key functionalities, including:
 * Transaction proposals and execution in `OptimisticProposer`.
 * Vault management, including freezing/unfreezing and role assignments in `VaultTracker`.
 
----
-
 ## Contributing
 
 Contributions are welcome! If you would like to contribute, please follow these steps:
@@ -204,12 +188,8 @@ Contributions are welcome! If you would like to contribute, please follow these 
 
 Please ensure that your code adheres to the project's style guidelines and passes all tests before submitting your pull request.
 
----
-
 ## Contact
 
 For questions or support, please open an issue in this repository.
-
----
 
 *Happy building on the Oya Protocol – where natural language + blockchain = better together!*
