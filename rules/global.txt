@@ -23,6 +23,8 @@ These are the global rules of the Oya protocol.
    - If a block is disputed, it is discarded, and any valid state changes MUST be re-proposed in the next block from that block's producer.
    - In the case where new blocks were built on top of a disputed block, all subsequent blocks should also be disputed and discarded, and any valid state changes contained in those subsequent blocks must be re-proposed in the next block from that block's producer.
    - A replacement block must include all valid state changes from the disputed block; omission of any valid state changes will render the replacement block invalid and disputable.
+   - The data for a block must be publicly available, and a quorum of 1/10 of active staked verifiers must attest to the data's availability during the first thirty minutes of the challenge period.
+   - A block must include a list of all historical blocks that are relevant to the new block's state changes, and the data for each of these blocks must be publicly available, with a quorum of 1/10 of active staked verifiers attesting to the data's availability during the first thirty minutes of the challenge period.
 
 6. **Nonce Management:**  
    - Every signed intention for a vault must have an incrementing nonces (0, 1, 2, …, n), with each new intention’s nonce exactly one unit higher than the previous.
