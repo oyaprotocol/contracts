@@ -1,8 +1,8 @@
-# Oya Onchain
+# Oya Contracts
 
-**Oya Onchain** is the smart contract suite for **Oya**, a natural language blockchain protocol. Assets deposited into these smart contracts on existing EVM chains can be used on the Oya natural language blockchain. Blocks on the Oya chain are verified using [UMA’s Optimistic Oracle](https://umaproject.org/), ensuring decentralized, permissionless validation of block data and proposals.
+`oyaprotocol/contracts` is the smart contract suite for **Oya**, a natural language blockchain protocol. Assets deposited into these smart contracts on existing EVM chains can be used on the Oya natural language blockchain. Blocks on the Oya chain are verified using [UMA’s Optimistic Oracle](https://umaproject.org/), ensuring decentralized, permissionless validation of block data and proposals.
 
-> _“Oya is a blockchain that interprets natural language rules and transactions, enabling a new paradigm for decentralized applications, ideal for both humans and AI agents.”_
+> _“Oya is a blockchain that interprets natural language rules and transactions, enabling a new paradigm for decentralized applications, ideal for both humans and AI.”_
 
 ## Table of Contents
 
