@@ -4,7 +4,7 @@
 
 > _“Oya is a blockchain that interprets natural language rules and transactions, enabling a new paradigm for decentralized applications, ideal for both humans and AI.”_
 
-**These contracts are unaudited and experimental. They should not be used in production. No official Oya Protocol contracts have been deployed on mainnet, nor any official Oya token.**
+**WARNING: These contracts are unaudited and experimental. They should not be used in production. No official Oya Protocol contracts have been deployed on mainnet, nor any official Oya token.**
 
 ## Table of Contents
 
