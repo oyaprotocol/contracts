@@ -24,7 +24,7 @@
 
 ## Overview
 
-The Oya Onchain repository contains the Solidity smart contracts that enable a natural language blockchain by integrating with UMA’s Optimistic Oracle for dispute resolution. The main components include:
+This repository contains the Solidity smart contracts that enable a natural language blockchain by integrating with UMA’s Optimistic Oracle for dispute resolution. The main components include:
 
 - **OptimisticProposer:** Provides a reusable framework for proposing and verifying onchain transactions or proposals via UMA’s optimistic validation mechanism.
 - **BlockTracker:** Handles the proposal of new blocks (with natural language-based block data) and integrates with UMA’s Optimistic Oracle to verify the proposals.
