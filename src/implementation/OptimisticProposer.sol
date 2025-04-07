@@ -119,7 +119,7 @@ contract OptimisticProposer is OptimisticOracleV3CallbackRecipientInterface, Loc
     return minimumBond > bondAmount ? minimumBond : bondAmount;
   }
 
-  function proposeTransactions(Transaction[] memory transactions, bytes memory explanation) external nonReentrant {
+  function proposeTransactions(Transaction[] memory transactions, bytes memory explanation) external virtual nonReentrant {
     // note: Optional explanation explains the intent of the transactions to make comprehension easier.
     uint256 time = getCurrentTime();
     address proposer = msg.sender;
