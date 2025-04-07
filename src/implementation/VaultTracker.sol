@@ -13,7 +13,7 @@ contract VaultTracker is OptimisticProposer, Executor {
   event VaultFrozen(uint256 indexed vaultId);
   event VaultUnfrozen(uint256 indexed vaultId);
   event SetVaultRules(uint256 indexed vaultId, string vaultRules);
-  event SetBlockProposer(uint256 indexed vaultId, address indexed blockProposer, uint256 liveTime);
+  event SetProposer(uint256 indexed vaultId, address indexed proposer, uint256 liveTime);
   event SetController(uint256 indexed vaultId, address indexed controller);
   event SetGuardian(uint256 indexed vaultId, address indexed guardian);
 
@@ -23,7 +23,7 @@ contract VaultTracker is OptimisticProposer, Executor {
 
   mapping(uint256 => string) public vaultRules;
   mapping(uint256 => bool) public vaultFrozen;
-  mapping(uint256 => address) public blockProposers;
+  mapping(uint256 => address) public proposers;
   mapping(uint256 => mapping(address => bool)) public isController;
   mapping(uint256 => mapping(address => bool)) public isGuardian;
 
@@ -94,11 +94,11 @@ contract VaultTracker is OptimisticProposer, Executor {
     _cat = _catAddress;
   }
 
-  function setBlockProposer(uint256 _vaultId, address _blockProposer) external notFrozen(_vaultId) {
+  function setProposer(uint256 _vaultId, address _proposer) external notFrozen(_vaultId) {
     require(msg.sender == address(this) || isController[_vaultId][msg.sender], "Not a controller");
     uint256 _liveTime = block.timestamp + 30 minutes;
-    blockProposers[_vaultId] = _blockProposer;
-    emit SetBlockProposer(_vaultId, _blockProposer, _liveTime);
+    proposers[_vaultId] = _proposer;
+    emit SetProposer(_vaultId, _proposer, _liveTime);
   }
 
   function setController(uint256 _vaultId, address _controller) external notFrozen(_vaultId) {

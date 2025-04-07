@@ -141,15 +141,15 @@ contract VaultTrackerTest is Test {
         assertFalse(vaultTracker.vaultFrozen(vaultId));
     }
 
-    function testSetBlockProposer() public {
+    function testSetProposer() public {
         vm.startPrank(owner);
         uint256 vaultId = vaultTracker.createVault(controller);
         vm.stopPrank();
 
         vm.warp(1000);
         vm.prank(controller);
-        vaultTracker.setBlockProposer(vaultId, address(999));
-        assertEq(vaultTracker.blockProposers(vaultId), address(999));
+        vaultTracker.setProposer(vaultId, address(999));
+        assertEq(vaultTracker.proposers(vaultId), address(999));
     }
 
     function testSetRules() public {
