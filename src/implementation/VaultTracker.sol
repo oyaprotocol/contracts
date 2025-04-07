@@ -7,7 +7,7 @@ contract VaultTracker is OptimisticProposer, Executor {
   using SafeERC20 for IERC20;
 
   event VaultTrackerDeployed(string rules);
-  event ChainFrozen();
+  event ProtocolFrozen();
   event ChainUnfrozen();
   event VaultCreated(uint256 indexed vaultId, address indexed controller);
   event VaultFrozen(uint256 indexed vaultId);
@@ -18,7 +18,7 @@ contract VaultTracker is OptimisticProposer, Executor {
   event SetGuardian(uint256 indexed vaultId, address indexed guardian);
 
   address _cat;
-  bool public chainFrozen = false;
+  bool public protocolFrozen = false;
   uint256 public nextVaultId;
 
   mapping(uint256 => string) public vaultRules;
@@ -72,7 +72,7 @@ contract VaultTracker is OptimisticProposer, Executor {
   }
 
   function executeProposal(Transaction[] memory transactions) external nonReentrant {
-    require(!chainFrozen, "Oya chain is currently frozen");
+    require(!protocolFrozen, "Oya protocol is currently frozen");
     bytes32 proposalHash = keccak256(abi.encode(transactions));
     bytes32 assertionId = assertionIds[proposalHash];
     require(assertionId != bytes32(0), "Proposal hash does not exist");
@@ -137,13 +137,13 @@ contract VaultTracker is OptimisticProposer, Executor {
     emit VaultUnfrozen(_vaultId);
   }
 
-  function freezeChain() external onlyCat {
-    chainFrozen = true;
-    emit ChainFrozen();
+  function freezeProtocol() external onlyCat {
+    protocolFrozen = true;
+    emit ProtocolFrozen();
   }
 
-  function unfreezeChain() external onlyCat {
-    chainFrozen = false;
+  function unfreezeProtocol() external onlyCat {
+    protocolFrozen = false;
     emit ChainUnfrozen();
   }
 
