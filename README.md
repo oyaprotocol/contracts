@@ -1,6 +1,6 @@
 # Oya Contracts
 
-`oyaprotocol/contracts` is the smart contract suite for **Oya**, a natural language protocol. Assets deposited into these smart contracts on existing EVM chains can be used on the Oya natural language protocol. Blocks on the Oya chain are verified using [UMA’s Optimistic Oracle](https://umaproject.org/), ensuring decentralized, permissionless validation of block data and proposals.
+`oyaprotocol/contracts` is the smart contract suite for **Oya**, a natural language protocol. Assets deposited into these smart contracts on existing EVM chains can be used on the Oya natural language protocol. Blocks of transactions in the Oya protocol are verified using [UMA’s Optimistic Oracle](https://umaproject.org/), ensuring decentralized, permissionless validation of block data and proposals.
 
 > _“Oya is a protocol that interprets natural language rules and transactions, enabling a new paradigm for decentralized applications, ideal for both humans and AI.”_
 
@@ -28,7 +28,7 @@ This repository contains the Solidity smart contracts that enable a natural lang
 
 - **OptimisticProposer:** Provides a reusable framework for proposing and verifying onchain transactions or proposals via UMA’s optimistic validation mechanism.
 - **BlockTracker:** Handles the proposal of new blocks (with natural language-based block data) and integrates with UMA’s Optimistic Oracle to verify the proposals.
-- **VaultTracker:** Manages vaults that control assets deposited into the smart contracts. It enables vault creation, management (controllers, guardians), and chain-level freeze/unfreeze functionality.
+- **VaultTracker:** Manages vaults that control assets deposited into the smart contracts. It enables vault creation, management (controllers, guardians), and protocol-level freeze/unfreeze functionality.
 
 Together, these contracts allow any ERC20 or ERC721 assets on existing EVM chains to be bridged to the Oya protocol and governed by natural language rules.
 
@@ -55,7 +55,7 @@ The `BlockTracker` contract is responsible for tracking new blocks on the Oya na
 
 The `VaultTracker` contract manages vaults that hold assets bridged to the Oya protocol. Its features include:
 - **Vault Management:** Creation and administration of vaults (e.g., setting controllers, guardians, and vault-specific rules).
-- **Chain Controls:** Functions to freeze or unfreeze individual vaults or the entire chain (useful for emergency shutdowns).
+- **Protocol Controls:** Functions to freeze or unfreeze individual vaults or the entire protocol (useful for emergency shutdowns).
 - **Proposal Execution:** Inherits the OptimisticProposer functionality to propose and execute transactions affecting vault states.
 - **Inheritance from Safe:** Inherits from the [Safe](https://safe.global/) `Executor` contract to allow secure execution of proposals.
 
@@ -72,8 +72,8 @@ The `VaultTracker` contract manages vaults that hold assets bridged to the Oya p
 Clone the repository and install dependencies:
 
 ```bash
-git clone https://github.com/pemulis/oya-onchain.git
-cd oya-onchain
+git clone https://github.com/oyaprotocol/contracts.git
+cd contracts
 forge install
 ```
 
@@ -139,9 +139,6 @@ The `VaultTracker` contract provides methods to manage vaults, which hold the br
   - `setController` assigns or changes the controller for a vault.
   - `setGuardian` allows designated accounts to act as guardians.
   - `removeGuardian` (requires proposal execution) removes a guardian from a vault.
-- **Chain Controls:** 
-  - `freezeVault` and `unfreezeVault` allow guardians to temporarily halt or resume operations for individual vaults.
-  - `freezeChain` and `unfreezeChain` can be called by a designated role (the Crisis Action Team, or CAT) to temporarily freeze the entire chain in case of emergencies. The CAT is a multisignature wallet whose signatories are controlled by Oya tokenholder governance.
 - **Executing Proposals:** Once a proposal is verified by the Optimistic Oracle, the `executeProposal` function executes a series of transactions that may update vault states or enforce tokenholder governance decisions.
 
 ### Interacting with UMA’s Optimistic Oracle
