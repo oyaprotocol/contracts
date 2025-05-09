@@ -1,8 +1,8 @@
 # Oya Contracts
 
-`oyaprotocol/contracts` is the smart contract suite for **Oya**, a natural language blockchain protocol. Assets deposited into these smart contracts on existing EVM chains can be used on the Oya natural language blockchain. Blocks on the Oya chain are verified using [UMA’s Optimistic Oracle](https://umaproject.org/), ensuring decentralized, permissionless validation of block data and proposals.
+`oyaprotocol/contracts` is the smart contract suite for **Oya**, a natural language protocol. Assets deposited into these smart contracts on existing EVM chains can be used on the Oya natural language protocol. Blocks on the Oya chain are verified using [UMA’s Optimistic Oracle](https://umaproject.org/), ensuring decentralized, permissionless validation of block data and proposals.
 
-> _“Oya is a blockchain that interprets natural language rules and transactions, enabling a new paradigm for decentralized applications, ideal for both humans and AI.”_
+> _“Oya is a protocol that interprets natural language rules and transactions, enabling a new paradigm for decentralized applications, ideal for both humans and AI.”_
 
 **WARNING: These contracts are unaudited and experimental. They should not be used in production. No official Oya Protocol contracts have been deployed on mainnet, nor any official Oya token.**
 
@@ -24,13 +24,13 @@
 
 ## Overview
 
-This repository contains the Solidity smart contracts that enable a natural language blockchain by integrating with UMA’s Optimistic Oracle for dispute resolution. The main components include:
+This repository contains the Solidity smart contracts that enable a natural language protocol by integrating with UMA’s Optimistic Oracle for dispute resolution. The main components include:
 
 - **OptimisticProposer:** Provides a reusable framework for proposing and verifying onchain transactions or proposals via UMA’s optimistic validation mechanism.
 - **BlockTracker:** Handles the proposal of new blocks (with natural language-based block data) and integrates with UMA’s Optimistic Oracle to verify the proposals.
 - **VaultTracker:** Manages vaults that control assets deposited into the smart contracts. It enables vault creation, management (controllers, guardians), and chain-level freeze/unfreeze functionality.
 
-Together, these contracts allow any ERC20 or ERC721 assets on existing EVM chains to be bridged to the Oya blockchain and governed by natural language rules.
+Together, these contracts allow any ERC20 or ERC721 assets on existing EVM chains to be bridged to the Oya protocol and governed by natural language rules.
 
 ## Architecture
 
@@ -46,14 +46,14 @@ This contract is inherited by both the `BlockTracker` and `VaultTracker`, ensuri
 
 ### BlockTracker
 
-The `BlockTracker` contract is responsible for tracking new blocks on the Oya natural language blockchain. Key features include:
+The `BlockTracker` contract is responsible for tracking new blocks on the Oya natural language protocol. Key features include:
 - **Block Proposal:** Nodes can propose new blocks by submitting natural language block data.
 - **Optimistic Verification:** Each block proposal triggers an assertion via UMA’s Optimistic Oracle. If the assertion is validated, the block is finalized.
 - **Event Emission:** Emits events such as `BlockProposed` and `BlockTrackerDeployed` for offchain monitoring and integration.
 
 ### VaultTracker
 
-The `VaultTracker` contract manages vaults that hold assets bridged to the Oya blockchain. Its features include:
+The `VaultTracker` contract manages vaults that hold assets bridged to the Oya protocol. Its features include:
 - **Vault Management:** Creation and administration of vaults (e.g., setting controllers, guardians, and vault-specific rules).
 - **Chain Controls:** Functions to freeze or unfreeze individual vaults or the entire chain (useful for emergency shutdowns).
 - **Proposal Execution:** Inherits the OptimisticProposer functionality to propose and execute transactions affecting vault states.
@@ -131,7 +131,7 @@ Users interact with the `BlockTracker` contract by calling the `proposeBlock` fu
 
 ### Managing Vaults
 
-The `VaultTracker` contract provides methods to manage vaults, which hold the bridged assets used on the Oya blockchain. Key functions include:
+The `VaultTracker` contract provides methods to manage vaults, which hold the bridged assets used on the Oya protocol. Key functions include:
 
 - **Creating Vaults:** Use `createVault(controllerAddress)` to initialize a new vault with a specified controller.
 - **Setting Vault Rules:** Vault-specific rules can be defined or updated using the `setVaultRules` function.
