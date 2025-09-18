@@ -18,7 +18,6 @@ import "@uma/core/optimistic-oracle-v3/implementation/ClaimData.sol";
 
 /**
  * @title Optimistic Proposer
- * @author Oya Protocol Team
  * @notice Core contract for optimistic proposal system using UMA's Optimistic Oracle V3
  * @dev Implements optimistic governance where proposals are assumed valid unless disputed
  *

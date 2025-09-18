@@ -5,7 +5,6 @@ import "./OptimisticProposer.sol";
 
 /**
  * @title Vault Tracker
- * @author Oya Protocol Team
  * @notice Multi-vault management system with optimistic governance
  * @dev Extends OptimisticProposer with vault-specific access controls and freezing mechanisms
  *

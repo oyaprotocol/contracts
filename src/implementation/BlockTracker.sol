@@ -4,8 +4,7 @@ import "./OptimisticProposer.sol";
 
 /**
  * @title Block Tracker
- * @author Oya Protocol Team
- * @notice Extends OptimisticProposer for timestamped block data proposals
+  * @notice Extends OptimisticProposer for timestamped block data proposals
  * @dev Specialized contract for tracking and validating OyaProtocol 'block' data
  *
  * @custom:invariant lastFinalizedTimestamp <= block.timestamp

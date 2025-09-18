@@ -8,7 +8,6 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 
 /**
  * @title Oya Token
- * @author Oya Protocol Team
  * @notice ERC20 token implementation for the Oya protocol with minting capabilities
  * @dev Extends OpenZeppelin's ERC20, Ownable, and ERC20Permit contracts
  *
