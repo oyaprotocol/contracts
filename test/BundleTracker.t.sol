@@ -5,15 +5,15 @@ import "forge-std/Test.sol";
 import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 
 import "@uma/core/optimistic-oracle-v3/interfaces/EscalationManagerInterface.sol";
-import "../src/implementation/BlockTracker.sol";
+import "../src/implementation/BundleTracker.sol";
 import "../src/mocks/MockAddressWhitelist.sol";
 import "../src/mocks/MockERC20.sol";
 import "../src/mocks/MockFinder.sol";
 import "../src/mocks/MockIdentifierWhitelist.sol";
 import "../src/mocks/MockOptimisticOracleV3.sol";
 
-contract BlockTrackerTest is Test {
-    BlockTracker public blockTracker;
+contract BundleTrackerTest is Test {
+    BundleTracker public bundleTracker;
     MockFinder public mockFinder;
     MockAddressWhitelist public mockAddressWhitelist;
     MockIdentifierWhitelist public mockIdentifierWhitelist;
@@ -23,7 +23,7 @@ contract BlockTrackerTest is Test {
     EscalationManagerInterface public mockEscalationManager;
 
     address public owner         = address(1);
-    address public blockProposer = address(2);
+    address public bundleProposer = address(2);
     address public txProposer    = address(3); // For proposeTransactions
     address public randomAddress = address(4);
 
@@ -57,9 +57,9 @@ contract BlockTrackerTest is Test {
         mockIdentifierWhitelist.addIdentifier(identifier);
         mockIdentifierWhitelist.addIdentifier(newIdentifier);
 
-        // Deploy & initialize the BlockTracker contract from "owner" address
+        // Deploy & initialize the BundleTracker contract from "owner" address
         vm.startPrank(owner);
-        blockTracker = new BlockTracker(
+        bundleTracker = new BundleTracker(
             address(mockFinder),
             address(mockCollateral),
             bondAmount,
@@ -71,25 +71,25 @@ contract BlockTrackerTest is Test {
     }
 
     // -----------------------------------------
-    // Tests for native BlockTracker functions
+    // Tests for native BundleTracker functions
     // -----------------------------------------
 
-    function testProposeBlock() public {
-        // Give blockProposer some collateral to pay bond
-        mockCollateral.transfer(blockProposer, 2000e18);
+    function testProposeBundle() public {
+        // Give bundleProposer some collateral to pay bond
+        mockCollateral.transfer(bundleProposer, 2000e18);
 
-        vm.startPrank(blockProposer);
+        vm.startPrank(bundleProposer);
         // Approve enough collateral for the bond
-        mockCollateral.approve(address(blockTracker), 2000e18);
+        mockCollateral.approve(address(bundleTracker), 2000e18);
 
-        string memory blockData = "Block data example";
+        string memory bundleData = "Bundle data example";
 
-        // Propose the block
-        blockTracker.proposeBlock(blockData);
+        // Propose the bundle
+        bundleTracker.proposeBundle(bundleData);
 
-        // The contract stores in: blocks[block.timestamp][msg.sender]
-        string memory storedData = blockTracker.blocks(block.timestamp, blockProposer);
-        assertEq(storedData, blockData, "Block data not stored correctly");
+        // The contract stores in: bundles[block.timestamp][msg.sender]
+        string memory storedData = bundleTracker.bundles(block.timestamp, bundleProposer);
+        assertEq(storedData, bundleData, "Bundle data not stored correctly");
 
         vm.stopPrank();
     }
@@ -100,49 +100,49 @@ contract BlockTrackerTest is Test {
 
     function testSetRules() public {
         vm.startPrank(owner);
-        blockTracker.setRules(newRules);
+        bundleTracker.setRules(newRules);
         vm.stopPrank();
 
-        assertEq(blockTracker.rules(), newRules, "Rules not updated");
+        assertEq(bundleTracker.rules(), newRules, "Rules not updated");
     }
 
     function testSetIdentifier() public {
         // Initially set to 'identifier'
-        assertEq(blockTracker.identifier(), identifier);
+        assertEq(bundleTracker.identifier(), identifier);
 
         vm.startPrank(owner);
-        blockTracker.setIdentifier(newIdentifier);
+        bundleTracker.setIdentifier(newIdentifier);
         vm.stopPrank();
 
-        assertEq(blockTracker.identifier(), newIdentifier, "Identifier not updated");
+        assertEq(bundleTracker.identifier(), newIdentifier, "Identifier not updated");
     }
 
     function testSetLiveness() public {
         // Initially set to 'liveness'
-        assertEq(blockTracker.liveness(), liveness);
+        assertEq(bundleTracker.liveness(), liveness);
 
         vm.startPrank(owner);
-        blockTracker.setLiveness(newLiveness);
+        bundleTracker.setLiveness(newLiveness);
         vm.stopPrank();
 
-        assertEq(blockTracker.liveness(), newLiveness, "Liveness not updated");
+        assertEq(bundleTracker.liveness(), newLiveness, "Liveness not updated");
     }
 
     function testSetEscalationManager() public {
         vm.startPrank(owner);
-        blockTracker.setEscalationManager(address(mockEscalationManager));
+        bundleTracker.setEscalationManager(address(mockEscalationManager));
         vm.stopPrank();
 
-        assertEq(blockTracker.escalationManager(), address(mockEscalationManager), "Escalation manager not updated");
+        assertEq(bundleTracker.escalationManager(), address(mockEscalationManager), "Escalation manager not updated");
     }
 
     function testSetCollateralAndBond() public {
         vm.startPrank(owner);
-        blockTracker.setCollateralAndBond(IERC20(address(newMockCollateral)), bondAmount);
+        bundleTracker.setCollateralAndBond(IERC20(address(newMockCollateral)), bondAmount);
         vm.stopPrank();
 
-        assertEq(address(blockTracker.collateral()), address(newMockCollateral), "Collateral not updated");
-        assertEq(blockTracker.bondAmount(), bondAmount, "Bond amount not updated");
+        assertEq(address(bundleTracker.collateral()), address(newMockCollateral), "Collateral not updated");
+        assertEq(bundleTracker.bondAmount(), bondAmount, "Bond amount not updated");
     }
 
     function testProposeTransactions() public {
@@ -151,7 +151,7 @@ contract BlockTrackerTest is Test {
 
         vm.startPrank(txProposer);
         // Approve enough collateral for the bond
-        mockCollateral.approve(address(blockTracker), 3000e18);
+        mockCollateral.approve(address(bundleTracker), 3000e18);
 
         // Build a small set of transactions
         OptimisticProposer.Transaction[] memory txs = new OptimisticProposer.Transaction[](2);
@@ -173,7 +173,7 @@ contract BlockTrackerTest is Test {
         });
 
         // propose transactions with some "explanation"
-        blockTracker.proposeTransactions(txs, bytes("Hello world"));
+        bundleTracker.proposeTransactions(txs, bytes("Hello world"));
 
         vm.stopPrank();
     }
