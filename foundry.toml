@@ -31,3 +31,10 @@ arbitrum_one = { key = "${ARBITRUMSCAN_API_KEY}" }
 arbitrum_sepolia = { key = "${ARBITRUMSCAN_API_KEY}" }
 base = { key = "${BASESCAN_API_KEY}" }
 base_sepolia = { key = "${BASESCAN_API_KEY}" }
+
+[profile.default.fs_permissions]
+"rules/" = "read"
+"rules/old/" = "read"
+"rules/global.txt" = "read"
+"rules/old/global.txt" = "read"
+"rules/old/vault.txt" = "read"

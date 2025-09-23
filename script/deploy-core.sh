@@ -185,7 +185,6 @@ validate_deployment() {
     forge script script/DeployCore.s.sol:DeployCore \
         --rpc-url "${RPC_URL}" \
         --private-key "${PRIVATE_KEY}" \
-        -s "validateEnvironment()" \
         --sig "validateEnvironment()"
 
     log_success "Pre-deployment validation passed"
