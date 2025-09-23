@@ -80,12 +80,12 @@ contract DeployCore is Script {
                 defaultIdentifier: keccak256("ASSERT_TRUTH")
             });
         }
-        // Arbitrum Goerli
-        else if (chainId == 421613) {
+        // Arbitrum Sepolia
+        else if (chainId == 421614) {
             return NetworkConfig({
-                name: "arbitrum-goerli",
-                umaFinder: 0xabcdef1234567890abcdef1234567890abcdef12, // TODO: Add actual UMA finder on Arbitrum Goerli
-                collateralToken: 0x6f14C02Fc1F68422c6f4aE8B5c7A7B1B8B8B0B5B, // Test USDC on Arbitrum Goerli
+                name: "arbitrum-sepolia",
+                umaFinder: 0xabcdef1234567890abcdef1234567890abcdef12, // TODO: Add actual UMA finder on Arbitrum Sepolia
+                collateralToken: 0x6f14C02Fc1F68422c6f4aE8B5c7A7B1B8B8B0B5B, // Test USDC on Arbitrum Sepolia
                 defaultBondAmount: 10e6, // 10 USDC
                 defaultLiveness: 3600, // 1 hour
                 defaultIdentifier: keccak256("ASSERT_TRUTH")
@@ -102,12 +102,12 @@ contract DeployCore is Script {
                 defaultIdentifier: keccak256("ASSERT_TRUTH")
             });
         }
-        // Base Goerli
-        else if (chainId == 84531) {
+        // Base Sepolia
+        else if (chainId == 84532) {
             return NetworkConfig({
-                name: "base-goerli",
-                umaFinder: 0xabcdef1234567890abcdef1234567890abcdef12, // TODO: Add actual UMA finder on Base Goerli
-                collateralToken: 0x6f14C02Fc1F68422c6f4aE8B5c7A7B1B8B8B0B5B, // Test USDC on Base Goerli
+                name: "base-sepolia",
+                umaFinder: 0xabcdef1234567890abcdef1234567890abcdef12, // TODO: Add actual UMA finder on Base Sepolia
+                collateralToken: 0x6f14C02Fc1F68422c6f4aE8B5c7A7B1B8B8B0B5B, // Test USDC on Base Sepolia
                 defaultBondAmount: 10e6, // 10 USDC
                 defaultLiveness: 3600, // 1 hour
                 defaultIdentifier: keccak256("ASSERT_TRUTH")
