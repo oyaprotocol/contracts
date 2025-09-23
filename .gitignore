@@ -18,3 +18,4 @@ docs/
 
 # Foundry stuff
 .gas-snapshot
+foundry.lock
