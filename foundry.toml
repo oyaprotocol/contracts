@@ -9,9 +9,9 @@ libs = ["lib"]
 mainnet = "${MAINNET_RPC_URL}"
 sepolia = "${SEPOLIA_RPC_URL}"
 arbitrum_one = "${ARBITRUM_ONE_RPC_URL}"
-arbitrum_goerli = "${ARBITRUM_GOERLI_RPC_URL}"
+arbitrum_sepolia = "${ARBITRUM_SEPOLIA_RPC_URL}"
 base = "${BASE_RPC_URL}"
-base_goerli = "${BASE_GOERLI_RPC_URL}"
+base_sepolia = "${BASE_SEPOLIA_RPC_URL}"
 
 [fmt]
 line_length = 120
@@ -28,6 +28,6 @@ wrap_comments = true
 mainnet = { key = "${ETHERSCAN_API_KEY}" }
 sepolia = { key = "${ETHERSCAN_API_KEY}" }
 arbitrum_one = { key = "${ARBITRUMSCAN_API_KEY}" }
-arbitrum_goerli = { key = "${ARBITRUMSCAN_API_KEY}" }
+arbitrum_sepolia = { key = "${ARBITRUMSCAN_API_KEY}" }
 base = { key = "${BASESCAN_API_KEY}" }
-base_goerli = { key = "${BASESCAN_API_KEY}" }
+base_sepolia = { key = "${BASESCAN_API_KEY}" }
