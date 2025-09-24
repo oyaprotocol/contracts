@@ -19,7 +19,7 @@
 # Examples:
 #   ./script/deploy-oya.sh $MAINNET_RPC_URL              # Deploy to Ethereum mainnet
 #   ./script/deploy-oya.sh $SEPOLIA_RPC_URL              # Deploy to Sepolia testnet
-#   ./script/deploy-oya.sh $ARBITRUM_ONE_RPC_URL --verify # Deploy to Arbitrum with verification
+#   ./script/deploy-oya.sh $POLYGON_MAINNET_RPC_URL --verify # Deploy to Polygon with verification
 #
 # Security Notes:
 # - Never commit your .env file with private keys
@@ -74,7 +74,7 @@ print_usage() {
     echo "Examples:"
     echo "  ${SCRIPT_NAME} \$MAINNET_RPC_URL              # Deploy to Ethereum mainnet"
     echo "  ${SCRIPT_NAME} \$SEPOLIA_RPC_URL              # Deploy to Sepolia testnet"
-    echo "  ${SCRIPT_NAME} \$ARBITRUM_ONE_RPC_URL --verify # Deploy to Arbitrum with verification"
+    echo "  ${SCRIPT_NAME} \$POLYGON_MAINNET_RPC_URL --verify # Deploy to Polygon with verification"
     echo ""
     echo "Note: The Oya token will mint 1 billion tokens to the deployer address"
     echo ""

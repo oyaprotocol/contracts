@@ -15,7 +15,7 @@ cp .env.example .env
 # 3. Deploy core contracts (per chain)
 ./script/deploy-core.sh 1                    # Ethereum mainnet
 ./script/deploy-core.sh 11155111             # Sepolia testnet
-./script/deploy-core.sh 42161                # Arbitrum One
+./script/deploy-core.sh 137                # Polygon Mainnet
 ```
 
 ## Prerequisites
@@ -31,7 +31,7 @@ cp .env.example .env
 
 ### Get API Keys
 - **Etherscan**: https://etherscan.io/apis
-- **ArbitrumScan**: https://arbiscan.io/apis
+- **PolygonScan**: https://polygonscan.com/apis
 - **BaseScan**: https://basescan.org/apis
 
 ## Environment Setup
@@ -57,14 +57,14 @@ CHAIN_ID=1
 # RPC endpoints for supported networks
 MAINNET_RPC_URL=https://eth-mainnet.g.alchemy.com/v2/YOUR_KEY
 SEPOLIA_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/YOUR_KEY
-ARBITRUM_ONE_RPC_URL=https://arb1.arbitrum.io/rpc
-ARBITRUM_SEPOLIA_RPC_URL=https://arb-sepolia.g.alchemy.com/v2/YOUR_KEY
+POLYGON_MAINNET_RPC_URL=https://polygon-rpc.com/
+POLYGON_TESTNET_RPC_URL=https://rpc-amoy.polygon.technology/
 BASE_RPC_URL=https://mainnet.base.org
 BASE_SEPOLIA_RPC_URL=https://sepolia.base.org
 
 # Block explorer API keys (for verification)
 ETHERSCAN_API_KEY=your_etherscan_api_key
-ARBITRUMSCAN_API_KEY=your_arbitrumscan_api_key
+POLYGONSCAN_API_KEY=your_polygonscan_api_key
 BASESCAN_API_KEY=your_basescan_api_key
 ```
 
@@ -82,8 +82,8 @@ INITIAL_VAULT_CONTROLLER=0x1234567890123456789012345678901234567890
 |---------|----------|---------|--------------|
 | Ethereum Mainnet | 1 | ✅ Active | `MAINNET_RPC_URL` |
 | Ethereum Sepolia | 11155111 | ✅ Active | `SEPOLIA_RPC_URL` |
-| Arbitrum One | 42161 | ✅ Active | `ARBITRUM_ONE_RPC_URL` |
-| Arbitrum Sepolia | 421614 | ✅ Active | `ARBITRUM_SEPOLIA_RPC_URL` |
+| Polygon Mainnet | 137 | ✅ Active | `POLYGON_MAINNET_RPC_URL` |
+| Polygon Amoy Testnet | 80002 | ✅ Active | `POLYGON_TESTNET_RPC_URL` |
 | Base | 8453 | ✅ Active | `BASE_RPC_URL` |
 | Base Sepolia | 84532 | ✅ Active | `BASE_SEPOLIA_RPC_URL` |
 
@@ -119,11 +119,11 @@ Deploy BundleTracker and VaultTracker contracts to each target chain.
 # Deploy to Sepolia testnet
 ./script/deploy-core.sh 11155111
 
-# Deploy to Arbitrum One
-./script/deploy-core.sh 42161
+# Deploy to Polygon Mainnet
+./script/deploy-core.sh 137
 
-# Deploy to Arbitrum Sepolia
-./script/deploy-core.sh 421614
+# Deploy to Polygon Amoy Testnet
+./script/deploy-core.sh 80002
 
 # Deploy to Base
 ./script/deploy-core.sh 8453

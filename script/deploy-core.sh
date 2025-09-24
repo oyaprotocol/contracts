@@ -23,7 +23,7 @@
 # Examples:
 #   ./script/deploy-core.sh 1                    # Deploy to Ethereum mainnet
 #   ./script/deploy-core.sh 11155111             # Deploy to Sepolia testnet
-#   ./script/deploy-core.sh 42161 --verify       # Deploy to Arbitrum with verification
+#   ./script/deploy-core.sh 137 --verify       # Deploy to Polygon with verification
 #
 # Security Notes:
 # - Never commit your .env file with private keys
@@ -52,8 +52,8 @@ NC='\033[0m' # No Color
 declare -A NETWORK_NAMES=(
     [1]="ethereum-mainnet"
     [11155111]="ethereum-sepolia"
-    [42161]="arbitrum-one"
-    [421614]="arbitrum-sepolia"
+    [137]="polygon-mainnet"
+    [80002]="polygon-testnet"
     [8453]="base"
     [84532]="base-sepolia"
 )
@@ -61,8 +61,8 @@ declare -A NETWORK_NAMES=(
 declare -A NETWORK_RPC_VARS=(
     [1]="MAINNET_RPC_URL"
     [11155111]="SEPOLIA_RPC_URL"
-    [42161]="ARBITRUM_ONE_RPC_URL"
-    [421614]="ARBITRUM_SEPOLIA_RPC_URL"
+    [137]="POLYGON_MAINNET_RPC_URL"
+    [80002]="POLYGON_TESTNET_RPC_URL"
     [8453]="BASE_RPC_URL"
     [84532]="BASE_SEPOLIA_RPC_URL"
 )
@@ -103,7 +103,7 @@ print_usage() {
     echo "Examples:"
     echo "  ${SCRIPT_NAME} 1                    # Deploy to Ethereum mainnet"
     echo "  ${SCRIPT_NAME} 11155111             # Deploy to Sepolia testnet"
-    echo "  ${SCRIPT_NAME} 42161 --verify       # Deploy to Arbitrum with verification"
+    echo "  ${SCRIPT_NAME} 137 --verify       # Deploy to Polygon with verification"
     echo ""
 }
 
@@ -152,8 +152,8 @@ validate_environment() {
         log_info "Supported chain IDs: ${SUPPORTED_NETWORKS}"
         log_info "1 = Ethereum Mainnet"
         log_info "11155111 = Ethereum Sepolia"
-        log_info "42161 = Arbitrum One"
-        log_info "421614 = Arbitrum Sepolia"
+        log_info "137 = Polygon Mainnet"
+        log_info "80002 = Polygon Amoy Testnet"
         log_info "8453 = Base"
         log_info "84532 = Base Sepolia"
         exit 1

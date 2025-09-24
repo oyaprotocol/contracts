@@ -62,30 +62,30 @@ contract DeployCore is Script {
         else if (chainId == 11155111) {
             return NetworkConfig({
                 name: "ethereum-sepolia",
-                umaFinder: 0x1aa7392D6C1c5d7C0C5f6b0d3A7E4E8E3b0e4d0d, // UMA testnet finder
+                umaFinder: 0xf4C48eDAd256326086AEfbd1A53e1896815F8f13, // UMA finder on Ethereum Sepolia
                 collateralToken: 0x6f14C02Fc1F68422c6f4aE8B5c7A7B1B8B8B0B5B, // Test USDC
                 defaultBondAmount: 10e6, // 10 USDC
                 defaultLiveness: 3600, // 1 hour
                 defaultIdentifier: keccak256("ASSERT_TRUTH")
             });
         }
-        // Arbitrum One
-        else if (chainId == 42161) {
+        // Polygon Mainnet
+        else if (chainId == 137) {
             return NetworkConfig({
-                name: "arbitrum-one",
-                umaFinder: 0x1234567890abcdef1234567890abcdef12345678, // TODO: Add actual UMA finder on Arbitrum
-                collateralToken: 0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8, // USDC.e on Arbitrum
+                name: "polygon-mainnet",
+                umaFinder: 0x09aea4b2242abC8bb4BB78D537A67a245A7bEC64, // UMA finder on Polygon Mainnet
+                collateralToken: 0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174, // USDC on Polygon
                 defaultBondAmount: 100e6, // 100 USDC
                 defaultLiveness: 7200, // 2 hours
                 defaultIdentifier: keccak256("ASSERT_TRUTH")
             });
         }
-        // Arbitrum Sepolia
-        else if (chainId == 421614) {
+        // Polygon Amoy Testnet
+        else if (chainId == 80002) {
             return NetworkConfig({
-                name: "arbitrum-sepolia",
-                umaFinder: 0xabcdef1234567890abcdef1234567890abcdef12, // TODO: Add actual UMA finder on Arbitrum Sepolia
-                collateralToken: 0x6f14C02Fc1F68422c6f4aE8B5c7A7B1B8B8B0B5B, // Test USDC on Arbitrum Sepolia
+                name: "polygon-testnet",
+                umaFinder: 0x28077B47Cd03326De7838926A63699849DD4fa87, // UMA finder on Polygon Amoy
+                collateralToken: 0x6f14C02Fc1F68422c6f4aE8B5c7A7B1B8B8B0B5B, // Test USDC on Polygon Amoy
                 defaultBondAmount: 10e6, // 10 USDC
                 defaultLiveness: 3600, // 1 hour
                 defaultIdentifier: keccak256("ASSERT_TRUTH")
@@ -95,7 +95,7 @@ contract DeployCore is Script {
         else if (chainId == 8453) {
             return NetworkConfig({
                 name: "base",
-                umaFinder: 0x1234567890abcdef1234567890abcdef12345678, // TODO: Add actual UMA finder on Base
+                umaFinder: 0x7E6d9618Ba8a87421609352d6e711958A97e2512, // UMA finder on Base
                 collateralToken: 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913, // USDC on Base
                 defaultBondAmount: 100e6, // 100 USDC
                 defaultLiveness: 7200, // 2 hours
@@ -106,7 +106,7 @@ contract DeployCore is Script {
         else if (chainId == 84532) {
             return NetworkConfig({
                 name: "base-sepolia",
-                umaFinder: 0xabcdef1234567890abcdef1234567890abcdef12, // TODO: Add actual UMA finder on Base Sepolia
+                umaFinder: 0xfF4Ec014E3CBE8f64a95bb022F1623C6e456F7dB, // UMA finder on Base Sepolia
                 collateralToken: 0x6f14C02Fc1F68422c6f4aE8B5c7A7B1B8B8B0B5B, // Test USDC on Base Sepolia
                 defaultBondAmount: 10e6, // 10 USDC
                 defaultLiveness: 3600, // 1 hour
