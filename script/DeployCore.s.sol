@@ -121,7 +121,7 @@ contract DeployCore is Script {
     /**
      * @notice Reads protocol rules from the rules/ directory
      * @return Protocol rules as string
-     * @dev Tries multiple rule files in order of preference
+     * @dev Reads from rules/global.txt only
      * @custom:security Validates that rules are not empty
      */
     function getProtocolRules() internal view returns (string memory) {
@@ -129,24 +129,17 @@ contract DeployCore is Script {
             return cachedRules;
         }
 
-        // Try to read from multiple possible rule files in order of preference
-        string[] memory ruleFiles = new string[](3);
-        ruleFiles[0] = "rules/global.txt";
-        ruleFiles[1] = "rules/old/global.txt";
-        ruleFiles[2] = "rules/old/vault.txt";
-
-        for (uint256 i = 0; i < ruleFiles.length; i++) {
-            try vm.readFile(ruleFiles[i]) returns (string memory rules) {
-                if (bytes(rules).length > 0) {
-                    cachedRules = rules;
-                    return rules;
-                }
-            } catch {
-                continue;
+        // Read protocol rules from global.txt
+        try vm.readFile("rules/global.txt") returns (string memory rules) {
+            if (bytes(rules).length > 0) {
+                cachedRules = rules;
+                return rules;
             }
+        } catch {
+            // Fall through to revert
         }
 
-        revert("Protocol rules not found. Please ensure rules/ directory contains valid rule files.");
+        revert("Protocol rules not found. Please ensure rules/global.txt contains valid rule files.");
     }
 
     /**
