@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.16;
 
 import {Script} from "forge-std/Script.sol";
 import {console} from "forge-std/console.sol";
@@ -54,7 +54,7 @@ contract DeployCore is Script {
                 umaFinder: 0x40f941E48A552bF496B154Af6bf55725f18D77c3,
                 collateralToken: 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48, // USDC
                 defaultBondAmount: 100e6, // 100 USDC
-                defaultIdentifier: keccak256("ASSERT_TRUTH"),
+                defaultIdentifier: bytes32("ASSERT_TRUTH"),
                 defaultLiveness: 7200 // 2 hours
             });
         }
@@ -63,10 +63,10 @@ contract DeployCore is Script {
             return NetworkConfig({
                 name: "ethereum-sepolia",
                 umaFinder: 0xf4C48eDAd256326086AEfbd1A53e1896815F8f13, // UMA finder on Ethereum Sepolia
-                collateralToken: 0x6f14C02Fc1F68422c6f4aE8B5c7A7B1B8B8B0B5B, // Test USDC
+                collateralToken: 0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238, // Test USDC
                 defaultBondAmount: 10e6, // 10 USDC
                 defaultLiveness: 3600, // 1 hour
-                defaultIdentifier: keccak256("ASSERT_TRUTH")
+                defaultIdentifier: bytes32("ASSERT_TRUTH")
             });
         }
         // Polygon Mainnet
@@ -74,10 +74,10 @@ contract DeployCore is Script {
             return NetworkConfig({
                 name: "polygon-mainnet",
                 umaFinder: 0x09aea4b2242abC8bb4BB78D537A67a245A7bEC64, // UMA finder on Polygon Mainnet
-                collateralToken: 0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174, // USDC on Polygon
+                collateralToken: 0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359, // USDC on Polygon
                 defaultBondAmount: 100e6, // 100 USDC
                 defaultLiveness: 7200, // 2 hours
-                defaultIdentifier: keccak256("ASSERT_TRUTH")
+                defaultIdentifier: bytes32("ASSERT_TRUTH")
             });
         }
         // Polygon Amoy Testnet
@@ -85,10 +85,10 @@ contract DeployCore is Script {
             return NetworkConfig({
                 name: "polygon-testnet",
                 umaFinder: 0x28077B47Cd03326De7838926A63699849DD4fa87, // UMA finder on Polygon Amoy
-                collateralToken: 0x6f14C02Fc1F68422c6f4aE8B5c7A7B1B8B8B0B5B, // Test USDC on Polygon Amoy
+                collateralToken: 0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0e7582, // Test USDC on Polygon Amoy
                 defaultBondAmount: 10e6, // 10 USDC
                 defaultLiveness: 3600, // 1 hour
-                defaultIdentifier: keccak256("ASSERT_TRUTH")
+                defaultIdentifier: bytes32("ASSERT_TRUTH")
             });
         }
         // Base
@@ -99,7 +99,7 @@ contract DeployCore is Script {
                 collateralToken: 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913, // USDC on Base
                 defaultBondAmount: 100e6, // 100 USDC
                 defaultLiveness: 7200, // 2 hours
-                defaultIdentifier: keccak256("ASSERT_TRUTH")
+                defaultIdentifier: bytes32("ASSERT_TRUTH")
             });
         }
         // Base Sepolia
@@ -107,10 +107,10 @@ contract DeployCore is Script {
             return NetworkConfig({
                 name: "base-sepolia",
                 umaFinder: 0xfF4Ec014E3CBE8f64a95bb022F1623C6e456F7dB, // UMA finder on Base Sepolia
-                collateralToken: 0x6f14C02Fc1F68422c6f4aE8B5c7A7B1B8B8B0B5B, // Test USDC on Base Sepolia
+                collateralToken: 0x036CbD53842c5426634e7929541eC2318f3dCF7e, // Test USDC on Base Sepolia
                 defaultBondAmount: 10e6, // 10 USDC
                 defaultLiveness: 3600, // 1 hour
-                defaultIdentifier: keccak256("ASSERT_TRUTH")
+                defaultIdentifier: bytes32("ASSERT_TRUTH")
             });
         }
         else {
@@ -124,7 +124,7 @@ contract DeployCore is Script {
      * @dev Reads from rules/global.txt only
      * @custom:security Validates that rules are not empty
      */
-    function getProtocolRules() internal view returns (string memory) {
+    function getProtocolRules() internal returns (string memory) {
         if (bytes(cachedRules).length > 0) {
             return cachedRules;
         }
@@ -188,7 +188,7 @@ contract DeployCore is Script {
             config.defaultIdentifier,
             config.defaultLiveness
         );
-        console.log("✅ BundleTracker deployed at:", address(bundleTracker));
+        console.log("BundleTracker deployed at:", address(bundleTracker));
 
         // Deploy VaultTracker
         console.log("\n2. Deploying VaultTracker...");
@@ -200,7 +200,7 @@ contract DeployCore is Script {
             config.defaultIdentifier,
             config.defaultLiveness
         );
-        console.log("✅ VaultTracker deployed at:", address(vaultTracker));
+        console.log("VaultTracker deployed at:", address(vaultTracker));
 
         // Optional: Set escalation manager if provided
         address escalationManager = vm.envOr("ESCALATION_MANAGER", address(0));
@@ -208,11 +208,11 @@ contract DeployCore is Script {
             console.log("\n3. Setting escalation manager...");
             if (address(bundleTracker).code.length > 0) {
                 bundleTracker.setEscalationManager(escalationManager);
-                console.log("✅ BundleTracker escalation manager set to:", escalationManager);
+                console.log("BundleTracker escalation manager set to:", escalationManager);
             }
             if (address(vaultTracker).code.length > 0) {
                 vaultTracker.setEscalationManager(escalationManager);
-                console.log("✅ VaultTracker escalation manager set to:", escalationManager);
+                console.log("VaultTracker escalation manager set to:", escalationManager);
             }
         }
 
@@ -222,8 +222,8 @@ contract DeployCore is Script {
             console.log("\n4. Creating initial vault...");
             address vaultController = vm.envOr("INITIAL_VAULT_CONTROLLER", msg.sender);
             vaultTracker.createVault(vaultController);
-            console.log("✅ Initial vault created with ID:", initialVaultId);
-            console.log("✅ Vault controller set to:", vaultController);
+            console.log("Initial vault created with ID:", initialVaultId);
+            console.log("Vault controller set to:", vaultController);
         }
 
         vm.stopBroadcast();
@@ -281,7 +281,7 @@ contract DeployCore is Script {
      * @notice Validates that the deployment environment is correct
      * @dev Can be called externally for pre-deployment checks
      */
-    function validateEnvironment() external view {
+    function validateEnvironment() external {
         uint256 chainId = vm.envUint("CHAIN_ID");
         NetworkConfig memory config = getNetworkConfig(chainId);
 
@@ -293,6 +293,6 @@ contract DeployCore is Script {
         string memory rules = getProtocolRules();
         require(bytes(rules).length > 0, "Protocol rules not found");
 
-        console.log("✅ Environment validation passed for network:", config.name);
+        console.log("Environment validation passed for network:", config.name);
     }
 }

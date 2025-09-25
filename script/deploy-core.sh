@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env zsh
 
 # ==============================================================================
 # Oya Protocol Core Deployment Script
@@ -41,6 +41,13 @@ SCRIPT_NAME="deploy-core.sh"
 SCRIPT_VERSION="1.0.0"
 SUPPORTED_NETWORKS="1,11155111,42161,421614,8453,84532"
 
+# Load .env if present (export all vars)
+if [ -f ".env" ]; then
+    set -a
+    . ./.env
+    set +a
+fi
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -48,24 +55,30 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Supported networks mapping
-declare -A NETWORK_NAMES=(
-    [1]="ethereum-mainnet"
-    [11155111]="ethereum-sepolia"
-    [137]="polygon-mainnet"
-    [80002]="polygon-testnet"
-    [8453]="base"
-    [84532]="base-sepolia"
-)
+# Supported networks mapping (zsh-compatible)
+get_network_name() {
+    case "$1" in
+        1) echo "ethereum-mainnet" ;;
+        11155111) echo "ethereum-sepolia" ;;
+        137) echo "polygon-mainnet" ;;
+        80002) echo "polygon-testnet" ;;
+        8453) echo "base" ;;
+        84532) echo "base-sepolia" ;;
+        *) echo "unknown" ;;
+    esac
+}
 
-declare -A NETWORK_RPC_VARS=(
-    [1]="MAINNET_RPC_URL"
-    [11155111]="SEPOLIA_RPC_URL"
-    [137]="POLYGON_MAINNET_RPC_URL"
-    [80002]="POLYGON_TESTNET_RPC_URL"
-    [8453]="BASE_RPC_URL"
-    [84532]="BASE_SEPOLIA_RPC_URL"
-)
+get_network_rpc_var() {
+    case "$1" in
+        1) echo "MAINNET_RPC_URL" ;;
+        11155111) echo "SEPOLIA_RPC_URL" ;;
+        137) echo "POLYGON_MAINNET_RPC_URL" ;;
+        80002) echo "POLYGON_TESTNET_RPC_URL" ;;
+        8453) echo "BASE_RPC_URL" ;;
+        84532) echo "BASE_SEPOLIA_RPC_URL" ;;
+        *) echo "" ;;
+    esac
+}
 
 # ==============================================================================
 # Utility Functions
@@ -160,8 +173,8 @@ validate_environment() {
     fi
 
     # Check for RPC URL
-    RPC_VAR=${NETWORK_RPC_VARS[$TARGET_CHAIN_ID]}
-    RPC_URL=${!RPC_VAR}
+    RPC_VAR="$(get_network_rpc_var "${TARGET_CHAIN_ID}")"
+    RPC_URL="${(P)RPC_VAR}"
 
     if [[ -z "${RPC_URL}" ]]; then
         log_error "RPC URL not configured for chain ID ${TARGET_CHAIN_ID}"
@@ -170,7 +183,7 @@ validate_environment() {
     fi
 
     log_success "Environment validation passed"
-    log_info "Target Network: ${NETWORK_NAMES[$TARGET_CHAIN_ID]} (${TARGET_CHAIN_ID})"
+    log_info "Target Network: $(get_network_name "${TARGET_CHAIN_ID}") (${TARGET_CHAIN_ID})"
     log_info "RPC URL: ${RPC_URL}"
 
     # Export validated variables
@@ -199,27 +212,17 @@ deploy_contracts() {
     shift
     local additional_args=("$@")
 
-    log_info "Starting deployment to ${NETWORK_NAMES[$chain_id]}..."
-
-    # Prepare forge command
-    local forge_args=(
-        "script"
-        "script/DeployCore.s.sol:DeployCore"
-        "--rpc-url" "${RPC_URL}"
-        "--private-key" "${PRIVATE_KEY}"
-        "--broadcast"
-    )
-
-    # Add additional arguments if provided
-    if [[ ${#additional_args[@]} -gt 0 ]]; then
-        forge_args+=("${additional_args[@]}")
-    fi
+    log_info "Starting deployment to $(get_network_name "${chain_id}")..."
 
     log_info "Executing deployment command..."
-    log_info "Command: forge ${forge_args[*]}"
+    log_info "Command: forge script script/DeployCore.s.sol:DeployCore --rpc-url ${RPC_URL} --private-key **** --broadcast ${additional_args[*]}"
 
     # Execute deployment
-    forge "${forge_args[@]}"
+    forge script script/DeployCore.s.sol:DeployCore \
+        --rpc-url "${RPC_URL}" \
+        --private-key "${PRIVATE_KEY}" \
+        --broadcast \
+        ${additional_args[@]:-}
 
     log_success "Deployment completed successfully!"
 }
@@ -250,7 +253,7 @@ main() {
     # Show deployment summary
     echo ""
     log_info "Deployment Summary:"
-    log_info "  Network: ${NETWORK_NAMES[$chain_id]}"
+    log_info "  Network: $(get_network_name "${chain_id}")"
     log_info "  Chain ID: ${chain_id}"
     log_info "  Deployer: ${DEPLOYER_ADDRESS:-"Not set (check .env)"}"
     log_info "  RPC: ${RPC_URL}"
@@ -271,7 +274,8 @@ main() {
     fi
 
     echo ""
-    read -p "Proceed with deployment? (y/N): " -n 1 -r
+    # zsh-compatible prompt for single char
+    read -rsk 1 "?Proceed with deployment? (y/N): "
     echo
 
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
@@ -305,7 +309,4 @@ main() {
 # Script Entry Point
 # ==============================================================================
 
-# Handle script being sourced vs executed
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-    main "$@"
-fi
+main "$@"
