@@ -23,13 +23,13 @@ cp .env.example .env
 ### Required Software
 - **Foundry** (latest version)
 - **Git**
-- **Bash** (Linux/macOS) or **Git Bash** (Windows)
+- **zsh** (default on macOS; available on Linux). On Windows use **Git Bash** or **WSL**.
 
-### Required Accounts
-- **Deployer Wallet**: Wallet with sufficient funds for gas fees
-- **Block Explorer API Keys**: For contract verification (optional but recommended)
+### Accounts
+- **Deployer Wallet**: Wallet with sufficient funds for gas fees (required)
+- **RPC URL**: RPC URL to read and write to the chain (eg: Alchemy API Key)
 
-### Get API Keys
+### Block Explorer API Keys: For contract verification (optional but recommended)
 - **Etherscan**: https://etherscan.io/apis
 - **PolygonScan**: https://polygonscan.com/apis
 - **BaseScan**: https://basescan.org/apis
@@ -51,6 +51,15 @@ cp .env.example .env
 PRIVATE_KEY=0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890
 DEPLOYER_ADDRESS=0x1234567890123456789012345678901234567890
 
+# TIP: Generate a new wallet (private/public key pair) with Foundry:
+#   `cast wallet new`
+# This prints the PRIVATE_KEY and corresponding DEPLOYER_ADDRESS.
+
+# Funding: You must fund DEPLOYER_ADDRESS to pay gas when deploying contracts.
+# - Testnet: use a faucet (e.g. Google Cloud Web3 Faucet for Sepolia:
+#   https://cloud.google.com/application/web3/faucet/ethereum/sepolia)
+# - Mainnet: send ETH to DEPLOYER_ADDRESS from your exchange/wallet
+
 # Target chain ID (1 = mainnet, 11155111 = sepolia, etc.)
 CHAIN_ID=1
 
@@ -61,15 +70,17 @@ POLYGON_MAINNET_RPC_URL=https://polygon-rpc.com/
 POLYGON_TESTNET_RPC_URL=https://rpc-amoy.polygon.technology/
 BASE_RPC_URL=https://mainnet.base.org
 BASE_SEPOLIA_RPC_URL=https://sepolia.base.org
+```
+
+
+**Optional Variables:**
+```bash
 
 # Block explorer API keys (for verification)
 ETHERSCAN_API_KEY=your_etherscan_api_key
 POLYGONSCAN_API_KEY=your_polygonscan_api_key
 BASESCAN_API_KEY=your_basescan_api_key
-```
 
-**Optional Variables:**
-```bash
 # Protocol configuration
 ESCALATION_MANAGER=0x0000000000000000000000000000000000000000
 CREATE_INITIAL_VAULT=1
@@ -130,6 +141,10 @@ Deploy BundleTracker and VaultTracker contracts to each target chain.
 
 # With verification
 ./script/deploy-core.sh 1 --verify
+
+# Note: Scripts are zsh-compatible. On macOS/Linux you can run directly as above.
+# If you prefer, you may invoke explicitly with zsh:
+# zsh ./script/deploy-core.sh 11155111 --verify
 ```
 
 **What happens:**
