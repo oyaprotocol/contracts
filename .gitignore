@@ -19,3 +19,5 @@ docs/
 # Foundry stuff
 .gas-snapshot
 foundry.lock
+
+.DS_Store 
