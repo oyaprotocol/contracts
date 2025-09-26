@@ -27,7 +27,7 @@ contract Oya is ERC20, Ownable, ERC20Permit {
      * @dev Mints initial supply of 1 billion tokens to deployer
      * @custom:supply Initial supply is minted at deployment; additional supply can be minted by owner
      */
-  constructor() ERC20("Oya", "OYA") Ownable() ERC20Permit("Oya") {
+  constructor() ERC20("Oya", "OYA") ERC20Permit("Oya") {
     _mint(msg.sender, 1_000_000_000 * 10 ** decimals());
   }
 
