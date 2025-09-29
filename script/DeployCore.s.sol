@@ -64,8 +64,8 @@ contract DeployCore is Script {
                 name: "ethereum-sepolia",
                 umaFinder: 0xf4C48eDAd256326086AEfbd1A53e1896815F8f13, // UMA finder on Ethereum Sepolia
                 collateralToken: 0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238, // Test USDC
-                defaultBondAmount: 10e6, // 10 USDC
-                defaultLiveness: 3600, // 1 hour
+                defaultBondAmount: 1000000, // 1 USDC
+                defaultLiveness: 120, // 2 minutes
                 defaultIdentifier: bytes32("ASSERT_TRUTH")
             });
         }

@@ -22,7 +22,6 @@ contract VaultTrackerTest is Test {
 
     address public owner = address(1);
     address public controller = address(2);
-    address public guardian = address(3);
     address public randomAddress = address(4);
 
     uint256 public bondAmount = 1000;
@@ -72,22 +71,12 @@ contract VaultTrackerTest is Test {
         vm.stopPrank();
 
         vm.prank(randomAddress);
-        vm.expectRevert("Not a controller");
+        vm.expectRevert(VaultTracker.NotController.selector);
         vaultTracker.setController(vaultId, address(5));
 
         vm.prank(controller);
         vaultTracker.setController(vaultId, address(6));
         assertTrue(vaultTracker.isController(vaultId, address(6)));
-    }
-
-    function testSetGuardian() public {
-        vm.startPrank(owner);
-        uint256 vaultId = vaultTracker.createVault(controller);
-        vm.stopPrank();
-
-        vm.prank(controller);
-        vaultTracker.setGuardian(vaultId, guardian);
-        assertTrue(vaultTracker.isGuardian(vaultId, guardian));
     }
 
     function testSetVaultRules() public {
@@ -96,7 +85,7 @@ contract VaultTrackerTest is Test {
         vm.stopPrank();
 
         vm.prank(controller);
-        vm.expectRevert("Rules can not be empty");
+        vm.expectRevert(VaultTracker.EmptyRules.selector);
         vaultTracker.setVaultRules(vaultId, "");
 
         vm.prank(controller);
@@ -104,42 +93,7 @@ contract VaultTrackerTest is Test {
         assertEq(vaultTracker.vaultRules(vaultId), "Vault policy 1");
     }
 
-    function testFreezeVault() public {
-        vm.startPrank(owner);
-        uint256 vaultId = vaultTracker.createVault(controller);
-        vm.stopPrank();
-
-        vm.prank(controller);
-        vaultTracker.setGuardian(vaultId, guardian);
-
-        vm.prank(randomAddress);
-        vm.expectRevert("Not a guardian");
-        vaultTracker.freezeVault(vaultId);
-
-        vm.prank(guardian);
-        vaultTracker.freezeVault(vaultId);
-        assertTrue(vaultTracker.vaultFrozen(vaultId));
-    }
-
-    function testUnfreezeVault() public {
-        vm.startPrank(owner);
-        uint256 vaultId = vaultTracker.createVault(controller);
-        vm.stopPrank();
-
-        vm.prank(controller);
-        vaultTracker.setGuardian(vaultId, guardian);
-
-        vm.prank(guardian);
-        vaultTracker.freezeVault(vaultId);
-
-        vm.prank(randomAddress);
-        vm.expectRevert("Not a guardian");
-        vaultTracker.unfreezeVault(vaultId);
-
-        vm.prank(guardian);
-        vaultTracker.unfreezeVault(vaultId);
-        assertFalse(vaultTracker.vaultFrozen(vaultId));
-    }
+    
 
     function testSetProposer() public {
         vm.startPrank(owner);
