@@ -6,46 +6,31 @@ import "./OptimisticProposer.sol";
 /**
  * @title Vault Tracker
  * @notice Multi-vault management system with optimistic governance
- * @dev Extends OptimisticProposer with vault-specific access controls and freezing mechanisms
+ * @dev Extends OptimisticProposer with vault-specific access controls
  *
  * Architecture:
- * - Individual vaults with separate controllers and guardians
- * - Emergency freezing mechanisms (vault-level and protocol-level)
+ * - Individual vaults with separate controllers
  * - Role-based access control for vault operations
  *
  * Security Features:
- * - Vault-level freezing for compromised vaults
- * - Protocol-wide emergency shutdown via CAT (Circuit Breaker)
- * - Guardian system for rapid response to threats
+ * - Role-based access control for vault operations
  *
- * @custom:invariant protocolFrozen implies proposals cannot be executed via executeProposal
- * @custom:invariant vaultFrozen[vaultId] implies functions guarded by notFrozen(vaultId) revert
+ * @custom:invariant Proposals must exist before execution
  */
 contract VaultTracker is OptimisticProposer, Executor {
   using SafeERC20 for IERC20;
 
-  /// @notice Emitted when the VaultTracker contract is deployed and initialized
-  /// @param rules The protocol rules used for vault operations
-  event VaultTrackerDeployed(string rules);
+  /// @notice Errors for gas-efficient reverts
+  error NotController();
+  error UnknownProposal();
+  error EmptyRules();
 
-  /// @notice Emitted when the entire protocol is frozen by the CAT
-  event ProtocolFrozen();
-
-  /// @notice Emitted when the protocol is unfrozen
-  event ChainUnfrozen();
+  
 
   /// @notice Emitted when a new vault is created
   /// @param vaultId The unique identifier of the created vault
   /// @param controller The address assigned as the vault controller
   event VaultCreated(uint256 indexed vaultId, address indexed controller);
-
-  /// @notice Emitted when a specific vault is frozen
-  /// @param vaultId The identifier of the frozen vault
-  event VaultFrozen(uint256 indexed vaultId);
-
-  /// @notice Emitted when a specific vault is unfrozen
-  /// @param vaultId The identifier of the unfrozen vault
-  event VaultUnfrozen(uint256 indexed vaultId);
 
   /// @notice Emitted when vault-specific rules are updated
   /// @param vaultId The identifier of the vault
@@ -63,17 +48,7 @@ contract VaultTracker is OptimisticProposer, Executor {
   /// @param controller The address assigned as controller
   event SetController(uint256 indexed vaultId, address indexed controller);
 
-  /// @notice Emitted when a guardian is added or removed from a vault
-  /// @param vaultId The identifier of the vault
-  /// @param guardian The guardian address
-  event SetGuardian(uint256 indexed vaultId, address indexed guardian);
-
-  /// @notice Address authorized to trigger protocol-wide emergency freeze
-  address private _cat;
-
-  /// @notice Global protocol freeze state - when true, all proposals blocked
-  /// @custom:security Only modifiable by designated CAT address
-  bool public protocolFrozen = false;
+  
 
   /// @notice Counter for generating unique vault IDs
   uint256 public nextVaultId;
@@ -81,10 +56,6 @@ contract VaultTracker is OptimisticProposer, Executor {
   /// @notice Mapping of vault ID to custom rules string
   /// @dev Rules define vault-specific operational constraints
   mapping(uint256 => string) public vaultRules;
-
-  /// @notice Mapping of vault ID to freeze status
-  /// @dev When true, most vault operations are blocked
-  mapping(uint256 => bool) public vaultFrozen;
 
   /// @notice Mapping of vault ID to authorized proposer address
   /// @dev Proposers can create proposals for specific vaults
@@ -94,23 +65,7 @@ contract VaultTracker is OptimisticProposer, Executor {
   /// @dev Controllers have administrative rights over vaults
   mapping(uint256 => mapping(address => bool)) public isController;
 
-  /// @notice Mapping of vault ID and address to guardian status
-  /// @dev Guardians can freeze vaults in emergency situations
-  mapping(uint256 => mapping(address => bool)) public isGuardian;
-
-  /// @notice Modifier to ensure vault is not frozen before operations
-  /// @param vaultId The vault identifier to check
-  modifier notFrozen(uint256 vaultId) {
-    require(!vaultFrozen[vaultId], "Vault is frozen");
-    _;
-  }
-
-  /// @notice Modifier to restrict functions to the designated CAT address
-  /// @dev Used for emergency protocol freezing/unfreezing
-  modifier onlyCat() {
-    require(msg.sender == _cat, "Only the CAT can trigger Oya shutdown");
-    _;
-  }
+  
 
   /**
    * @notice Initializes the VaultTracker contract
@@ -152,7 +107,7 @@ contract VaultTracker is OptimisticProposer, Executor {
     setIdentifier(_identifier);
     setLiveness(_liveness);
     _sync();
-    emit VaultTrackerDeployed(_rules);
+    
   }
 
   /**
@@ -186,10 +141,9 @@ contract VaultTracker is OptimisticProposer, Executor {
    * @custom:security Reentrancy protected
    */
   function executeProposal(Transaction[] memory transactions) external nonReentrant {
-    require(!protocolFrozen, "Oya protocol is currently frozen");
     bytes32 proposalHash = keccak256(abi.encode(transactions));
     bytes32 assertionId = assertionIds[proposalHash];
-    require(assertionId != bytes32(0), "Proposal hash does not exist");
+    if (assertionId == bytes32(0)) revert UnknownProposal();
     delete assertionIds[proposalHash];
     delete proposalHashes[assertionId];
     optimisticOracleV3.settleAndGetAssertionResult(assertionId);
@@ -204,15 +158,7 @@ contract VaultTracker is OptimisticProposer, Executor {
     emit ProposalExecuted(proposalHash, assertionId);
   }
 
-  /**
-   * @notice Sets the Circuit Breaker (CAT) address for emergency freezing
-   * @param _catAddress Address authorized to freeze/unfreeze the protocol
-   * @dev Only callable by contract owner. Set to zero address to disable CAT controls.
-   * @custom:security Critical for emergency response capabilities
-   */
-  function setCat(address _catAddress) external onlyOwner {
-    _cat = _catAddress;
-  }
+  
 
   /**
    * @notice Assigns a proposer to a specific vault
@@ -222,8 +168,8 @@ contract VaultTracker is OptimisticProposer, Executor {
    *      informational and not enforced on-chain by this contract.
    * @custom:events Emits SetProposer event with expiration time
    */
-  function setProposer(uint256 _vaultId, address _proposer) external notFrozen(_vaultId) {
-    require(msg.sender == address(this) || isController[_vaultId][msg.sender], "Not a controller");
+  function setProposer(uint256 _vaultId, address _proposer) external {
+    if (!(msg.sender == address(this) || isController[_vaultId][msg.sender])) revert NotController();
     uint256 _liveTime = block.timestamp + 30 minutes;
     proposers[_vaultId] = _proposer;
     emit SetProposer(_vaultId, _proposer, _liveTime);
@@ -236,36 +182,12 @@ contract VaultTracker is OptimisticProposer, Executor {
    * @dev Controllers have administrative rights over vault operations
    * @custom:events Emits SetController event
    */
-  function setController(uint256 _vaultId, address _controller) external notFrozen(_vaultId) {
-    require(msg.sender == address(this) || isController[_vaultId][msg.sender], "Not a controller");
+  function setController(uint256 _vaultId, address _controller) external {
+    if (!(msg.sender == address(this) || isController[_vaultId][msg.sender])) revert NotController();
     _setController(_vaultId, _controller);
   }
 
-  /**
-   * @notice Adds a guardian to a specific vault
-   * @param _vaultId The identifier of the vault
-   * @param _guardian Address to be assigned as a vault guardian
-   * @dev Guardians can freeze the vault in emergency situations
-   * @custom:events Emits SetGuardian event
-   */
-  function setGuardian(uint256 _vaultId, address _guardian) external notFrozen(_vaultId) {
-    require(msg.sender == address(this) || isController[_vaultId][msg.sender], "Not a controller");
-    isGuardian[_vaultId][_guardian] = true;
-    emit SetGuardian(_vaultId, _guardian);
-  }
-
-  /**
-   * @notice Removes a guardian from a specific vault
-   * @param _vaultId The identifier of the vault
-   * @param _guardian Address to be removed from vault guardians
-   * @dev Only proposals (calls from this contract) can remove guardians for security
-   * @custom:events Emits SetGuardian event
-   */
-  function removeGuardian(uint256 _vaultId, address _guardian) external {
-    require(msg.sender == address(this), "Guardians must be removed by a proposal");
-    isGuardian[_vaultId][_guardian] = false;
-    emit SetGuardian(_vaultId, _guardian);
-  }
+  
 
   /**
    * @notice Sets custom rules for a specific vault
@@ -274,59 +196,11 @@ contract VaultTracker is OptimisticProposer, Executor {
    * @dev Rules cannot be empty and define vault-specific constraints
    * @custom:events Emits SetVaultRules event
    */
-  function setVaultRules(uint256 _vaultId, string memory _rules) external notFrozen(_vaultId) {
-    require(msg.sender == address(this) || isController[_vaultId][msg.sender], "Not a controller");
-    require(bytes(_rules).length > 0, "Rules can not be empty");
+  function setVaultRules(uint256 _vaultId, string memory _rules) external {
+    if (!(msg.sender == address(this) || isController[_vaultId][msg.sender])) revert NotController();
+    if (bytes(_rules).length == 0) revert EmptyRules();
     vaultRules[_vaultId] = _rules;
     emit SetVaultRules(_vaultId, _rules);
-  }
-
-  /**
-   * @notice Freezes a specific vault to prevent operations
-   * @param _vaultId The identifier of the vault to freeze
-   * @dev Only guardians can freeze vaults, used for emergency response. Functions marked with
-   *      `notFrozen(_vaultId)` will revert while frozen.
-   * @custom:events Emits VaultFrozen event
-   * @custom:security Emergency mechanism to halt compromised vaults
-   */
-  function freezeVault(uint256 _vaultId) external notFrozen(_vaultId) {
-    require(isGuardian[_vaultId][msg.sender], "Not a guardian");
-    vaultFrozen[_vaultId] = true;
-    emit VaultFrozen(_vaultId);
-  }
-
-  /**
-   * @notice Unfreezes a specific vault to resume operations
-   * @param _vaultId The identifier of the vault to unfreeze
-   * @dev Both guardians and proposals can unfreeze vaults
-   * @custom:events Emits VaultUnfrozen event
-   */
-  function unfreezeVault(uint256 _vaultId) external {
-    require(msg.sender == address(this) || isGuardian[_vaultId][msg.sender], "Not a guardian");
-    vaultFrozen[_vaultId] = false;
-    emit VaultUnfrozen(_vaultId);
-  }
-
-  /**
-   * @notice Freezes the entire protocol to halt all operations
-   * @dev Emergency circuit breaker activated by the CAT address
-   * @custom:events Emits ProtocolFrozen event
-   * @custom:security Only callable by designated CAT address
-   */
-  function freezeProtocol() external onlyCat {
-    protocolFrozen = true;
-    emit ProtocolFrozen();
-  }
-
-  /**
-   * @notice Unfreezes the protocol to resume normal operations
-   * @dev Emergency circuit breaker deactivated by the CAT address
-   * @custom:events Emits ChainUnfrozen event
-   * @custom:security Only callable by designated CAT address
-   */
-  function unfreezeProtocol() external onlyCat {
-    protocolFrozen = false;
-    emit ChainUnfrozen();
   }
 
   /**

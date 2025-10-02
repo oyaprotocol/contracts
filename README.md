@@ -120,6 +120,15 @@ Replace the constructor arguments, Etherscan API key, RPC URL, and private key w
 
 ## Usage
 
+### Testnet Contracts
+Sample `BundleTracker` and `VaultTracker` contracts have been deployed on Sepolia Testnet for testing. The contract addresses are below. 
+
+*Disclaimer: These contracts are for testing only, verifier nodes are not yet actively checking proposals sent to the contracts.*
+
+- BundleTracker: `0xF96cd74e7EEcb93a773105269b7ef5187db30aef`
+- VaultTracker: `0xBA6AC2cA66d4608e54a760A3bE95C0CA790bb76f`
+
+
 ### Proposing a Bundle
 
 Users interact with the `BundleTracker` contract by calling the `proposeBundle` function with their bundle data written in natural language. The data structure is described in the protocol's global rules. The process is as follows:
