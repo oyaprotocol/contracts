@@ -87,6 +87,16 @@ contract BundleTrackerTest is Test {
         // Propose the bundle
         bundleTracker.proposeBundle(bundleData);
 
+        uint256 expectedBond = bundleTracker.getProposalBond();
+
+        // The bond should be pulled into the contract before forwarding to the OO
+        assertEq(mockCollateral.balanceOf(address(bundleTracker)), expectedBond, "Bond not collected");
+        assertEq(
+            mockCollateral.balanceOf(bundleProposer),
+            2000e18 - expectedBond,
+            "Proposer balance not reduced by bond"
+        );
+
         // The contract stores in: bundles[block.timestamp][msg.sender]
         string memory storedData = bundleTracker.bundles(block.timestamp, bundleProposer);
         assertEq(storedData, bundleData, "Bundle data not stored correctly");

@@ -103,21 +103,28 @@ contract BundleTracker is OptimisticProposer {
    *                  assertion will revert unless configuration is adjusted accordingly.
    */
   function proposeBundle(string memory _bundleData) external {
-    bundles[block.timestamp][msg.sender] = _bundleData;
+    address proposer = msg.sender;
+    bundles[block.timestamp][proposer] = _bundleData;
+
+    uint256 totalBond = getProposalBond();
+    if (totalBond > 0) {
+      collateral.safeTransferFrom(proposer, address(this), totalBond);
+      collateral.safeIncreaseAllowance(address(optimisticOracleV3), totalBond);
+    }
 
     bytes32 _assertionID = optimisticOracleV3.assertTruth(
       bytes(_bundleData),
-      msg.sender,
+      proposer,
       address(this), // callback to the bundle tracker contract
       address(0), // no escalation manager
       liveness, // these and other oracle values set in OptimisticProposer setup
       collateral,
-      bondAmount,
+      totalBond,
       identifier,
       0
     );
 
-    assertionProposer[_assertionID] = msg.sender;
+    assertionProposer[_assertionID] = proposer;
     assertionTimestamps[_assertionID] = block.timestamp;
 
     emit BundleProposed(block.timestamp, msg.sender, _bundleData);
