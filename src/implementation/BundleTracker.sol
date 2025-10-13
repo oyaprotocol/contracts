@@ -104,21 +104,10 @@ contract BundleTracker is OptimisticProposer {
    */
   function proposeBundle(string memory _bundleData) external {
     bundles[block.timestamp][msg.sender] = _bundleData;
+    bytes memory _bundleDataBytes = bytes(_bundleData);
 
-    bytes32 _assertionID = optimisticOracleV3.assertTruth(
-      bytes(_bundleData),
-      msg.sender,
-      address(this), // callback to the bundle tracker contract
-      address(0), // no escalation manager
-      liveness, // these and other oracle values set in OptimisticProposer setup
-      collateral,
-      bondAmount,
-      identifier,
-      0
-    );
-
-    assertionProposer[_assertionID] = msg.sender;
-    assertionTimestamps[_assertionID] = block.timestamp;
+    // See proposeTransactions function in OptimisticProposer
+    proposeTransactions([], _bundleDataBytes);
 
     emit BundleProposed(block.timestamp, msg.sender, _bundleData);
   }
