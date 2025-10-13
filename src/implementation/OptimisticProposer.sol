@@ -82,10 +82,6 @@ contract OptimisticProposer is OptimisticOracleV3CallbackRecipientInterface, Loc
   /// @param escalationManager The new escalation manager address
   event SetEscalationManager(address indexed escalationManager);
 
-  /// @notice Emitted when the vault tracker is updated
-  /// @param vaultTracker The new vault tracker address
-  event SetVaultTracker(address indexed vaultTracker);
-
   /// @notice Emitted when a new proposal is created and asserted
   /// @param proposer Address that created the proposal
   /// @param proposalTime Timestamp when the proposal was created
