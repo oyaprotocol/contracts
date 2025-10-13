@@ -27,6 +27,10 @@ contract VaultTracker is OptimisticProposer, Executor {
 
   
 
+  /// @notice Emitted when the VaultTracker contract is deployed and initialized
+  /// @param rules The protocol rules used for vault transaction validation
+  event VaultTrackerDeployed(string rules);
+
   /// @notice Emitted when a new vault is created
   /// @param vaultId The unique identifier of the created vault
   /// @param controller The address assigned as the vault controller
@@ -108,6 +112,7 @@ contract VaultTracker is OptimisticProposer, Executor {
     setLiveness(_liveness);
     _sync();
     
+    emit VaultTrackerDeployed(_rules);
   }
 
   /**
