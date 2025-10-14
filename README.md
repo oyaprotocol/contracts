@@ -125,8 +125,8 @@ Sample `BundleTracker` and `VaultTracker` contracts have been deployed on Sepoli
 
 *Disclaimer: These contracts are for testing only, verifier nodes are not yet actively checking proposals sent to the contracts.*
 
-- BundleTracker: `0xF96cd74e7EEcb93a773105269b7ef5187db30aef`
-- VaultTracker: `0xBA6AC2cA66d4608e54a760A3bE95C0CA790bb76f`
+- BundleTracker: `0x4b05e1269b74d031B80E8c6973cA076b681914E7`
+- VaultTracker: `0x9F97e0D732E732F502F5796FDd40689488AEe10f`
 
 
 ### Proposing a Bundle
