@@ -1,6 +1,7 @@
 pragma solidity ^0.8.6;
 
 import "./OptimisticProposer.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /**
  * @title Bundle Tracker
@@ -11,6 +12,8 @@ import "./OptimisticProposer.sol";
  * @custom:invariant For any stored assertionId, assertionTimestamps[assertionId] equals the proposal timestamp
  */
 contract BundleTracker is OptimisticProposer {
+  using SafeERC20 for IERC20;
+
   /// @notice Emitted when a new bundle is proposed for validation
   /// @param timestamp The timestamp when the bundle was proposed
   /// @param bundleProposer Address that proposed the bundle data
