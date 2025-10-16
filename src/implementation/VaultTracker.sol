@@ -72,6 +72,20 @@ contract VaultTracker is OptimisticProposer, Executor {
     uint256 amount
   );
 
+  /// @notice Emitted when ERC20 tokens are deposited and attributed to a vault
+  /// @param vaultId The identifier of the vault
+  /// @param vaultAddress The address used to route the deposit
+  /// @param token The ERC20 token address
+  /// @param from The original depositor
+  /// @param amount The amount of tokens deposited
+  event ERC20Deposited(
+    uint256 indexed vaultId,
+    address indexed vaultAddress,
+    address indexed token,
+    address from,
+    uint256 amount
+  );
+
   
 
   /// @notice Counter for generating unique vault IDs
@@ -239,6 +253,20 @@ contract VaultTracker is OptimisticProposer, Executor {
     require(msg.value > 0, "No ETH");
     uint256 _vaultId = _vaultIdFromAddressOrRevert(vaultAddress);
     emit ETHDeposited(_vaultId, vaultAddress, msg.sender, msg.value);
+  }
+
+  /**
+   * @notice Deposit ERC20 tokens and attribute them to a vault via an address handle
+   * @param vaultAddress The address handle mapped to a vault
+   * @param token The ERC20 token to deposit
+   * @param amount The amount of tokens to deposit
+   * @custom:events Emits ERC20Deposited attributing the deposit to the vault
+   */
+  function depositERC20(address vaultAddress, address token, uint256 amount) external nonReentrant {
+    require(amount > 0, "Amount=0");
+    uint256 _vaultId = _vaultIdFromAddressOrRevert(vaultAddress);
+    IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
+    emit ERC20Deposited(_vaultId, vaultAddress, token, msg.sender, amount);
   }
 
   /// @notice Reject unattributed ETH transfers; require use of depositETH
