@@ -24,6 +24,9 @@ contract VaultTracker is OptimisticProposer, Executor {
   error NotController();
   error UnknownProposal();
   error EmptyRules();
+  error InvalidVault();
+  error UnknownVaultAddress();
+  error VaultAddressTaken();
 
   
 
@@ -52,6 +55,23 @@ contract VaultTracker is OptimisticProposer, Executor {
   /// @param controller The address assigned as controller
   event SetController(uint256 indexed vaultId, address indexed controller);
 
+  /// @notice Emitted when an address is registered as a deposit handle for a vault
+  /// @param vaultId The identifier of the vault
+  /// @param vaultAddress The address registered to route deposits to the vault
+  event VaultAddressRegistered(uint256 indexed vaultId, address indexed vaultAddress);
+
+  /// @notice Emitted when ETH is deposited and attributed to a vault
+  /// @param vaultId The identifier of the vault
+  /// @param vaultAddress The address used to route the deposit
+  /// @param from The original depositor
+  /// @param amount The amount of ETH deposited
+  event ETHDeposited(
+    uint256 indexed vaultId,
+    address indexed vaultAddress,
+    address indexed from,
+    uint256 amount
+  );
+
   
 
   /// @notice Counter for generating unique vault IDs
@@ -68,6 +88,10 @@ contract VaultTracker is OptimisticProposer, Executor {
   /// @notice Mapping of vault ID and address to controller status
   /// @dev Controllers have administrative rights over vaults
   mapping(uint256 => mapping(address => bool)) public isController;
+
+  /// @notice Maps a deposit handle address to the corresponding vault ID
+  /// @dev Used to attribute deposits specified by address to a single vault
+  mapping(address => uint256) public vaultOf;
 
   
 
@@ -125,6 +149,7 @@ contract VaultTracker is OptimisticProposer, Executor {
   function createVault(address _controller) external returns (uint256) {
     nextVaultId++;
     _setController(nextVaultId, _controller);
+    _registerVaultAddress(nextVaultId, _controller);
     emit VaultCreated(nextVaultId, _controller);
     return nextVaultId;
   }
@@ -192,7 +217,33 @@ contract VaultTracker is OptimisticProposer, Executor {
     _setController(_vaultId, _controller);
   }
 
-  
+  /**
+   * @notice Registers an address to route deposits to a specific vault
+   * @param _vaultId The identifier of the vault
+   * @param _vaultAddress The address to register as a deposit handle for the vault
+   * @dev Only callable by the contract itself (via proposals) or a controller of the vault
+   * @custom:events Emits VaultAddressRegistered on first registration
+   */
+  function setVaultAddress(uint256 _vaultId, address _vaultAddress) external {
+    if (!(msg.sender == address(this) || isController[_vaultId][msg.sender])) revert NotController();
+    _requireVaultExists(_vaultId);
+    _registerVaultAddress(_vaultId, _vaultAddress);
+  }
+
+  /**
+   * @notice Deposit raw ETH and attribute it to a vault via an address handle
+   * @param vaultAddress The address handle mapped to a vault
+   * @custom:events Emits ETHDeposited attributing the deposit to the vault
+   */
+  function depositETH(address vaultAddress) external payable nonReentrant {
+    require(msg.value > 0, "No ETH");
+    uint256 _vaultId = _vaultIdFromAddressOrRevert(vaultAddress);
+    emit ETHDeposited(_vaultId, vaultAddress, msg.sender, msg.value);
+  }
+
+  /// @notice Reject unattributed ETH transfers; require use of depositETH
+  receive() external payable { revert("Use depositETH"); }
+  fallback() external payable { revert("Use depositETH"); }
 
   /**
    * @notice Sets custom rules for a specific vault
@@ -218,5 +269,27 @@ contract VaultTracker is OptimisticProposer, Executor {
   function _setController(uint256 _vaultId, address _controller) internal {
     isController[_vaultId][_controller] = true;
     emit SetController(_vaultId, _controller);
+  }
+
+  /// @notice Ensures a vault exists (IDs start at 1 and are sequential)
+  function _requireVaultExists(uint256 _vaultId) internal view {
+    if (_vaultId == 0 || _vaultId > nextVaultId) revert InvalidVault();
+  }
+
+  /// @notice Look up vaultId by address handle or revert if none is registered
+  function _vaultIdFromAddressOrRevert(address _vaultAddress) internal view returns (uint256) {
+    uint256 vid = vaultOf[_vaultAddress];
+    if (vid == 0) revert UnknownVaultAddress();
+    return vid;
+  }
+
+  /// @notice Register an address handle to a vault, enforcing uniqueness across vaults
+  function _registerVaultAddress(uint256 _vaultId, address _addr) internal {
+    uint256 existing = vaultOf[_addr];
+    if (existing != 0 && existing != _vaultId) revert VaultAddressTaken();
+    if (existing == 0) {
+      vaultOf[_addr] = _vaultId;
+      emit VaultAddressRegistered(_vaultId, _addr);
+    }
   }
 }
