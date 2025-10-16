@@ -185,6 +185,16 @@ These tests cover key functionalities, including:
 * Transaction proposals and execution in `OptimisticProposer`.
 * Vault management, including freezing/unfreezing and role assignments in `VaultTracker`.
 
+
+### Testnet Tokens
+
+There are four ERC-20 tokens deployed on *Sepolia Testnet*, which are used for testing transfers, swaps, and other simple defi transactions on the Oya Protocol. Each ERC-20 has a supply of 1B and the mock stablecoins, $OTUSDC and $OTUSDT, have 6 decimals to mimic the contracts of mainnet USDT and USDC. Please find the contract addresses below.  
+
+* OyaTestWETH (OTWETH): 0xe0Ab3BaC84Af1f63719fE4B2e96d16505EC68842
+* OyaTestUSDC (OTUSDC): 0x69dB14C05d012ff97a0F41e37E327970dea4F5eA
+* OyaTestUSDT (OTUSDT): 0x897292EaEc4Ef49948a36727a02FA0388E46C692
+* OyaTestOYA (OTOYA): 0xaCe171bf775107B491D9F4d4Daa808Be6515B2d0
+
 ## Contributing
 
 Contributions are welcome! If you would like to contribute, please follow these steps:
