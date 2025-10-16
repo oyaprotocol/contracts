@@ -2,6 +2,8 @@ pragma solidity ^0.8.6;
 
 import "@gnosis.pm/safe-contracts/contracts/base/Executor.sol";
 import "./OptimisticProposer.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
 /**
  * @title Vault Tracker
@@ -17,7 +19,7 @@ import "./OptimisticProposer.sol";
  *
  * @custom:invariant Proposals must exist before execution
  */
-contract VaultTracker is OptimisticProposer, Executor {
+contract VaultTracker is OptimisticProposer, Executor, IERC721Receiver {
   using SafeERC20 for IERC20;
 
   /// @notice Errors for gas-efficient reverts
@@ -84,6 +86,20 @@ contract VaultTracker is OptimisticProposer, Executor {
     address indexed token,
     address from,
     uint256 amount
+  );
+
+  /// @notice Emitted when ERC721 tokens are deposited and attributed to a vault
+  /// @param vaultId The identifier of the vault
+  /// @param vaultAddress The address used to route the deposit
+  /// @param token The ERC721 token address
+  /// @param from The original depositor
+  /// @param tokenIds The list of token IDs deposited
+  event ERC721Deposited(
+    uint256 indexed vaultId,
+    address indexed vaultAddress,
+    address indexed token,
+    address from,
+    uint256[] tokenIds
   );
 
   
@@ -267,6 +283,30 @@ contract VaultTracker is OptimisticProposer, Executor {
     uint256 _vaultId = _vaultIdFromAddressOrRevert(vaultAddress);
     IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
     emit ERC20Deposited(_vaultId, vaultAddress, token, msg.sender, amount);
+  }
+
+  /**
+   * @notice Deposit one or more ERC721 tokens and attribute them to a vault via an address handle
+   * @param vaultAddress The address handle mapped to a vault
+   * @param token The ERC721 token to deposit
+   * @param tokenIds The token IDs to transfer
+   * @custom:events Emits ERC721Deposited attributing the deposit to the vault
+   */
+  function nftDeposit(address vaultAddress, address token, uint256[] calldata tokenIds) external nonReentrant {
+    require(tokenIds.length > 0, "Empty tokenIds");
+    uint256 _vaultId = _vaultIdFromAddressOrRevert(vaultAddress);
+    for (uint256 i = 0; i < tokenIds.length; i++) {
+      IERC721(token).safeTransferFrom(msg.sender, address(this), tokenIds[i]);
+    }
+    emit ERC721Deposited(_vaultId, vaultAddress, token, msg.sender, tokenIds);
+  }
+
+  /**
+   * @notice Restrict direct NFT transfers; deposits should go through nftDeposit for attribution
+   */
+  function onERC721Received(address operator, address, uint256, bytes calldata) external view returns (bytes4) {
+    require(operator == address(this), "Use nftDeposit");
+    return IERC721Receiver.onERC721Received.selector;
   }
 
   /// @notice Reject unattributed ETH transfers; require use of depositETH
