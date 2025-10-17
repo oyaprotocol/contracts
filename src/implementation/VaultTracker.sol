@@ -24,6 +24,7 @@ contract VaultTracker is OptimisticProposer, Executor {
   error NotController();
   error UnknownProposal();
   error EmptyRules();
+  error NotVerified();
 
   
 
@@ -52,7 +53,14 @@ contract VaultTracker is OptimisticProposer, Executor {
   /// @param controller The address assigned as controller
   event SetController(uint256 indexed vaultId, address indexed controller);
 
-  
+  /// @notice Emitted when a controller address is replaced
+  /// @param oldController The controller address to be replaced
+  /// @param newController The new controller address taking over vault control
+  /// @dev Controller addresses may be replaced when private keys are lost or compromised
+  event ReplaceController(address indexed oldController, address indexed newController);
+
+  /// @notice Safety check to see if we are running executeProposal function
+  bool private _inProposal;
 
   /// @notice Counter for generating unique vault IDs
   uint256 public nextVaultId;
@@ -68,6 +76,19 @@ contract VaultTracker is OptimisticProposer, Executor {
   /// @notice Mapping of vault ID and address to controller status
   /// @dev Controllers have administrative rights over vaults
   mapping(uint256 => mapping(address => bool)) public isController;
+
+  /// @notice Mapping of controller addresses to vaults
+  /// @dev Controller addresses may each control multiple vaults
+  mapping(address => uint256[]) public controllerVaults;
+
+
+
+  /// @notice Safety check for functions that should only be called within executeProposal
+  modifier onlyDuringProposal() {
+    if (!_inProposal) revert NotVerified();
+    if (msg.sender != address(this)) revert NotVerified();
+    _;
+  }
 
   
 
@@ -152,6 +173,8 @@ contract VaultTracker is OptimisticProposer, Executor {
     delete assertionIds[proposalHash];
     delete proposalHashes[assertionId];
     optimisticOracleV3.settleAndGetAssertionResult(assertionId);
+
+    _inProposal = true;
     for (uint256 i = 0; i < transactions.length; i++) {
       Transaction memory transaction = transactions[i];
       require(
@@ -160,6 +183,7 @@ contract VaultTracker is OptimisticProposer, Executor {
       );
       emit TransactionExecuted(proposalHash, assertionId, i);
     }
+    _inProposal = false;
     emit ProposalExecuted(proposalHash, assertionId);
   }
 
@@ -185,14 +209,26 @@ contract VaultTracker is OptimisticProposer, Executor {
    * @param _vaultId The identifier of the vault
    * @param _controller Address to be assigned as the vault controller
    * @dev Controllers have administrative rights over vault operations
+   * @dev This function can only be called by the VaultTracker contract itself
+   * @dev New controller setting must be part of an undisputed bundle through executeProposal
    * @custom:events Emits SetController event
    */
-  function setController(uint256 _vaultId, address _controller) external {
-    if (!(msg.sender == address(this) || isController[_vaultId][msg.sender])) revert NotController();
+  function setController(uint256 _vaultId, address _controller) external onlyDuringProposal {
     _setController(_vaultId, _controller);
   }
 
-  
+  /**
+   * @notice Wrapper function to replace controller
+   * @param _oldController The controller address to be replaced
+   * @param _newController The new controller address taking over vault control
+   * @dev Controller addresses may be replaced when private keys are lost or compromised
+   * @dev This function can only be called by the VaultTracker contract itself
+   * @dev Controller replacement must be part of an undisputed bundle through executeProposal
+   * @custom:events Emits ReplaceController event
+  */
+  function replaceController(address _oldController, address _newController) external onlyDuringProposal {
+    _replaceController(_oldController, _newController);
+  }
 
   /**
    * @notice Sets custom rules for a specific vault
@@ -216,7 +252,41 @@ contract VaultTracker is OptimisticProposer, Executor {
    * @custom:events Emits SetController event
    */
   function _setController(uint256 _vaultId, address _controller) internal {
-    isController[_vaultId][_controller] = true;
+    if (!isController[_vaultId][_controller]) {
+      isController[_vaultId][_controller] = true;
+      controllerVaults[_controller].push(_vaultId);
+    }
     emit SetController(_vaultId, _controller);
+  }
+
+  /** 
+   * @notice Internal function to replace a controller address
+   * @param _oldController The controller address to be replaced
+   * @param _newController The new controller address taking over vault control
+   * @dev Controller addresses may be replaced when private keys are lost or compromised
+  */
+  function _replaceController(address _oldController, address _newController) internal {
+    if (_oldController == _newController) {
+      emit ReplaceController(_oldController, _newController);
+      return; // no-op: avoid duplicating the array
+    }
+
+    uint256[] storage vaults = controllerVaults[_oldController];
+    uint256 len = vaults.length;
+    
+    for (uint256 i = 0; i < len; i++) {
+      uint256 vaultId = vaults[i];
+      isController[vaultId][_oldController] = false;
+
+      if (!isController[vaultId][_newController]) {
+        isController[vaultId][_newController] = true;
+        controllerVaults[_newController].push(vaultId);
+        emit SetController(vaultId, _newController);
+      }
+    }
+    
+    delete controllerVaults[_oldController];
+
+    emit ReplaceController(_oldController, _newController);
   }
 }
