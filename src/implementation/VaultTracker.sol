@@ -45,8 +45,7 @@ contract VaultTracker is OptimisticProposer, Executor {
   /// @notice Emitted when a proposer is assigned to a vault
   /// @param vaultId The identifier of the vault
   /// @param proposer The address assigned as proposer
-  /// @param liveTime The timestamp when proposer assignment expires
-  event SetProposer(uint256 indexed vaultId, address indexed proposer, uint256 liveTime);
+  event SetProposer(uint256 indexed vaultId, address indexed proposer);
 
   /// @notice Emitted when a controller is assigned to a vault
   /// @param vaultId The identifier of the vault
@@ -197,11 +196,10 @@ contract VaultTracker is OptimisticProposer, Executor {
    *      informational and not enforced on-chain by this contract.
    * @custom:events Emits SetProposer event with expiration time
    */
-  function setProposer(uint256 _vaultId, address _proposer) external {
+  function setProposer(uint256 _vaultId, address _proposer) external onlyDuringProposal {
     if (!(msg.sender == address(this) || isController[_vaultId][msg.sender])) revert NotController();
-    uint256 _liveTime = block.timestamp + 30 minutes;
     proposers[_vaultId] = _proposer;
-    emit SetProposer(_vaultId, _proposer, _liveTime);
+    emit SetProposer(_vaultId, _proposer);
   }
 
   /**
