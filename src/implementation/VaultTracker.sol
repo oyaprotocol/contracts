@@ -21,12 +21,8 @@ contract VaultTracker is OptimisticProposer, Executor {
   using SafeERC20 for IERC20;
 
   /// @notice Errors for gas-efficient reverts
-  error NotController();
   error UnknownProposal();
-  error EmptyRules();
-  error NotVerified();
 
-  
 
   /// @notice Emitted when the VaultTracker contract is deployed and initialized
   /// @param rules The protocol rules used for vault transaction validation
@@ -37,59 +33,9 @@ contract VaultTracker is OptimisticProposer, Executor {
   /// @param controller The address assigned as the vault controller
   event VaultCreated(uint256 indexed vaultId, address indexed controller);
 
-  /// @notice Emitted when vault-specific rules are updated
-  /// @param vaultId The identifier of the vault
-  /// @param vaultRules The new rules for the vault
-  event SetVaultRules(uint256 indexed vaultId, string vaultRules);
-
-  /// @notice Emitted when a proposer is assigned to a vault
-  /// @param vaultId The identifier of the vault
-  /// @param proposer The address assigned as proposer
-  event SetProposer(uint256 indexed vaultId, address indexed proposer);
-
-  /// @notice Emitted when a controller is assigned to a vault
-  /// @param vaultId The identifier of the vault
-  /// @param controller The address assigned as controller
-  event SetController(uint256 indexed vaultId, address indexed controller);
-
-  /// @notice Emitted when a controller address is replaced
-  /// @param oldController The controller address to be replaced
-  /// @param newController The new controller address taking over vault control
-  /// @dev Controller addresses may be replaced when private keys are lost or compromised
-  event ReplaceController(address indexed oldController, address indexed newController);
-
-  /// @notice Safety check to see if we are running executeProposal function
-  bool private _inProposal;
-
   /// @notice Counter for generating unique vault IDs
   uint256 public nextVaultId;
 
-  /// @notice Mapping of vault ID to custom rules string
-  /// @dev Rules define vault-specific operational constraints
-  mapping(uint256 => string) public vaultRules;
-
-  /// @notice Mapping of vault ID to authorized proposer address
-  /// @dev Proposers can create proposals for specific vaults
-  mapping(uint256 => address) public proposers;
-
-  /// @notice Mapping of vault ID and address to controller status
-  /// @dev Controllers have administrative rights over vaults
-  mapping(uint256 => mapping(address => bool)) public isController;
-
-  /// @notice Mapping of controller addresses to vaults
-  /// @dev Controller addresses may each control multiple vaults
-  mapping(address => uint256[]) public controllerVaults;
-
-
-
-  /// @notice Safety check for functions that should only be called within executeProposal
-  modifier onlyDuringProposal() {
-    if (!_inProposal) revert NotVerified();
-    if (msg.sender != address(this)) revert NotVerified();
-    _;
-  }
-
-  
 
   /**
    * @notice Initializes the VaultTracker contract
@@ -144,7 +90,6 @@ contract VaultTracker is OptimisticProposer, Executor {
    */
   function createVault(address _controller) external returns (uint256) {
     nextVaultId++;
-    _setController(nextVaultId, _controller);
     emit VaultCreated(nextVaultId, _controller);
     return nextVaultId;
   }
@@ -173,7 +118,6 @@ contract VaultTracker is OptimisticProposer, Executor {
     delete proposalHashes[assertionId];
     optimisticOracleV3.settleAndGetAssertionResult(assertionId);
 
-    _inProposal = true;
     for (uint256 i = 0; i < transactions.length; i++) {
       Transaction memory transaction = transactions[i];
       require(
@@ -182,109 +126,6 @@ contract VaultTracker is OptimisticProposer, Executor {
       );
       emit TransactionExecuted(proposalHash, assertionId, i);
     }
-    _inProposal = false;
     emit ProposalExecuted(proposalHash, assertionId);
-  }
-
-  
-
-  /**
-   * @notice Assigns a proposer to a specific vault
-   * @param _vaultId The identifier of the vault
-   * @param _proposer Address to be assigned as the vault proposer
-   * @dev Proposers can create proposals for the specified vault. The `liveTime` emitted is
-   *      informational and not enforced on-chain by this contract.
-   * @custom:events Emits SetProposer event with expiration time
-   */
-  function setProposer(uint256 _vaultId, address _proposer) external onlyDuringProposal {
-    if (!(msg.sender == address(this) || isController[_vaultId][msg.sender])) revert NotController();
-    proposers[_vaultId] = _proposer;
-    emit SetProposer(_vaultId, _proposer);
-  }
-
-  /**
-   * @notice Assigns a controller to a specific vault
-   * @param _vaultId The identifier of the vault
-   * @param _controller Address to be assigned as the vault controller
-   * @dev Controllers have administrative rights over vault operations
-   * @dev This function can only be called by the VaultTracker contract itself
-   * @dev New controller setting must be part of an undisputed bundle through executeProposal
-   * @custom:events Emits SetController event
-   */
-  function setController(uint256 _vaultId, address _controller) external onlyDuringProposal {
-    _setController(_vaultId, _controller);
-  }
-
-  /**
-   * @notice Wrapper function to replace controller
-   * @param _oldController The controller address to be replaced
-   * @param _newController The new controller address taking over vault control
-   * @dev Controller addresses may be replaced when private keys are lost or compromised
-   * @dev This function can only be called by the VaultTracker contract itself
-   * @dev Controller replacement must be part of an undisputed bundle through executeProposal
-   * @custom:events Emits ReplaceController event
-  */
-  function replaceController(address _oldController, address _newController) external onlyDuringProposal {
-    _replaceController(_oldController, _newController);
-  }
-
-  /**
-   * @notice Sets custom rules for a specific vault
-   * @param _vaultId The identifier of the vault
-   * @param _rules The rules string defining vault behavior
-   * @dev Rules cannot be empty and define vault-specific constraints
-   * @custom:events Emits SetVaultRules event
-   */
-  function setVaultRules(uint256 _vaultId, string memory _rules) external {
-    if (!(msg.sender == address(this) || isController[_vaultId][msg.sender])) revert NotController();
-    if (bytes(_rules).length == 0) revert EmptyRules();
-    vaultRules[_vaultId] = _rules;
-    emit SetVaultRules(_vaultId, _rules);
-  }
-
-  /**
-   * @notice Internal function to set a vault controller
-   * @param _vaultId The identifier of the vault
-   * @param _controller Address to be assigned as controller
-   * @dev Internal helper used by createVault and setController
-   * @custom:events Emits SetController event
-   */
-  function _setController(uint256 _vaultId, address _controller) internal {
-    if (!isController[_vaultId][_controller]) {
-      isController[_vaultId][_controller] = true;
-      controllerVaults[_controller].push(_vaultId);
-    }
-    emit SetController(_vaultId, _controller);
-  }
-
-  /** 
-   * @notice Internal function to replace a controller address
-   * @param _oldController The controller address to be replaced
-   * @param _newController The new controller address taking over vault control
-   * @dev Controller addresses may be replaced when private keys are lost or compromised
-  */
-  function _replaceController(address _oldController, address _newController) internal {
-    if (_oldController == _newController) {
-      emit ReplaceController(_oldController, _newController);
-      return; // no-op: avoid duplicating the array
-    }
-
-    uint256[] storage vaults = controllerVaults[_oldController];
-    uint256 len = vaults.length;
-    
-    for (uint256 i = 0; i < len; i++) {
-      uint256 vaultId = vaults[i];
-      isController[vaultId][_oldController] = false;
-
-      if (!isController[vaultId][_newController]) {
-        isController[vaultId][_newController] = true;
-        controllerVaults[_newController].push(vaultId);
-        emit SetController(vaultId, _newController);
-      }
-    }
-    
-    delete controllerVaults[_oldController];
-
-    emit ReplaceController(_oldController, _newController);
   }
 }
