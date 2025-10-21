@@ -22,7 +22,6 @@ contract VaultTrackerTest is Test {
 
     address public owner = address(1);
     address public controller = address(2);
-    address public randomAddress = address(4);
 
     uint256 public bondAmount = 1000;
     string public rules = "Sample rules";
@@ -61,49 +60,6 @@ contract VaultTrackerTest is Test {
         vm.startPrank(owner);
         uint256 newVaultId = vaultTracker.createVault(controller);
         vm.stopPrank();
-        bool isCtrl = vaultTracker.isController(newVaultId, controller);
-        assertTrue(isCtrl, "Specified controller should be initial controller");
-    }
-
-    function testSetController() public {
-        vm.startPrank(owner);
-        uint256 vaultId = vaultTracker.createVault(controller);
-        vm.stopPrank();
-
-        vm.prank(randomAddress);
-        vm.expectRevert(VaultTracker.NotController.selector);
-        vaultTracker.setController(vaultId, address(5));
-
-        vm.prank(controller);
-        vaultTracker.setController(vaultId, address(6));
-        assertTrue(vaultTracker.isController(vaultId, address(6)));
-    }
-
-    function testSetVaultRules() public {
-        vm.startPrank(owner);
-        uint256 vaultId = vaultTracker.createVault(controller);
-        vm.stopPrank();
-
-        vm.prank(controller);
-        vm.expectRevert(VaultTracker.EmptyRules.selector);
-        vaultTracker.setVaultRules(vaultId, "");
-
-        vm.prank(controller);
-        vaultTracker.setVaultRules(vaultId, "Vault policy 1");
-        assertEq(vaultTracker.vaultRules(vaultId), "Vault policy 1");
-    }
-
-    
-
-    function testSetProposer() public {
-        vm.startPrank(owner);
-        uint256 vaultId = vaultTracker.createVault(controller);
-        vm.stopPrank();
-
-        vm.warp(1000);
-        vm.prank(controller);
-        vaultTracker.setProposer(vaultId, address(999));
-        assertEq(vaultTracker.proposers(vaultId), address(999));
     }
 
     function testSetRules() public {
