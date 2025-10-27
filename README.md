@@ -53,10 +53,10 @@ The `BundleTracker` contract is responsible for tracking new bundles on the Oya 
 
 ### VaultTracker
 
-The `VaultTracker` contract enables vault creation and executes transaction proposals validated through optimistic governance. Its features include:
+The `VaultTracker` contract enables vault creation and executes transaction proposals validated through an optimistic oracle. Its features include:
 - **Vault Creation:** Generates unique vault IDs with associated controller addresses for offchain tracking.
 - **Proposal Execution:** Executes batches of transactions that have been validated by UMA's Optimistic Oracle V3.
-- **Optimistic Governance:** Inherits comprehensive proposal management from OptimisticProposer including bonding, dispute resolution, and automatic proposal lifecycle handling.
+- **Optimistic Verification:** Inherits comprehensive proposal management from OptimisticProposer including bonding, dispute resolution, and automatic proposal lifecycle handling.
 - **Secure Execution:** Inherits from the [Safe](https://safe.global/) `Executor` contract to safely execute validated transaction batches.
 
 ## Getting Started
@@ -143,7 +143,7 @@ Users interact with the `BundleTracker` contract by calling the `proposeBundle` 
 The `VaultTracker` contract provides vault creation and proposal execution capabilities:
 
 - **Creating Vaults:** Use `createVault(controllerAddress)` to generate a unique vault ID with an associated controller address for offchain tracking.
-- **Executing Proposals:** Once a proposal is verified by the Optimistic Oracle, the `executeProposal` function executes a batch of transactions that have been validated through the optimistic governance process.
+- **Executing Proposals:** Once a proposal is verified by the Optimistic Oracle, the `executeProposal` function executes a batch of transactions that have been validated through the optimistic verification process.
 
 ### Interacting with UMA’s Optimistic Oracle
 

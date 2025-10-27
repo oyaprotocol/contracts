@@ -5,7 +5,7 @@ import "./OptimisticProposer.sol";
 
 /**
  * @title Vault Tracker
- * @notice Vault creation and proposal execution system using optimistic governance
+ * @notice Vault creation and proposal execution system using optimistic verification
  * @dev Extends OptimisticProposer to enable verified proposal execution
  *
  * Architecture:
