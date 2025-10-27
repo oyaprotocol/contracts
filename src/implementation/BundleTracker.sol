@@ -18,7 +18,13 @@ contract BundleTracker is OptimisticProposer {
   /// @param timestamp The timestamp when the bundle was proposed
   /// @param bundleProposer Address that proposed the bundle data
   /// @param bundleData The bundle data being validated
-  event BundleProposed(uint256 indexed timestamp, address indexed bundleProposer, string bundleData);
+  /// @param assertionId The assertion ID returned by the optimistic oracle for this proposal
+  event BundleProposed(
+    uint256 indexed timestamp,
+    address indexed bundleProposer,
+    string bundleData,
+    string assertionId
+  );
 
   /// @notice Emitted when the BundleTracker contract is deployed and initialized
   /// @param rules The protocol rules used for bundle validation
@@ -130,7 +136,7 @@ contract BundleTracker is OptimisticProposer {
     assertionProposer[_assertionID] = proposer;
     assertionTimestamps[_assertionID] = block.timestamp;
 
-    emit BundleProposed(block.timestamp, msg.sender, _bundleData);
+    emit BundleProposed(block.timestamp, msg.sender, _bundleData, string(_assertionID));
   }
 
   /**
