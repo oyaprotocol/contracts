@@ -28,7 +28,7 @@ This repository contains the Solidity smart contracts that enable a natural lang
 
 - **OptimisticProposer:** Provides a reusable framework for proposing and verifying onchain transactions or proposals via UMA’s optimistic validation mechanism.
 - **BundleTracker:** Handles the proposal of new bundles (with natural language-based bundle data) and integrates with UMA’s Optimistic Oracle to verify the proposals.
-- **VaultTracker:** Manages vaults that control assets deposited into the smart contracts. It enables vault creation, management (controllers, guardians), and protocol-level freeze/unfreeze functionality.
+- **VaultTracker:** Holds assets which have been deposited into the Oya Protocol. Responsible for creating vaults with associated controller addresses and executing transactions which have been verified by UMA's Optimistic Oracle. 
 
 Together, these contracts allow any ERC20 or ERC721 assets on existing EVM chains to be bridged to the Oya protocol and governed by natural language rules.
 
@@ -53,11 +53,11 @@ The `BundleTracker` contract is responsible for tracking new bundles on the Oya 
 
 ### VaultTracker
 
-The `VaultTracker` contract manages vaults that hold assets bridged to the Oya protocol. Its features include:
-- **Vault Management:** Creation and administration of vaults (e.g., setting controllers, guardians, and vault-specific rules).
-- **Protocol Controls:** Functions to freeze or unfreeze individual vaults or the entire protocol (useful for emergency shutdowns).
-- **Proposal Execution:** Inherits the OptimisticProposer functionality to propose and execute transactions affecting vault states.
-- **Inheritance from Safe:** Inherits from the [Safe](https://safe.global/) `Executor` contract to allow secure execution of proposals.
+The `VaultTracker` contract enables vault creation and executes transaction proposals validated through an optimistic oracle. Its features include:
+- **Vault Creation:** Generates unique vault IDs with associated controller addresses for offchain tracking.
+- **Proposal Execution:** Executes batches of transactions that have been validated by UMA's Optimistic Oracle V3.
+- **Optimistic Verification:** Inherits comprehensive proposal management from OptimisticProposer including bonding, dispute resolution, and automatic proposal lifecycle handling.
+- **Secure Execution:** Inherits from the [Safe](https://safe.global/) `Executor` contract to safely execute validated transaction batches.
 
 ## Getting Started
 
@@ -138,17 +138,12 @@ Users interact with the `BundleTracker` contract by calling the `proposeBundle` 
 - A `BundleProposed` event is emitted containing the timestamp, proposer address, and bundle data.
 - If the assertion is validated (i.e., no disputes are raised within the liveness period), the bundle is finalized.
 
-### Managing Vaults
+### Creating Vaults
 
-The `VaultTracker` contract provides methods to manage vaults, which hold the bridged assets used on the Oya protocol. Key functions include:
+The `VaultTracker` contract provides vault creation and proposal execution capabilities:
 
-- **Creating Vaults:** Use `createVault(controllerAddress)` to initialize a new vault with a specified controller.
-- **Setting Vault Rules:** Vault-specific rules can be defined or updated using the `setVaultRules` function.
-- **Managing Controllers and Guardians:** 
-  - `setController` assigns or changes the controller for a vault.
-  - `setGuardian` allows designated accounts to act as guardians.
-  - `removeGuardian` (requires proposal execution) removes a guardian from a vault.
-- **Executing Proposals:** Once a proposal is verified by the Optimistic Oracle, the `executeProposal` function executes a series of transactions that may update vault states or enforce tokenholder governance decisions.
+- **Creating Vaults:** Use `createVault(controllerAddress)` to generate a unique vault ID with an associated controller address for offchain tracking.
+- **Executing Proposals:** Once a proposal is verified by the Optimistic Oracle, the `executeProposal` function executes a batch of transactions that have been validated through the optimistic verification process.
 
 ### Interacting with UMA’s Optimistic Oracle
 
@@ -183,7 +178,7 @@ These tests cover key functionalities, including:
 
 * Bundle proposal and finalization in `BundleTracker`.
 * Transaction proposals and execution in `OptimisticProposer`.
-* Vault management, including freezing/unfreezing and role assignments in `VaultTracker`.
+* Vault creation and configuration in `VaultTracker`.
 
 
 ### Testnet Tokens

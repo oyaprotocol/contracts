@@ -5,15 +5,16 @@ import "./OptimisticProposer.sol";
 
 /**
  * @title Vault Tracker
- * @notice Multi-vault management system with optimistic governance
- * @dev Extends OptimisticProposer with vault-specific access controls
+ * @notice Vault creation and proposal execution system using optimistic verification
+ * @dev Extends OptimisticProposer to enable verified proposal execution
  *
  * Architecture:
- * - Individual vaults with separate controllers
- * - Role-based access control for vault operations
+ * - Generates unique vault IDs with associated controller addresses
+ * - Executes transaction batches validated by UMA's Optimistic Oracle
  *
  * Security Features:
- * - Role-based access control for vault operations
+ * - Optimistic Oracle validation for all proposals
+ * - Reentrancy protection on critical functions
  *
  * @custom:invariant Proposals must exist before execution
  */
@@ -97,15 +98,13 @@ contract VaultTracker is OptimisticProposer, Executor {
   /**
    * @notice Executes a proposal whose assertion is eligible for settlement
    * @param transactions Array of transactions to execute
-   * @dev Prevents execution when protocol is frozen, then settles the oracle assertion and executes
-   *      each transaction via the `Executor` base. Settlement reverts if the assertion is untruthful
-   *      or still within liveness.
+   * @dev Settles the oracle assertion and executes each transaction via the `Executor` base.
+   *      Settlement reverts if the assertion is untruthful or still within liveness.
    *
    * Execution flow:
-   * 1. Ensure protocol is not frozen
-   * 2. Lookup `assertionId` for the `transactions` hash, then delete mappings to prevent re-use
-   * 3. Settle at Optimistic Oracle V3; this reverts if not truthful or not resolvable
-   * 4. Execute each transaction via `execute`
+   * 1. Lookup `assertionId` for the `transactions` hash, then delete mappings to prevent re-use
+   * 2. Settle at Optimistic Oracle V3; this reverts if not truthful or not resolvable
+   * 3. Execute each transaction via `execute`
    *
    * @custom:events Emits `TransactionExecuted` for each transaction and `ProposalExecuted`
    * @custom:security Reentrancy protected
