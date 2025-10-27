@@ -28,7 +28,7 @@ This repository contains the Solidity smart contracts that enable a natural lang
 
 - **OptimisticProposer:** Provides a reusable framework for proposing and verifying onchain transactions or proposals via UMA’s optimistic validation mechanism.
 - **BundleTracker:** Handles the proposal of new bundles (with natural language-based bundle data) and integrates with UMA’s Optimistic Oracle to verify the proposals.
-- **VaultTracker:** Manages vaults that control assets deposited into the smart contracts. It enables vault creation, management (controllers, guardians), and protocol-level freeze/unfreeze functionality.
+- **VaultTracker:** Holds assets which have been deposited into the Oya Protocol. Responsible for creating vaults with associated controller addresses and executing transactions which have been verified by UMA's Optimistic Oracle. 
 
 Together, these contracts allow any ERC20 or ERC721 assets on existing EVM chains to be bridged to the Oya protocol and governed by natural language rules.
 
