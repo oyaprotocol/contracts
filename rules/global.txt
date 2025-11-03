@@ -10,7 +10,7 @@ The protocol is composed of smart contracts that handle user assets and bundles 
 
 Vaults and Bundles
 
-Users deposit assets in onchain VaultTracker contracts, create vaults to hold them, select a specific propose address for that vault (mandatory, one proposer per vault), and optionally select special natural language rules and additional controller addresses to a vault. There is one VaultTracker contract for each supported chain which holds all assets for that chain. Controller addresses for a vault are allowed to sign intentions for that vault. Each new intention for a vault that is included in a bundle increases that vault's nonce by 1. Only one designated proposer address is allowed per vault.
+Users deposit assets in onchain VaultTracker contracts, create vaults to hold them, select a specific proposer address for that vault (mandatory, one proposer per vault), and optionally select special natural language rules and additional controller addresses to a vault. There is one VaultTracker contract for each supported chain which holds all assets for that chain. Controller addresses for a vault are allowed to sign intentions for that vault. Each new intention for a vault that is included in a bundle increases that vault's nonce by 1. Only one designated proposer address is allowed per vault.
 
 Bundles are collections of intentions signed by controllers and submitted by the proposer, along with a bond for the optimistic verification system, through the onchain BundleTracker contract. The bond amount and collateral is defined in the BundleTracker contract. The proposal itself references the IPFS CID of the full offchain data for the bundle. There is only one BundleTracker contract to support all chains, which reduces the complexity of verifying bundles; since optimistic verification can see the current state of all chains as well as the current state of the real world, there is no need for separate bundle trackers for each chain.
 
@@ -29,7 +29,7 @@ Some intentions are involved in vault setup and management, including the follow
 
 Protocol Fee
 
-The protocol may collect a fee as a percentage of output tokens in a transaction. For example, if the protocol fee is 1%, and the output of a transfer is 1,000 ETH, the protocol fee is 1 ETH. The intention is invalid and the bundle including it will be disputed if any mandatory protocol fee is not reflected in the intention.
+The protocol may collect a fee as a percentage of output tokens in a transaction. For example, if the protocol fee is 0.1%, and the output of a transfer is 1,000 ETH, the protocol fee is 1 ETH. The intention is invalid and the bundle including it will be disputed if any mandatory protocol fee is not reflected in the intention.
 
 
 Inputs and Outputs
@@ -39,7 +39,7 @@ The inputs for an intention always come from a vault and must be available in th
 
 Cascading Finality for In-Protocol Transactions
 
-Many intentions specify in-protocol inputs and outputs, where assets move virtually from one vault to another without any tokens are actually transferred onchain.
+Many intentions specify in-protocol inputs and outputs, where assets move virtually from one vault to another without any tokens actually being transferred onchain.
 
 If Alice transfers 1 ETH to Bob's vault, and the intention is valid, Bob can immediately use that 1 ETH. Although one would think everyone would need to wait until the optimistic verification system finalizes the bundle that includes Alice's transfer before the 1 ETH can be used for Bob's intentions, that is not the case. Bob may submit his own intentions relying on the receipt of that 1 ETH as soon as Alice's intention is published in a bundle.
 
