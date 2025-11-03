@@ -1,41 +1,72 @@
-These are the global rules of the Oya protocol.
+General Purpose of the Oya Protocol
 
-1. **Supported Tokens and Actions:**  
-   - Only ERC20 and ERC721 tokens are supported. Tokens deposited by mistake that are unsupported may be withdrawn by the original depositor.
-   - The supported token actions on the Oya blockchain are deposit, withdraw, and transfer.
+The protocol handles pure natural language transactions onchain through user vaults with natural language controls, bundles of natural language intentions specifying in-protocol and external transactions, and optimistic verification to check correctness. This creates a highly flexible and efficient transaction system that is human-readable and friendly to agents based on language models.
 
-2. **Vault Initialization and Block Production:**  
-   - After a vault is created, a signed intention from the vault’s controller address—if included in a block by any block proposer—may set additional parameters for the vault.
-   - The first block proposer to submit a signed message from the controller address for a vault will be designated as that vault’s initial block producer.
 
-3. **Block Proposer Assignment:**  
-   - Each vault may have only one block proposer at a time.
-   - A block proposer can be changed either via a signed intention included in a block or by a transaction directly from the vault’s controller address.
-   - Any change in block proposers is subject to a delay of 30 minutes, as recorded in the event logs.
+Technical Structure
 
-4. **Vault Balances and Transfers:**  
-   - Vault balances can increase via deposits or transfers, and decrease via withdrawals or transfers.
-   - A transfer recorded on the Oya blockchain is verified by the optimistic oracle. This process does not require an actual movement of tokens within the VaultTracker contract or any on-chain state change on the host blockchain.
-   - To execute a withdrawal or transfer of tokens in a vault, the vault must have a sufficient balance of that token.
+The protocol is composed of smart contracts that handle user assets and bundles of natural language intentions, nodes that propose and verify bundles, and users and agents creating intentions. These global rules for the protocol are primarily concerned with how to verify that a bundle of intentions is valid.
 
-5. **Block Finality and Disputes:**  
-   - Proposed state changes in a block are considered valid unless a dispute is raised during the optimistic oracle’s challenge period.
-   - If a block is disputed, it is discarded, and any valid state changes MUST be re-proposed in the next block from that block's producer.
-   - In the case where new blocks were built on top of a disputed block, all subsequent blocks should also be disputed and discarded, and any valid state changes contained in those subsequent blocks must be re-proposed in the next block from that block's producer.
-   - A replacement block must include all valid signed intentions from the disputed block; omission of any valid state changes will render the replacement block invalid and disputable.
-   - Valid signed intentions from the disputed block are still valid when included in a replacement block even if the signer's vault has switched to a different block proposer in the meantime.
-   - The data for a block must be publicly available, and a quorum of 1/10 of active staked verifiers must attest to the data's availability during the first thirty minutes of the challenge period.
-   - A block must include a list of all historical blocks that are relevant to the new block's state changes, and the data for each of these blocks must be publicly available, with a quorum of 1/10 of active staked verifiers attesting to the data's availability during the first thirty minutes of the challenge period.
 
-6. **Nonce Management:**  
-   - Every signed intention for a vault must have an incrementing nonces (0, 1, 2, …, n), with each new intention’s nonce exactly one unit higher than the previous.
-   - The vault's nonce is carried over when changing block proposers (e.g., if the nonce of the last signed intention included in a block was 2 before changing block proposers, the next nonce will be 3).
-   - Each block produced by a particular block proposer must also have incrementing nonces, with the replacement block using the same nonce as any disputed block.
+Vaults and Bundles
 
-7. **Amendments to Global Rules:**  
-   - Changes to the global rules require Oya tokenholder approval, and may only come into effect after a minimum time delay of seven days.
-   - New features for the Oya blockchain may be implemented through amendments to the global rules.
-   - If the Oya tokenholder governance process has been compromised due to a bug, exploit, or other technical failure, changes to the global rules shall be considered invalid, and the rules existing prior to the issue shall remain in effect.
+Users deposit assets in onchain VaultTracker contracts, create vaults to hold them, select a specific proposer address for that vault (mandatory, one proposer per vault), and optionally select special natural language rules and additional controller addresses to a vault. There is one VaultTracker contract for each supported chain which holds all assets for that chain. Controller addresses for a vault are allowed to sign intentions for that vault. Each new intention for a vault that is included in a bundle increases that vault's nonce by 1. Only one designated proposer address is allowed per vault.
 
-8. **Compliance with Vault-Specific Rules:**  
-   - Every signed intention for a vault must adhere to that vault’s individual rules; otherwise, the intention shall be considered invalid, and any block containing the invalid intention shall be invalid.
+Bundles are collections of intentions signed by controllers and submitted by the proposer, along with a bond for the optimistic verification system, through the onchain BundleTracker contract. The bond amount and collateral is defined in the BundleTracker contract. The proposal itself references the IPFS CID of the full offchain data for the bundle. There is only one BundleTracker contract to support all chains, which reduces the complexity of verifying bundles; since optimistic verification can see the current state of all chains as well as the current state of the real world, there is no need for separate bundle trackers for each chain.
+
+
+Intentions in General
+
+Intentions are expressed at a high level in natural language "actions" and these actions must have enough information for humans and language models to understand the overall intention. They also include a detailed payload of inputs and outputs, which are assets that are used as inputs for the intention (such as tokens being transferred from a vault) and the outputs (where the tokens are going). The payload must also specify any fees, including mandatory protocol fees, and optional tips to proposers and agents. The intention always specifies a specific vault, and the inputs will always come from that vault.
+
+The range of actions is limited only by the ability of users to express themselves in plain language and the willingness of proposers to stake their bond behind the correctness and objectivity of the intention. If an intention is included in a bundle and violates the rules of the protocol, the rules of the vault, attempts to use funds that are not available as inputs from the vault, or is too vague to be enforceable, the entire bundle can be disputed and the proposer's bond will be lost if the optimistic verification system confirms that the proposer made a mistake.
+
+
+Special Protocol Intentions
+
+Some intentions are involved in vault setup and management, including the following actions: CreateVault, UpdateProposer, UpdateControllers, UpdateRules, and AssignDeposit. These intentions have empty values for inputs, outputs, and fees.
+
+
+Protocol Fee
+
+The protocol may collect a fee as a percentage of output tokens in a transaction. For example, if the protocol fee is 0.1%, and the output of a transfer is 1,000 ETH, the protocol fee is 1 ETH. The intention is invalid and the bundle including it will be disputed if any mandatory protocol fee is not reflected in the intention.
+
+
+Inputs and Outputs
+
+The inputs for an intention always come from a vault and must be available in the vault when the intention is included in a bundle. The outputs specify the inputs, minus fees, and the recipient(s). The inputs for an intention are encumbered by that intention and can not be used for another intention until the intention is filled, canceled, or expired.
+
+
+Cascading Finality for In-Protocol Transactions
+
+Many intentions specify in-protocol inputs and outputs, where assets move virtually from one vault to another without any tokens actually being transferred onchain.
+
+If Alice transfers 1 ETH to Bob's vault, and the intention is valid, Bob can immediately use that 1 ETH. Although one would think everyone would need to wait until the optimistic verification system finalizes the bundle that includes Alice's transfer before the 1 ETH can be used for Bob's intentions, that is not the case. Bob may submit his own intentions relying on the receipt of that 1 ETH as soon as Alice's intention is published in a bundle.
+
+The reason is that if a bundle is disputed, any intentions in that bundle that were correct must be included in a replacement bundle from the proposer with the same nonce. If any valid intentions are not included, that replacement bundle is also invalid, and will be disputed. This prevents malicious disputes due to "cold feet" and attempts to undo valid intentions that were honestly filled, and also allows future bundles to be built and proposed immediately based on those valid intentions. The user experience is that transactions are instant as soon as they are proposed, as long as they were valid in the first place.
+
+The concept of cascading finality is that valid intentions will eventually be finalized, even if the bundle they were originally included in was disputed. And, in fact, they may finalize before the replacement bundle.
+
+Using our example from earlier, Alice's 1 ETH transfer to Bob is valid, but some other intention in the same bundle was not. Bob creates an intention using the 1 ETH he received from Alice, and Bob's intention is valid, because the transfer from Alice was valid. Meanwhile, a node notices the flaw in some other intention in Alice's bundle, and raises a dispute. Bob's bundle may finalize before the replacement bundle including Alice's transfer; we have "cascading finality" where Alice's transfer effectively finalizes as part of Bob's bundle.
+
+The takeaway is that intentions that are valid can be treated as though they have already finalized as soon as they are proposed in a bundle, because they are guaranteed to finalize eventually, and you can build new bundles based on their inputs and outputs without waiting for bundles to finalize.
+
+
+External Transactions
+
+If the outputs for any intentions in a bundle are going to external addresses, the proposer must call proposeTransactions in the relevant VaultTracker contract(s) with an executable payload that will handle all of the external transfers for that vault in that bundle, with the underlying bundle referenced in the explanation field. These function calls must happen within XX minutes of the bundle proposal or the bundle shall be considered invalid and will be disputed (though the valid intentions in that bundle must be reproposed in a replacement bundle with the same nonce).
+
+Calling proposeTransactions in a VaultTracker will create a separate assertion to the optimistic verification system that the proposed transaction payload includes all of the external transactions for that bundle on that chain. This assertion has a liveness that is one hour longer than the liveness for the underlying bundle proposal.
+
+If the underlying bundle is disputed, and the problem lies with one of the external transactions, the proposeTransactions assertion should also be disputed. If there is no issue with the external transactions in a bundle, the proposeTransactions assertion should not be disputed, and the external transactions will execute without additional delay. In that case, the replacement bundle will include a small bit of extra data stating that the external transactions in the bundle were all correct, and no replacement external transaction payload needs to be proposed.
+
+
+Vault Rules
+
+Controllers may add human readable rules to specific vaults, and intentions must respect those rules in order to be considered valid. For example, if the vault rules include a restricted list of addresses where the vault may make external transfers, an intention that would make an external transfer to an address not on that list would be invalid. If a proposer is uncertain if an intention follows the user's vault rules, they should refuse to include the intention in a bundle, since it may result in a dispute and loss of their bond.
+
+Vault rules are set in an UpdateRules action, and unenforceable rules should be disputed before they are set. For example: "This vault only makes good trades." This rule is overly ambiguous, and the intention setting that rule should be rejected by a proposer or disputed if included in a bundle.
+
+In addition, meta-rules about setting rules must also be respected. If the vault rules state: "The assets in this vault are to be locked for one year, and the rules may not change to unlock the assets earlier." And a controller signs an intention changing the rules to: "The assets in this vault are unlocked and may be moved." That second intention is invalid, because it violates the vault's meta-rules about setting rules.
+
+Vault controllers may also set rules around vault freezing and vault recovery, which is important in the case of lost or compromised controller keys. The protocol itself does not specify actions for this, but it is an important feature for most users. We anticipate continuous innovation in vault recovery, allowing vault owners to set the rules that make the most sense for them.
