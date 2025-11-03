@@ -10,7 +10,7 @@ The protocol is composed of smart contracts that handle user assets and bundles 
 
 Vaults and Bundles
 
-Users deposit assets in onchain VaultTracker contracts, create vaults to hold them, select a specific proposer address for that vault (mandatory, one proposer per vault), and optionally select special natural language rules and additional controller addresses to a vault. There is one VaultTracker contract for each supported chain which holds all assets for that chain. Controller addresses for a vault are allowed to sign intentions for that vault. Each new intention for a vault that is included in a bundle increases that vault's nonce by 1. Only one designated proposer address is allowed per vault.
+Users deposit assets in onchain VaultTracker contracts, create vaults to hold them, and optionally select special natural language rules and additional controller addresses to a vault. There is one VaultTracker contract for each supported chain which holds all assets for that chain. Controller addresses for a vault are allowed to sign intentions for that vault. Each new intention for a vault that is included in a bundle increases that vault's nonce by 1. Only one designated proposer address is allowed per vault.
 
 Bundles are collections of intentions signed by controllers and submitted by the proposer, along with a bond for the optimistic verification system, through the onchain BundleTracker contract. The bond amount and collateral is defined in the BundleTracker contract. The proposal itself references the IPFS CID of the full offchain data for the bundle. There is only one BundleTracker contract to support all chains, which reduces the complexity of verifying bundles; since optimistic verification can see the current state of all chains as well as the current state of the real world, there is no need for separate bundle trackers for each chain.
 
@@ -21,10 +21,12 @@ Intentions are expressed at a high level in natural language "actions" and these
 
 The range of actions is limited only by the ability of users to express themselves in plain language and the willingness of proposers to stake their bond behind the correctness and objectivity of the intention. If an intention is included in a bundle and violates the rules of the protocol, the rules of the vault, attempts to use funds that are not available as inputs from the vault, or is too vague to be enforceable, the entire bundle can be disputed and the proposer's bond will be lost if the optimistic verification system confirms that the proposer made a mistake.
 
+Each intention must also specify the proposer address for the next intention, and an exclusivity window for the next intention. If the next proposer includes the intention in a bundle within the exclusivity window, it will be valid, even if the controller changed the next proposer in the meantime through an UpdateNextProposer action (see below). Changes to the next proposer are not in effect until a delay equal to the exclusivity window specified in the last intention.
+
 
 Special Protocol Intentions
 
-Some intentions are involved in vault setup and management, including the following actions: CreateVault, UpdateProposer, UpdateControllers, UpdateRules, and AssignDeposit. These intentions have empty values for inputs, outputs, and fees.
+Some intentions are involved in vault setup and management, including the following actions: CreateVault, UpdateProposer, UpdateControllers, UpdateRules, AssignDeposit, and UpdateNextProposer. These intentions have empty values for inputs, outputs, and fees.
 
 
 Protocol Fee
